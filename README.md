@@ -4,11 +4,14 @@
 
 ## 当前状态
 
-- 已在嘉立创 EDA 专业版中通过 Run API Gateway 绘制首版单页原理图。
+- 已在嘉立创 EDA 专业版中通过 Run API Gateway 完成单页原理图的结构重排版（Rev A），并完成一次 API 网表审计。
 - USB 有线方向：USB-C 设备/供电/充电/烧录接口；USB-A HID 主机接口。
 - 已纳入：1S 受保护锂电池接口、充电与 power-path、电源升降压、USB ESD、两路 PS/2、RS232、I²C OLED、按键、WCH-Link 调试口、SPI 扩展排针、BLE 天线与 32 MHz 晶振。
+- J3/J4 已更换为 6 针圆形 DIN-6 PS/2 插座候选 C23689424；原先错误的 9 针长条封装已移除。
+- 原理图按电源、USB、CH582M/RF、PS/2、RS232、调试/扩展分区；短引线不显示重复网络名，网络由引脚处端口维护。
 - 暂不纳入 2.4 GHz 接收端软硬件；2.4 GHz 这里仅指 CH582M 的 BLE/RF 部分。
 - 尚未开始 PCB；当前原理图是可继续审查的工程首版，不是可直接打板的 release 版本。
+- USB-C、USB-A、DB9、电池座、OLED/排针、晶振、天线和按键中仍有若干 C990 Extended Part 机械候选，尚未达到生产 BOM 的可追溯要求。
 
 ## 嘉立创 EDA 工程
 
@@ -48,7 +51,7 @@ J6 按“自带保护板的 1S 锂电池”建模。充电电流、终止电流�
 
 ## 下一步
 
-1. 在嘉立创 EDA 内做 ERC、封装/引脚号、库型号和数据手册逐项复核。
+1. 在嘉立创 EDA 内重新打开当前 Rev A，做 ERC、封装/引脚号、库型号和数据手册逐项复核。
 2. 确认 USB 主从控制器映射、CH582M 官方参考布局、电源开关与天线 keep-out。
 3. 确认 PS/2 插座实际针脚定义、RS232 DB9 的 DTE/DCE 角色和 OLED 接插件方向。
 4. 依据确认后的电流预算与电池型号修订充电/升压参数，再开始 PCB placement/routing。
@@ -61,4 +64,3 @@ J6 按“自带保护板的 1S 锂电池”建模。充电电流、终止电流�
 - TI BQ24074：[datasheet](https://www.ti.com/document-viewer/bq24074/datasheet)
 - TI TPS63031：[datasheet PDF](https://www.ti.com/lit/ds/symlink/tps63031.pdf)
 - TI TPS61023：[datasheet PDF](https://www.ti.com/lit/ds/symlink/tps61023.pdf)
-
