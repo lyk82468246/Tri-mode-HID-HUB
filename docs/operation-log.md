@@ -87,3 +87,11 @@ API 可以取得当前页 PNG 渲染用于复查；当前 Gateway 下 PDF 导出
 2. 保留远端已有的 PCB/原理图设计记录，并把 `CH582M.wvproj`、`src/`、`Startup/`、`Ld/`、`RVMSIS/` 和 `StdPeriphDriver/` 作为固件工程加入同一仓库。
 3. 新增仓库级 `.gitignore` 和 `.gitattributes`：忽略 MounRiver 本机工作区及构建输出，保留可复现工程配置、源码、启动文件、链接脚本和随工程使用的 ISP 库。
 4. 当前加入的 `src/Main.c` 是 WCH 的 UART1 收发模板，尚不宣称已经实现三模 HID；后续固件功能必须继续以 `docs/pin-plan.md` 和实际芯片/SDK 文档为准。
+
+## 2026-09-12 固件系统架构与迭代 Roadmap
+
+1. 在未实现底层驱动前，定义 `Event_Router`、统一键鼠/手柄/数据流中间格式、静态 SPSC Ring Buffer、ISR/TMOS/输出后端的所有权边界。
+2. 规定 PS/2/USB Host 键盘都先转换为完整 8 字节 Boot Keyboard Report 快照，再进入 `router_input_ring`；输出端根据 Report ID 映射到 USB HID 或 BLE HOGP。
+3. 规划六个严格串行里程碑：USB Device 复合输出、BLE HOGP/NUS、PS/2/UART 输入、USB Host HID、Event_Router 全链路合并、资源与可靠性收口。
+4. 根据 WCH 公开资料和当前工程配置，将 CH582M 的代码容量按约 448K Flash、32K SRAM、32K DataFlash 预算；1MB 说法暂不作为链接依据，待实物料号和数据手册确认。
+5. 记录 WCH BLE 报文缓冲 API 的动态所有权审计为 M2 前置条件，应用层不使用 libc `malloc/free`。

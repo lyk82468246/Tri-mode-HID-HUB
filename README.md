@@ -43,6 +43,8 @@ MounRiver Studio 入口为 [`CH582M.wvproj`](CH582M.wvproj)，固件源码从 [`
 
 当前固件只是可继续开发的 CH582M 基础工程：上电发送 UART1 示例字符串并回显接收数据。固件的 USB Host HID、USB Device HID、BLE HOGP、PS/2、RS232 和 OLED 功能会按硬件引脚规划逐步加入，详见 [`docs/firmware.md`](docs/firmware.md)。
 
+系统级路由器、静态内存模型和六阶段实现顺序见 [`docs/firmware-architecture.md`](docs/firmware-architecture.md)。
+
 ## 电源方案
 
 ```text

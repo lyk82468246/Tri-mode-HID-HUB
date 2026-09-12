@@ -22,6 +22,8 @@ StdPeriphDriver/    WCH 外设驱动、头文件和 ISP 库
 
 它还不是三模 HID 的完成固件。USB Host HID、USB Device HID、BLE HOGP、PS/2 协议转换、RS232 bridge 和 OLED UI 将基于 `docs/pin-plan.md` 中的硬件规划逐项实现。
 
+系统级数据流、静态内存布局、Ring Buffer 所有权和六阶段开发顺序见 [`docs/firmware-architecture.md`](firmware-architecture.md)。后续实现严格按 M1 至 M6 逐阶段推进。
+
 ## 在 MounRiver Studio 中使用
 
 1. 打开 `CH582M.wvproj`，确认芯片选择为 CH582M。
