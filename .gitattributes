@@ -1,0 +1,7 @@
+# Keep source and project files diffable across platforms.
+* text=auto
+*.a binary
+*.bin binary
+*.elf binary
+*.hex binary
+*.pdf binary

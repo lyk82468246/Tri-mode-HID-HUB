@@ -80,3 +80,10 @@ API 可以取得当前页 PNG 渲染用于复查；当前 Gateway 下 PDF 导出
 - 打开 EDA 后确认隐藏网络端口确实在 GUI 中保持连接，并运行原生 ERC。
 - 对 C990 候选逐一替换为最终可采购、可查数据手册的具体料号；特别是 USB-C、USB-A、DB9、OLED/排针、晶振、天线和按键。
 - 重新核对 BQ24074、TPS63031、TPS61023、SY6280 的参数网络和电流预算，再进入 PCB。
+
+## 2026-09-12 固件工程纳入仓库
+
+1. 将本地 MounRiver Studio CH582M 空工程接入已有 GitHub 仓库，而不是创建一个与远端无关的新历史：本地 `main` 跟踪 `origin/main`，远端地址为 `https://github.com/lyk82468246/Tri-mode-HID-HUB.git`。
+2. 保留远端已有的 PCB/原理图设计记录，并把 `CH582M.wvproj`、`src/`、`Startup/`、`Ld/`、`RVMSIS/` 和 `StdPeriphDriver/` 作为固件工程加入同一仓库。
+3. 新增仓库级 `.gitignore` 和 `.gitattributes`：忽略 MounRiver 本机工作区及构建输出，保留可复现工程配置、源码、启动文件、链接脚本和随工程使用的 ISP 库。
+4. 当前加入的 `src/Main.c` 是 WCH 的 UART1 收发模板，尚不宣称已经实现三模 HID；后续固件功能必须继续以 `docs/pin-plan.md` 和实际芯片/SDK 文档为准。

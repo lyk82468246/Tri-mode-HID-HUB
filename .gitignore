@@ -1,0 +1,18 @@
+# MounRiver / Eclipse workspace state
+.mrs/
+.metadata/
+.settings/
+
+# Generated build and debug artifacts
+obj/
+Debug/
+Release/
+build/
+out/
+*.elf
+*.hex
+*.bin
+*.map
+*.lst
+*.o
+*.d
