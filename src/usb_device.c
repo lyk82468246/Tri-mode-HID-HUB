@@ -942,6 +942,11 @@ uint8_t UsbDevice_GetConfiguration(void)
     return g_usb_configuration;
 }
 
+uint8_t UsbDevice_IsReady(void)
+{
+    return (g_usb_configuration != 0u && g_usb_suspended == 0u) ? 1u : 0u;
+}
+
 uint8_t UsbDevice_GetKeyboardLeds(void)
 {
     return g_hid_keyboard_leds;

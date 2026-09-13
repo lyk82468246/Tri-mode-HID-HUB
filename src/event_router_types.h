@@ -51,13 +51,35 @@ typedef enum
     ROUTER_POLICY_BLE_ONLY,
     ROUTER_POLICY_USB_PREFERRED,
     ROUTER_POLICY_BLE_PREFERRED,
-    ROUTER_POLICY_BOTH
+    ROUTER_POLICY_BOTH,
+    ROUTER_POLICY_NONE
 } RouterOutputPolicy;
+
+#define ROUTER_OUTPUT_INDEX_USB        0u
+#define ROUTER_OUTPUT_INDEX_BLE        1u
+#define ROUTER_OUTPUT_SLOT_COUNT       2u
 
 #define ROUTER_FLAG_SNAPSHOT            (1u << 0)
 #define ROUTER_FLAG_RELEASE_ALL         (1u << 1)
 #define ROUTER_FLAG_FROM_ISR            (1u << 2)
 #define ROUTER_FLAG_OVERFLOW            (1u << 3)
+
+/* CDC/NUS control frame: [0xA5, 0x5A, command, argument]. */
+#define ROUTER_CONTROL_FRAME_LEN        4u
+#define ROUTER_CONTROL_MAGIC_0          0xA5u
+#define ROUTER_CONTROL_MAGIC_1          0x5Au
+#define ROUTER_CONTROL_SET_POLICY       0x01u
+#define ROUTER_CONTROL_SET_MASK         0x02u
+
+/* HID report availability uses one bit per logical report, independent of
+ * the transport-level Report ID.  The bit assignments match BLE HOGP. */
+#define ROUTER_HID_REPORT_MASK_NONE     0u
+#define ROUTER_HID_REPORT_MASK_KEYBOARD (1u << 0)
+#define ROUTER_HID_REPORT_MASK_MOUSE    (1u << 1)
+#define ROUTER_HID_REPORT_MASK_GAMEPAD  (1u << 2)
+#define ROUTER_HID_REPORT_MASK_ALL      (ROUTER_HID_REPORT_MASK_KEYBOARD | \
+                                         ROUTER_HID_REPORT_MASK_MOUSE | \
+                                         ROUTER_HID_REPORT_MASK_GAMEPAD)
 
 typedef struct
 {
@@ -134,7 +156,7 @@ typedef struct
     uint8_t connected;
     uint8_t keyboard_valid;
     uint8_t mouse_valid;
-    uint8_t reserved;
+    uint8_t gamepad_valid;
     KeyboardState keyboard;
     MouseState mouse;
     HidGamepadReport gamepad;
@@ -150,6 +172,11 @@ typedef struct
     uint32_t stream_tx_drop;
     uint32_t parser_error;
     uint32_t resync_count;
+    uint32_t output_switches;
+    uint32_t stream_unavailable_drop;
+    uint32_t mouse_unavailable_drop;
+    uint32_t mouse_delta_saturation;
+    uint32_t keyboard_merge_overflow;
 } RouterStats;
 
 typedef struct
@@ -157,12 +184,25 @@ typedef struct
     uint8_t task_id;
     uint8_t output_policy;
     uint8_t active_output_mask;
+    uint8_t active_stream_output_mask;
     uint8_t flags;
     uint16_t pending_events;
     uint16_t reserved;
     uint32_t next_sequence;
 
     InputSourceState source[ROUTER_SOURCE_COUNT];
+    KeyboardState merged_keyboard;
+    MouseState merged_mouse;
+    HidGamepadReport merged_gamepad;
+    MouseState pending_mouse[ROUTER_OUTPUT_SLOT_COUNT];
+    uint8_t pending_keyboard_mask;
+    uint8_t pending_mouse_mask;
+    uint8_t pending_gamepad_mask;
+    uint8_t output_available_mask;
+    uint8_t stream_available_mask;
+    uint8_t gamepad_source;
+    uint8_t merged_gamepad_valid;
+    uint8_t hid_report_available[ROUTER_OUTPUT_SLOT_COUNT];
     RouterStats stats;
 
     StaticSpscRing input_ring;

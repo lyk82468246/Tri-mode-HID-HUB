@@ -27,6 +27,27 @@ const uint8_t MacAddr[6] = {0x84, 0xC2, 0xE4, 0x03, 0x02, 0x02};
 
 static tmosTaskID g_firmware_task_id = INVALID_TASK_ID;
 
+static void Firmware_GetOutputAvailability(uint8_t *usb_hid_report_mask,
+                                           uint8_t *ble_hid_report_mask,
+                                           uint8_t *stream_available)
+{
+    uint8_t stream_mask = ROUTER_OUTPUT_NONE;
+
+    *usb_hid_report_mask = ROUTER_HID_REPORT_MASK_NONE;
+    *ble_hid_report_mask = ROUTER_HID_REPORT_MASK_NONE;
+    if(UsbDevice_IsReady())
+    {
+        *usb_hid_report_mask = ROUTER_HID_REPORT_MASK_ALL;
+        stream_mask |= ROUTER_OUTPUT_USB;
+    }
+    *ble_hid_report_mask = BleOutput_GetHidReportNotifyMask();
+    if(BleOutput_IsStreamReady())
+    {
+        stream_mask |= ROUTER_OUTPUT_BLE;
+    }
+    *stream_available = stream_mask;
+}
+
 #if(CH582M_M1_TEST_PATTERN)
 static void Firmware_TestKey(uint8_t pressed)
 {
@@ -49,6 +70,9 @@ static tmosEvents Firmware_ProcessEvent(tmosTaskID task_id, tmosEvents events)
 {
     uint8_t cdc_data[USB_DEVICE_CDC_PACKET_MAX];
     uint8_t cdc_length;
+    uint8_t usb_hid_report_mask;
+    uint8_t ble_hid_report_mask;
+    uint8_t stream_available;
     uint8_t i;
 
     (void)task_id;
@@ -71,6 +95,12 @@ static tmosEvents Firmware_ProcessEvent(tmosTaskID task_id, tmosEvents events)
         UartInput_Process();
         UsbHostHid_Process();
         BleOutput_ProcessInput();
+        Firmware_GetOutputAvailability(&usb_hid_report_mask,
+                                       &ble_hid_report_mask,
+                                       &stream_available);
+        EventRouter_SetHidReportAvailability(usb_hid_report_mask,
+                                             ble_hid_report_mask);
+        EventRouter_SetStreamAvailability(stream_available);
         EventRouter_Process();
         UsbDevice_ProcessTask();
         BleOutput_Process();
@@ -117,7 +147,7 @@ void Firmware_Init(void)
     UsbHostHid_Init();
     UsbDevice_Init();
     BleOutput_Init();
-    EventRouter_SetOutputMask(ROUTER_OUTPUT_BOTH);
+    EventRouter_SetOutputPolicy(ROUTER_POLICY_USB_PREFERRED);
 
     g_firmware_task_id = TMOS_ProcessEventRegister(Firmware_ProcessEvent);
     EventRouter_GetContext()->task_id = g_firmware_task_id;

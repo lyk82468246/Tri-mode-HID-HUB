@@ -1,6 +1,6 @@
 # 固件系统架构与六阶段 Roadmap
 
-状态：Architecture v0.5。Milestone 1 已落地 TMOS 基础、静态 SPSC Ring、USB Device HID/CDC 复合输出和 CDC 回送；Milestone 2 已落地 BLE HOGP/NUS-compatible 输出；Milestone 3 已落地 PS/2 与 UART 输入适配器；Milestone 4 已落地 USB Host HID 非阻塞枚举、轮询与固定上限报表解析。活跃链路策略和最终可靠性收口仍待后续里程碑。
+状态：Architecture v0.6。Milestone 1 已落地 TMOS 基础、静态 SPSC Ring、USB Device HID/CDC 复合输出和 CDC 回送；Milestone 2 已落地 BLE HOGP/NUS-compatible 输出；Milestone 3 已落地 PS/2 与 UART 输入适配器；Milestone 4 已落地 USB Host HID 非阻塞枚举、轮询与固定上限报表解析；Milestone 5 已落地 Event_Router 状态合并、USB/BLE 活跃策略、独立 HID/stream 可用性和恢复重同步。最终可靠性收口仍待后续里程碑。
 
 ## 0. 约束与芯片容量校准
 
@@ -49,6 +49,8 @@ USB 下行 Host ── USB2 Host/TMOS poll ─> usb_host_report_ring ─┘     
 
 关键原则是：输入适配器先产生统一的 `RouterEvent`，路由器再复制成具体输出队列项；路由器不直接调用 USB 或 BLE 发送函数。
 
+M5 中 HID 和 stream 各自经过策略选择。HID 活跃掩码由 USB configured/非 suspend 或 BLE HOGP 输入 CCCD 决定，且路由器按每个 Report ID 保存 HID 可用性；stream 活跃掩码由 USB configured/非 suspend 或 BLE NUS TX CCCD 决定。`USB_PREFERRED`/`BLE_PREFERRED` 只选择一个当前可用端，`BOTH` 向所有当前可用端复制；链路或单个 HID Report 从 active/可用集合移除时丢弃该端尚未发送的旧帧，重新可用时由状态快照重新填队列。
+
 ## 2. 统一中间格式
 
 ### 2.1 键盘：完整的 8 字节 Boot Keyboard Report
@@ -65,13 +67,13 @@ byte 2-7: six USB HID Usage IDs
 
 PS/2 使用 Set 2 扫描码状态机处理 `F0` break、`E0` extended 和 `E1` 特殊序列，再映射为 USB HID Usage ID。USB Host 先支持 Boot Keyboard，再按固定上限解析 Report Descriptor；两条路径最终都只能向 `router_input_ring` 投递 `ROUTER_EVENT_KEYBOARD_REPORT`。
 
-多键盘源的默认策略是按 Usage ID 去重后合并；超过 6 个非修饰键时进入 `ErrorRollOver`（Usage `0x01`）状态并置 `ROUTER_FLAG_OVERFLOW`。M5 再决定是否增加“单一输入源优先级”策略。源断开、解码溢出或重置时必须生成 release-all/resync，而不是保留旧状态。
+多键盘源的默认策略是按 Usage ID 去重后合并；超过 6 个非修饰键时进入 `ErrorRollOver`（Usage `0x01`）状态并置 `ROUTER_FLAG_OVERFLOW`。源断开、解码溢出或重置时生成 release-all/resync，而不是保留旧状态。手柄使用最后更新的有效源快照，鼠标按钮按源 OR 合并，位移不伪装成持久状态。
 
 ### 2.2 鼠标、手柄和数据流
 
 - 鼠标中间报表固定为 4 字节：`buttons, dx, dy, wheel`；位移使用二补码 `int8_t` 语义，线上的字节仍按原始 8 位传输。
 - 手柄中间报表先固定 8 字节槽位，具体按钮、Hat 和轴的含义由 M1 的 USB/BLE Report Map 定义；路由器不解析传输层 Report ID。
-- UART 数据不是键盘事件，先切成不超过 20 字节的 `ROUTER_EVENT_STREAM_DATA`。M2/M3 的默认 BLE ATT 有效负载预算为 20 字节；M5 完成 MTU/链路策略后才考虑放宽，USB CDC 可在输出端重新分片。
+- UART 数据不是键盘事件，先切成不超过 20 字节的 `ROUTER_EVENT_STREAM_DATA`。M5 为 USB CDC 和 BLE NUS 保留独立 stream 队列，并依据各自 configured/CCCD 状态生成活跃掩码；BLE ATT 默认有效负载仍按 20 字节处理，USB CDC 在输出端使用自己的端点包长。
 - PS/2 键盘和鼠标都在 GPIOA 时钟下降沿采样 DATA，TMOS 再消费 11 位帧（start、8 个 LSB-first data、odd parity、stop）。键盘解码 Set 2 的 `F0` break、`E0` extended 和 `E1` Pause 序列；鼠标先校验首字节同步位，再按标准 3 字节包生成 `buttons/dx/dy/wheel`，并把 PS/2 的正 Y 方向转换为 USB 的正 Y 方向。鼠标上电后发送 `F4` 进入数据报告模式，发送、ACK 和失败重试均为非阻塞状态机。
 
 ## 3. C 语言核心类型定义
@@ -120,6 +122,16 @@ typedef enum
     ROUTER_OUTPUT_BLE  = 1u << 1,
     ROUTER_OUTPUT_BOTH = ROUTER_OUTPUT_USB | ROUTER_OUTPUT_BLE
 } RouterOutputMask;
+
+typedef enum
+{
+    ROUTER_POLICY_USB_ONLY = 0,
+    ROUTER_POLICY_BLE_ONLY,
+    ROUTER_POLICY_USB_PREFERRED,
+    ROUTER_POLICY_BLE_PREFERRED,
+    ROUTER_POLICY_BOTH,
+    ROUTER_POLICY_NONE
+} RouterOutputPolicy;
 
 #define ROUTER_FLAG_SNAPSHOT   (1u << 0)
 #define ROUTER_FLAG_RELEASE_ALL (1u << 1)
@@ -200,7 +212,7 @@ typedef struct
     uint8_t connected;
     uint8_t keyboard_valid;
     uint8_t mouse_valid;
-    uint8_t reserved;
+    uint8_t gamepad_valid;
     KeyboardState keyboard;
     MouseState mouse;
     HidGamepadReport gamepad;
@@ -226,19 +238,37 @@ typedef struct
     uint32_t stream_tx_drop;
     uint32_t parser_error;
     uint32_t resync_count;
+    uint32_t output_switches;
+    uint32_t stream_unavailable_drop;
+    uint32_t mouse_unavailable_drop;
+    uint32_t mouse_delta_saturation;
+    uint32_t keyboard_merge_overflow;
 } RouterStats;
 
 typedef struct
 {
     uint8_t task_id;             /* 实际实现绑定 tmosTaskID */
     uint8_t output_policy;
-    uint8_t active_output_mask;
+    uint8_t active_output_mask;  /* HID active mask */
+    uint8_t active_stream_output_mask;
     uint8_t flags;
     uint16_t pending_events;     /* 实际实现绑定 tmosEvents */
     uint16_t reserved;
     uint32_t next_sequence;
 
     InputSourceState source[ROUTER_SOURCE_COUNT];
+    KeyboardState merged_keyboard;
+    MouseState merged_mouse;
+    HidGamepadReport merged_gamepad;
+    MouseState pending_mouse[2];
+    uint8_t pending_keyboard_mask;
+    uint8_t pending_mouse_mask;
+    uint8_t pending_gamepad_mask;
+    uint8_t output_available_mask;
+    uint8_t stream_available_mask;
+    uint8_t gamepad_source;
+    uint8_t merged_gamepad_valid;
+    uint8_t hid_report_available[2]; /* bit0 key, bit1 mouse, bit2 gamepad */
     RouterStats stats;
 
     StaticSpscRing input_ring;
@@ -249,11 +279,13 @@ typedef struct
 } Event_Router;
 ```
 
-`RouterEvent` 不携带 USB 或 BLE 的 Report ID；Report ID 属于输出端描述符。建议 USB HID 与 BLE HOGP 先统一使用：`1 = keyboard`、`2 = mouse`、`3 = gamepad`，最终以 M1/M2 的 Report Map 和主机兼容性测试为准。
+`RouterEvent` 不携带 USB 或 BLE 的 Report ID；Report ID 属于输出端描述符，M1/M2 已统一为 `1 = keyboard`、`2 = mouse`、`3 = gamepad`。`active_output_mask` 表示 HID 输出，`active_stream_output_mask` 表示 CDC/NUS 数据流输出；BLE HID CCCD 与 NUS CCCD 可以独立决定两者。
+
+M5 定义了一个不与普通透传混淆的控制帧：CDC 或 NUS 收到 `[0xA5, 0x5A, command, argument]` 时，`command=0x01` 设置 `RouterOutputPolicy`，`command=0x02` 设置 USB/BLE 输出掩码；无效命令计入 `parser_error`，普通数据不被吞掉。默认策略为 `USB_PREFERRED`，自动选择只在对应输出真正可用时激活。
 
 ## 4. 静态 Buffer 与所有权
 
-这些是整个项目的建议容量，定义应只出现在一个 `.c` 文件中；头文件只声明类型和接口。M1/M2/M3/M4 已实现 USB Device、CDC、BLE HOGP/NUS、PS/2 edge、UART RX 和 USB Host raw report 队列。容量不是越大越好，必须让 `.map` 文件证明 BLE/USB 栈、TMOS、应用状态、栈和余量都能放进 32KB SRAM。
+这些是整个项目的建议容量，定义应只出现在一个 `.c` 文件中；头文件只声明类型和接口。M1/M2/M3/M4/M5 已实现 USB Device、CDC、BLE HOGP/NUS、PS/2 edge、UART RX、USB Host raw report 队列和状态化路由。容量不是越大越好，必须让 `.map` 文件证明 BLE/USB 栈、TMOS、应用状态、栈和余量都能放进 32KB SRAM。
 
 ```c
 typedef struct
@@ -311,7 +343,7 @@ M4 的实际 USB Host 静态对象还包括：USB2 Host RX/TX DMA `64 B × 2`，
 | USB/BLE CDC/NUS 数据队列 | 8 × 24 B × 2 | 384 B |
 | 端点缓冲实际布局 | 192 B + 128 B × 3 | 576 B |
 | UART 分帧工作区 | 20 B | 20 B |
-| **M1/M2/M3/M4 规划应用侧合计（不含 BLE 堆）** |  | **约 5.5 KB，最终以 map 为准** |
+| **M1/M2/M3/M4/M5 规划应用侧合计（不含 BLE 堆）** |  | **约 5.6 KB，最终以 map 为准** |
 
 建议应用层所有静态对象（包括协议状态、固定 Report Descriptor map、统计量和测试注入队列）先控制在 8KB 以内，把剩余 SRAM 留给 BLE/USB/TMOS 和运行栈。最终以链接器 map、启动时栈水位和最坏并发场景为准。
 
@@ -332,7 +364,7 @@ M4 的实际 USB Host 静态对象还包括：USB2 Host RX/TX DMA `64 B × 2`，
 | `PS2_INPUT_TASK` | 消费 edge ring、Set 2 解码、更新源状态、投递键鼠快照 | ISR 中解析完整帧；死循环等待时钟 |
 | `UART_INPUT_TASK` | 消费 UART ring、协议分帧、投递 stream event | 阻塞等待换行/固定长度 |
 | `USB_HOST_TASK` | 枚举状态机、固定上限 Report Descriptor 解析、生成输入事件 | 动态建字段链表；在回调里做完整解析 |
-| `EVENT_ROUTER_TASK` | 合并源状态、选择输出、填充输出队列、处理 resync | 直接调用 USB/BLE 发送 API |
+| `EVENT_ROUTER_TASK` | 合并源状态、选择 HID/stream 输出、填充输出队列、处理 resync | 直接调用 USB/BLE 发送 API |
 | `USB_DEVICE_TASK` | 端点状态机、HID/CDC 发送与完成回调 | 从 ISR 直接提交长事务 |
 | `BLE_OUTPUT_TASK` | HOGP/NUS 连接状态、CCCD、MTU、通知发送重试 | 阻塞等待连接或动态无界重试 |
 
@@ -344,7 +376,7 @@ M2 的 BLE 外设任务已经按 WCH 官方外设流程接入：系统初始化 
 
 - HOGP 使用标准 HID Service `0x1812`，Report Map 为 193 B，Report ID 与 USB 描述符保持一致：`1 = keyboard`、`2 = mouse`、`3 = gamepad`。键盘、鼠标和手柄均有独立输入 Report Characteristic 与 CCCD，并提供 Boot Keyboard/Mouse；Protocol Mode 在 Report/Boot 之间选择对应输入特征。
 - NUS-compatible 使用 Nordic UART Service 的标准 128 位 UUID。RX 接收 Write/Write Without Response 后只把最多 20 B 复制进 `BleNusRxFrame[4]` 静态 SPSC Ring；TMOS 再以 `ROUTER_SRC_BLE_NUS` 注入 `EventRouter`。TX 受 CCCD 和 `ATT_GetMTU(conn) - 3` 限制，当前默认分片上限为 20 B。
-- 路由器把每个 HID/数据帧分别复制到 USB 与 BLE 队列，BLE 后端用 `Peek` 在连接、CCCD 或发送资源暂不可用时保留队首；每个 2 ms 周期最多尝试一帧 HID 和一帧 NUS，避免忙等和无界重试。M2 联调默认 `ROUTER_OUTPUT_BOTH`，M5 再依据 USB configured、BLE connection/CCCD 状态实现自动活跃链路策略。
+- 路由器按策略生成 HID 与 stream 两套活跃掩码，并把每个输出端的值复制到独立队列。BLE 后端用 `Peek` 在连接、CCCD 或发送资源暂不可用时保留队首；每个 2 ms 周期最多尝试一帧 HID 和一帧 NUS，避免忙等和无界重试。HID 队列满时由 pending 位保留最新完整状态，输出断开时清理旧队列，恢复时执行键盘/鼠标/手柄 resync。
 - 断链时复位 HID/NUS CCCD 和 BLE 连接状态，不把 DMA 或 Ring 内存地址交给协议栈长期持有。`GATT_bm_alloc()` 成功后由 WCH BLE 栈接管报文，失败则由应用立即 `GATT_bm_free()`；这是 SDK 规定的栈报文池接口，不是应用层 libc `malloc/free`。
 
 M2 的代码级验收已通过 MounRiver 自带 RISC-V GCC 8.2.0 交叉编译、`-Wall -Wextra -fsyntax-only`、工程 JSON/XML 解析和 ELF 静态对象检查：Flash `155,436 B / 448 KB`，RAM `20,204 B / 32 KB`；HOGP Report Map、GATT 属性表、CCCD 数量和静态 NUS RX Ring 均已进入最终镜像。电脑/手机实际 BLE 配对、CCCD 写入、HID 收发和 MTU 协商仍需在 CH582M 开发板上执行，不能由交叉编译替代。
@@ -418,7 +450,7 @@ M4 代码验收已通过 RISC-V GCC 8.2.0 全工程语法检查、交叉链接�
 
 代码验收：固定 DMA、非阻塞 EP0 控制传输、配置/HID/Report Descriptor 解析、Boot Keyboard/Mouse 轮询、Report ID/短报表/拔插/错误恢复已进入 `src/usb_host_hid.c`，并通过交叉编译与静态审计。硬件验收：外接至少两种键盘、两种鼠标和一个不同 Report ID 的 HID 设备可枚举；报表转成与 PS/2 相同的 `RouterEvent`；热插拔、短报表和不支持的 HID 不会破坏已连接的 USB Device/BLE 输出。
 
-### Milestone 5：Event_Router、活跃上行链路与全链路合并
+### Milestone 5：Event_Router、活跃上行链路与全链路合并（代码完成，硬件验收待执行）
 
 范围：
 
@@ -442,4 +474,4 @@ M4 代码验收已通过 RISC-V GCC 8.2.0 全工程语法检查、交叉链接�
 
 ## 10. 后续实现纪律
 
-下一轮只实现 M5，不提前扩展 M6 的 PCB/长期可靠性收口。每个新模块先给出：输入/输出队列、静态内存大小、TMOS 事件位、所有权、溢出策略和验收用例，然后再写 `.c/.h`。
+下一轮只实现 M6，不提前扩展 PCB 迁移之外的协议功能。每个新模块先给出：输入/输出队列、静态内存大小、TMOS 事件位、所有权、溢出策略和验收用例，然后再写 `.c/.h`。

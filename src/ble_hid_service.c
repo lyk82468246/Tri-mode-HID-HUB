@@ -540,6 +540,34 @@ uint8_t BleHidService_IsReportNotifyEnabled(uint16_t connection_handle,
              GATT_CLIENT_CFG_NOTIFY) != 0u);
 }
 
+uint8_t BleHidService_GetReportNotifyMask(uint16_t connection_handle)
+{
+    uint8_t mask = 0u;
+
+    if(BleHidService_IsReportNotifyEnabled(connection_handle,
+                                            BLE_HID_REPORT_ID_KEYBOARD))
+    {
+        mask |= BLE_HID_REPORT_NOTIFY_MASK_KEYBOARD;
+    }
+    if(BleHidService_IsReportNotifyEnabled(connection_handle,
+                                            BLE_HID_REPORT_ID_MOUSE))
+    {
+        mask |= BLE_HID_REPORT_NOTIFY_MASK_MOUSE;
+    }
+    if(BleHidService_IsReportNotifyEnabled(connection_handle,
+                                            BLE_HID_REPORT_ID_GAMEPAD))
+    {
+        mask |= BLE_HID_REPORT_NOTIFY_MASK_GAMEPAD;
+    }
+    return mask;
+}
+
+uint8_t BleHidService_IsAnyReportNotifyEnabled(uint16_t connection_handle)
+{
+    return (BleHidService_GetReportNotifyMask(connection_handle) != 0u) ?
+               1u : 0u;
+}
+
 bStatus_t BleHidService_Notify(uint16_t connection_handle,
                                uint8_t report_id,
                                const uint8_t *data,

@@ -385,6 +385,33 @@ uint8_t BleOutput_IsConnected(void)
     return g_ble_output_connected;
 }
 
+uint8_t BleOutput_IsReady(void)
+{
+    return (BleOutput_IsHidReady() || BleOutput_IsStreamReady()) ? 1u : 0u;
+}
+
+uint8_t BleOutput_IsHidReady(void)
+{
+    return (BleOutput_GetHidReportNotifyMask() != 0u) ? 1u : 0u;
+}
+
+uint8_t BleOutput_GetHidReportNotifyMask(void)
+{
+    if(!g_ble_output_connected)
+    {
+        return 0u;
+    }
+    return BleHidService_GetReportNotifyMask(
+        g_ble_output_connection_handle);
+}
+
+uint8_t BleOutput_IsStreamReady(void)
+{
+    return (g_ble_output_connected &&
+            BleNusService_IsTxNotifyEnabled(
+                g_ble_output_connection_handle)) ? 1u : 0u;
+}
+
 uint16_t BleOutput_GetConnectionHandle(void)
 {
     return g_ble_output_connection_handle;

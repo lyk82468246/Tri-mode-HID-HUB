@@ -138,3 +138,14 @@ API 可以取得当前页 PNG 渲染用于复查；当前 Gateway 下 PDF 导出
 6. 完成拔出释放快照、事务超时/STALL/描述符错误统计和 100 ms 后非阻塞重新枚举；`tmos_app.c` 将 Host 服务放在 PS/2/UART 之后、`EventRouter_Process()` 之前，保证原始报表在同一 TMOS 周期进入统一路由。
 7. 使用 MounRiver Studio 自带 RISC-V Embedded GCC 8.2.0 完成全工程语法检查和交叉链接：Flash `166,832 B / 448 KB`，RAM `24,572 B / 32 KB`；工程 XML/JSON 解析、ELF 静态对象大小和动态分配调用审计通过。
 8. 尚未接入 CH582M 开发板执行 USB-A VBUS、PB13/PB12、键鼠枚举、不同 Report ID、短报表、热插拔和 USB Device/BLE 并发物理验收；代码完成后按顺序进入 M5，实施活跃上行链路与多源状态合并。
+
+## 2026-09-13 Milestone 5：Event_Router 全链路合并与活跃上行策略
+
+1. 将 `Event_Router` 从“事件直接复制到输出队列”改为统一状态源：每个输入源保存键盘、鼠标和手柄状态，键盘按 Usage ID 去重合并，鼠标按钮按源 OR 合并，手柄采用最后更新的有效源快照。
+2. 为 HID 与 stream 分别维护 USB/BLE 可用性和活跃掩码。USB 由 configured 且非 suspend 判定；BLE HID 按每个 Report ID 的 HOGP 输入 CCCD 判定，BLE stream 由连接与 NUS TX CCCD 判定；单个未订阅 BLE HID Report 不进入共用队列，避免 HOGP/NUS 或不同 HID Report 之间队首阻塞。
+3. 实现 `USB_ONLY`、`BLE_ONLY`、`BOTH`、`USB_PREFERRED`、`BLE_PREFERRED` 和 `NONE` 策略；默认使用 `USB_PREFERRED`，策略变化和输出断链会清理该输出的旧队列，恢复时重新投递当前完整键盘/鼠标/手柄快照。
+4. HID 队列满时不等待、不丢弃最新状态：键盘/手柄保留 pending 位，鼠标按输出保留饱和后的增量和按钮状态；数据流保持固定 20 B 分片，输出不可用或 stream 队列满时增加对应统计量。
+5. 增加 CDC/NUS 显式控制帧 `[0xA5, 0x5A, command, argument]`：`0x01` 设置策略，`0x02` 设置输出掩码；只有来源为 CDC/NUS 且帧头/命令有效时才解释，普通串口数据继续走 `STREAM_DATA`。
+6. 增加 USB `IsReady`、BLE HOGP/NUS ready 状态接口，并在 `tmos_app.c` 每个 2 ms 周期将状态送入路由器；路由器不直接调用 USB/BLE 发送 API，仍由各自后端消费独立 Ring。
+7. 使用本机 MounRiver Studio 自带 RISC-V GCC 8.2.0 完成 M5 全工程交叉链接：Flash `170,000 B / 448 KB`，RAM `24,636 B / 32 KB`；`Event_Router` ELF 静态对象为 `0x184 B`，应用层无 libc `malloc/free`，语法检查、链接和 `git diff --check` 通过。
+8. 尚未接入 CH582M 开发板执行多源同时按键、鼠标增量、CDC/NUS 控制帧、USB/BLE 切换、HID/NUS CCCD 独立状态和断链恢复物理验收；下一阶段进入 M6，进行资源、长期可靠性和 PCB 收口。
