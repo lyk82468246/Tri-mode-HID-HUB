@@ -9,7 +9,8 @@
  * The producer owns head and the consumer owns tail.  The implementation
  * deliberately stores values, rather than pointers into DMA or endpoint
  * memory, so an ISR can publish a complete item atomically from the point of
- * view of the consumer.
+ * view of the consumer.  Clear is a coordinated reset operation: the
+ * caller must quiesce the producer and consumer while it advances tail.
  */
 typedef struct
 {

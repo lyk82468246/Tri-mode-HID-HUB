@@ -96,8 +96,8 @@ uint8_t StaticSpscRing_Peek(const StaticSpscRing *ring, void *item)
 
 void StaticSpscRing_Clear(StaticSpscRing *ring)
 {
-    /* Only the consumer calls Clear.  Publishing tail makes all currently
-     * queued values disposable while preserving the producer's head. */
+    /* Clear is only safe while producer and consumer are quiesced.  TMOS
+     * uses it for output failover before the backend consumers run. */
     StaticSpscRing_MemoryBarrier();
     ring->tail = ring->head;
     StaticSpscRing_MemoryBarrier();

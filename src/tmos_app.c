@@ -2,6 +2,7 @@
 
 #include "ble_output.h"
 #include "event_router.h"
+#include "firmware_diagnostics.h"
 #include "ps2_input.h"
 #include "tmos_app.h"
 #include "uart_input.h"
@@ -74,11 +75,13 @@ static tmosEvents Firmware_ProcessEvent(tmosTaskID task_id, tmosEvents events)
     uint8_t ble_hid_report_mask;
     uint8_t stream_available;
     uint8_t i;
+    uint32_t service_start_cycles;
 
     (void)task_id;
 
     if(events & FIRMWARE_SERVICE_EVENT)
     {
+        service_start_cycles = FirmwareDiagnostics_BeginService();
         /* CDC RX is copied by the USB ISR; framing and routing happen here. */
         for(i = 0; i < 4u; ++i)
         {
@@ -95,6 +98,7 @@ static tmosEvents Firmware_ProcessEvent(tmosTaskID task_id, tmosEvents events)
         UartInput_Process();
         UsbHostHid_Process();
         BleOutput_ProcessInput();
+        FirmwareDiagnostics_SampleQueues();
         Firmware_GetOutputAvailability(&usb_hid_report_mask,
                                        &ble_hid_report_mask,
                                        &stream_available);
@@ -102,8 +106,11 @@ static tmosEvents Firmware_ProcessEvent(tmosTaskID task_id, tmosEvents events)
                                              ble_hid_report_mask);
         EventRouter_SetStreamAvailability(stream_available);
         EventRouter_Process();
+        FirmwareDiagnostics_SampleQueues();
         UsbDevice_ProcessTask();
         BleOutput_Process();
+        FirmwareDiagnostics_EndService(service_start_cycles);
+        FirmwareDiagnostics_FeedWatchdog();
         if(g_firmware_task_id != INVALID_TASK_ID)
         {
             tmos_start_reload_task(g_firmware_task_id,
@@ -137,6 +144,7 @@ static tmosEvents Firmware_ProcessEvent(tmosTaskID task_id, tmosEvents events)
 
 void Firmware_Init(void)
 {
+    FirmwareDiagnostics_Init();
     /* WCH BLE SDK/TMOS runtime initialization. */
     CH58X_BLEInit();
     HAL_Init();

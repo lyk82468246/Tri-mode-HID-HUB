@@ -149,3 +149,13 @@ API 可以取得当前页 PNG 渲染用于复查；当前 Gateway 下 PDF 导出
 6. 增加 USB `IsReady`、BLE HOGP/NUS ready 状态接口，并在 `tmos_app.c` 每个 2 ms 周期将状态送入路由器；路由器不直接调用 USB/BLE 发送 API，仍由各自后端消费独立 Ring。
 7. 使用本机 MounRiver Studio 自带 RISC-V GCC 8.2.0 完成 M5 全工程交叉链接：Flash `170,000 B / 448 KB`，RAM `24,636 B / 32 KB`；`Event_Router` ELF 静态对象为 `0x184 B`，应用层无 libc `malloc/free`，语法检查、链接和 `git diff --check` 通过。
 8. 尚未接入 CH582M 开发板执行多源同时按键、鼠标增量、CDC/NUS 控制帧、USB/BLE 切换、HID/NUS CCCD 独立状态和断链恢复物理验收；下一阶段进入 M6，进行资源、长期可靠性和 PCB 收口。
+
+## 2026-09-13 Milestone 6：资源、可靠性和开发板收口准备
+
+1. 新增 `src/firmware_diagnostics.c/.h`，使用 44 B 固定运行态和 184 B 缓存快照（合计 228 B）记录 2 ms TMOS 服务周期的最近/最大执行周期、超时次数、复位原因、系统时钟和 USB/BLE/Router Ring 高水位，并通过 `FirmwareDiagnosticsSnapshot` 汇总 Router、PS/2、UART、USB Host 和 BLE NUS 统计。
+2. 看门狗支持通过 `FIRMWARE_DIAGNOSTICS_WATCHDOG_ENABLE=1` 显式开启，默认关闭；启用后只在完整固件服务周期结束时喂狗，避免服务卡死后继续运行。实际超时和复位行为必须在开发板上测量。
+3. 强化 `EventRouter_Post()` 的报表长度校验，禁止异常长度进入固定格式解析器；USB Host 枚举/传输进入错误恢复时先投递键盘/鼠标释放快照，避免重枚举期间遗留 stuck key/button。
+4. 明确 `StaticSpscRing_Clear()` 的协同复位前提：只有在生产者/消费者静默时清理；TMOS 路由器在输出后端消费前执行 failover 清队列，符合当前单任务执行顺序。
+5. 新增 [`docs/m6-validation.md`](m6-validation.md)，固定代码验收、复位/USB/BLE/多源/溢出/8 h 长稳测试矩阵、诊断快照记录方法和开发板到首版 PCB 的引脚/电源/电平/RF 复核条件。
+6. 使用本机 MounRiver Studio 自带 RISC-V GCC 8.2.0 完成 M6 全工程交叉链接：Flash `170,796 B / 448 KB`，RAM `24,868 B / 32 KB`；全量 `src/` 语法检查、应用层动态分配审计、USB Host 阻塞 helper 审计和工程 XML/JSON 解析通过。
+7. 尚未执行开发板物理验收和 PCB 迁移；M6 代码验收后，下一步只执行 `docs/m6-validation.md` 中的实测、缺陷修复和硬件收口，不新增协议功能。

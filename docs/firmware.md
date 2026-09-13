@@ -8,10 +8,11 @@
 CH582M.wvproj       MounRiver 工程入口
 CH582M.launch       调试启动配置
 src/Main.c          TMOS 应用入口
-src/tmos_app.c      TMOS 任务和 M1/M2/M3/M4/M5 服务周期
+src/tmos_app.c      TMOS 任务和 M1/M2/M3/M4/M5/M6 服务周期
 src/usb_device.c    USB Device HID/CDC 复合控制器
 src/event_router.c  输入事件与输出队列路由
 src/static_spsc_ring.c  固定容量 SPSC Ring 实现
+src/firmware_diagnostics.c  M6 服务耗时、Ring 高水位和故障统计
 src/board_pins.h       开发板/首版 PCB 引脚覆盖层
 src/ble_hid_service.c   BLE HOGP HID Service
 src/ble_nus_service.c   BLE NUS-compatible Service
@@ -35,6 +36,12 @@ M1/M2/M3/M4/M5 已把输入到多路输出的台架链路接入工程：`Main.c`
 M5 的 `Event_Router` 是规范化 HID 状态的唯一拥有者：每个输入源保存自己的键盘/鼠标/手柄状态，键盘按 Usage ID 去重并合并修饰键，鼠标按钮按源 OR 合并、位移按输出端分别累积，手柄采用最后更新的有效源快照。HID 队列满时不阻塞 TMOS，而是保留最新状态的 pending 位；USB/BLE 重新可用时清掉旧队列并发送当前完整键盘、鼠标、手柄快照。
 
 输出策略由 `EventRouter_SetOutputPolicy()` 选择：`USB_ONLY`、`BLE_ONLY`、`BOTH`、`USB_PREFERRED`、`BLE_PREFERRED` 和 `NONE`。默认是 `USB_PREFERRED`；USB HID/CDC 只有在 configured 且未 suspend 时可用，BLE HID 按每个 Report ID 的 HOGP CCCD、NUS 按 TX CCCD 分别计算可用性，因此只有 NUS 可用时不会把 HID 队列当作 NUS 数据发送；未订阅的 BLE HID Report 不会进入共用发送队列，避免队首阻塞。CDC/NUS 收到 `[0xA5, 0x5A, command, argument]` 四字节控制帧时，仅在来源为 CDC/NUS 且命令有效的情况下切换策略；普通数据仍按 `STREAM_DATA` 透传。
+
+## Milestone 6 当前状态
+
+M6 已加入 `FirmwareDiagnostics` 固定内存诊断模块：TMOS 每个 2 ms 服务周期在输入消费前后采样各 Ring 深度，并记录服务执行周期、超时次数、复位原因和最大高水位；`FirmwareDiagnostics_GetSnapshot()` 汇总 Router、PS/2、UART、USB Host 和 BLE NUS 的统计。代码不改变协议格式，也不引入 FreeRTOS 或运行时 `malloc/free`。
+
+看门狗通过 `FIRMWARE_DIAGNOSTICS_WATCHDOG_ENABLE` 编译宏选择，默认关闭；只有完成开发板供电/复位和 WCH-Link 观察后才应打开。M6 的物理测试矩阵、记录格式和 PCB 迁移退出条件见 [`docs/m6-validation.md`](m6-validation.md)，当前不能把交叉编译结果当作硬件验收。
 
 当前 USB Device 描述符采用一个 HID 接口加一个 CDC ACM 功能：
 
@@ -60,9 +67,9 @@ USB VID/PID `0x1209:0x5820` 仅为开发阶段占位值，发布前必须更换�
 
 系统级数据流、静态内存布局、Ring Buffer 所有权和六阶段开发顺序见 [`docs/firmware-architecture.md`](firmware-architecture.md)。后续实现严格按 M1 至 M6 逐阶段推进。
 
-## M5 静态内存与任务边界
+## M6 静态内存与任务边界
 
-M1/M2/M3/M4/M5 的主要静态分配如下，所有可变 Buffer 均使用 4 字节对齐：
+M1/M2/M3/M4/M5/M6 的主要静态分配如下，所有可变 Buffer 均使用 4 字节对齐：
 
 | 对象 | 容量 |
 |---|---:|
@@ -84,6 +91,7 @@ M1/M2/M3/M4/M5 的主要静态分配如下，所有可变 Buffer 均使用 4 字
 | USB Host HID parser/interface 状态 | `UsbHostHidInterface[2]`，含 24 个固定字段槽位/接口 |
 | USB Host 原始报表 Ring | `UsbHostHidRawReport[4]`，每帧 64 B 有效数据 |
 | Event_Router 状态 | 388 B；源状态、合并快照、输出 pending 位和统计量 |
+| FirmwareDiagnostics 运行态与最近快照 | 228 B（44 B 运行态 + 184 B 快照）；服务计时、超时计数、Ring 高水位和汇总统计 |
 
 ISR 不解析 HID、不调用路由器，也不等待发送完成。PS/2 GPIOA ISR 只读取对应 DATA 电平并入 edge Ring，UART1 ISR 只排空 FIFO 并保存线路状态，EP2 OUT ISR 只完成有限长度复制和入队；GATT 写回调只复制 NUS RX 数据到静态 Ring。PS/2 鼠标发 `F4` 时，ISR 只推进数据位/ACK 的时序状态，协议解析、UART/PS/2 解码、CDC 回送、HOGP/NUS 通知和输出端点提交都在 TMOS 上下文中执行。Ring 为 SPSC，满时返回资源错误或增加对应计数，不能把 DMA 地址或局部变量指针交给异步消费者。
 
@@ -96,6 +104,6 @@ ISR 不解析 HID、不调用路由器，也不等待发送完成。PS/2 GPIOA I
 
 若要启用 M1 的台架按键注入，在工程 C 预处理宏中临时加入 `CH582M_M1_TEST_PATTERN=1` 后重新 Build；默认值为 0，不会自动向主机发送按键。CDC 验收可从主机向 CDC OUT 写入最多 64 字节，设备应在下一个 TMOS 周期通过 CDC IN 回送。
 
-本机 MRS 自带 RISC-V GCC 8.2.0 的 M5 交叉编译结果为：代码 Flash 使用 170,000 B / 448 KB，RAM 使用 24,636 B / 32 KB（含 WCH BLE 库、外设驱动和应用，最终仍以 MRS 生成的 map 为准）。若 MRS GUI 重新生成工程配置，应确认 `BLE/HAL/include`、`BLE/LIB`、`CH58xBLE`、UART1/GPIOA 中断入口、USB2 Host 源文件和上述预处理宏没有丢失。
+本机 MRS 自带 RISC-V GCC 8.2.0 的 M6 交叉编译结果为：代码 Flash 使用 170,796 B / 448 KB，RAM 使用 24,868 B / 32 KB（含 WCH BLE 库、外设驱动和应用，最终仍以 MRS 生成的 map 为准）。若 MRS GUI 重新生成工程配置，应确认 `BLE/HAL/include`、`BLE/LIB`、`CH58xBLE`、UART1/GPIOA 中断入口、USB2 Host 源文件、`src/firmware_diagnostics.c` 和上述预处理宏没有丢失。
 
 不同版本的 MounRiver Studio 可能使用不同的 SDK 安装路径；工程文件保留了芯片、编译器、链接脚本和下载目标配置，但不把本机 SDK 安装目录写入仓库。

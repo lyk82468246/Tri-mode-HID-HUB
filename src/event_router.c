@@ -55,6 +55,33 @@ static uint8_t EventRouter_IsValidKind(uint8_t kind)
     return (kind <= ROUTER_EVENT_SOURCE_RESYNC) ? 1u : 0u;
 }
 
+static uint8_t EventRouter_IsValidEventLength(uint8_t kind,
+                                              uint8_t length)
+{
+    switch(kind)
+    {
+        case ROUTER_EVENT_KEYBOARD_REPORT:
+            return (length == HID_KEYBOARD_REPORT_LEN) ? 1u : 0u;
+
+        case ROUTER_EVENT_MOUSE_REPORT:
+            return (length == HID_MOUSE_REPORT_LEN) ? 1u : 0u;
+
+        case ROUTER_EVENT_GAMEPAD_REPORT:
+            return (length == HID_GAMEPAD_REPORT_LEN) ? 1u : 0u;
+
+        case ROUTER_EVENT_STREAM_DATA:
+            return (length <= STREAM_CHUNK_MAX_LEN) ? 1u : 0u;
+
+        case ROUTER_EVENT_SOURCE_UP:
+        case ROUTER_EVENT_SOURCE_DOWN:
+        case ROUTER_EVENT_SOURCE_RESYNC:
+            return (length == 0u) ? 1u : 0u;
+
+        default:
+            return 0u;
+    }
+}
+
 static uint8_t EventRouter_OutputBitForSlot(uint8_t slot)
 {
     return (slot == ROUTER_OUTPUT_INDEX_BLE) ?
@@ -463,6 +490,7 @@ uint8_t EventRouter_Post(const RouterEvent *event)
     }
     if(!EventRouter_IsValidSource(event->source) ||
        !EventRouter_IsValidKind(event->kind) ||
+       !EventRouter_IsValidEventLength(event->kind, event->length) ||
        (event->length > ROUTER_EVENT_PAYLOAD_LEN))
     {
         g_event_router.stats.parser_error++;

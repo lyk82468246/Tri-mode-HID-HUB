@@ -1,6 +1,6 @@
 # 固件系统架构与六阶段 Roadmap
 
-状态：Architecture v0.6。Milestone 1 已落地 TMOS 基础、静态 SPSC Ring、USB Device HID/CDC 复合输出和 CDC 回送；Milestone 2 已落地 BLE HOGP/NUS-compatible 输出；Milestone 3 已落地 PS/2 与 UART 输入适配器；Milestone 4 已落地 USB Host HID 非阻塞枚举、轮询与固定上限报表解析；Milestone 5 已落地 Event_Router 状态合并、USB/BLE 活跃策略、独立 HID/stream 可用性和恢复重同步。最终可靠性收口仍待后续里程碑。
+状态：Architecture v0.7。Milestone 1 已落地 TMOS 基础、静态 SPSC Ring、USB Device HID/CDC 复合输出和 CDC 回送；Milestone 2 已落地 BLE HOGP/NUS-compatible 输出；Milestone 3 已落地 PS/2 与 UART 输入适配器；Milestone 4 已落地 USB Host HID 非阻塞枚举、轮询与固定上限报表解析；Milestone 5 已落地 Event_Router 状态合并、USB/BLE 活跃策略、独立 HID/stream 可用性和恢复重同步；Milestone 6 已加入运行时诊断、服务预算和 USB Host 错误释放保护。开发板长稳与 PCB 收口仍待执行。
 
 ## 0. 约束与芯片容量校准
 
@@ -283,9 +283,11 @@ typedef struct
 
 M5 定义了一个不与普通透传混淆的控制帧：CDC 或 NUS 收到 `[0xA5, 0x5A, command, argument]` 时，`command=0x01` 设置 `RouterOutputPolicy`，`command=0x02` 设置 USB/BLE 输出掩码；无效命令计入 `parser_error`，普通数据不被吞掉。默认策略为 `USB_PREFERRED`，自动选择只在对应输出真正可用时激活。
 
+M6 在 TMOS 服务周期前后采样 Router 各 Ring 的深度，并以 `FirmwareDiagnosticsSnapshot` 提供服务执行周期、超时次数、复位原因、Ring 高水位、Router/PS/2/UART/USB Host/NUS 统计。看门狗由编译宏显式开启且默认关闭；物理验收步骤和 PCB 迁移退出条件见 [`docs/m6-validation.md`](m6-validation.md)。
+
 ## 4. 静态 Buffer 与所有权
 
-这些是整个项目的建议容量，定义应只出现在一个 `.c` 文件中；头文件只声明类型和接口。M1/M2/M3/M4/M5 已实现 USB Device、CDC、BLE HOGP/NUS、PS/2 edge、UART RX、USB Host raw report 队列和状态化路由。容量不是越大越好，必须让 `.map` 文件证明 BLE/USB 栈、TMOS、应用状态、栈和余量都能放进 32KB SRAM。
+这些是整个项目的建议容量，定义应只出现在一个 `.c` 文件中；头文件只声明类型和接口。M1/M2/M3/M4/M5/M6 已实现 USB Device、CDC、BLE HOGP/NUS、PS/2 edge、UART RX、USB Host raw report 队列、状态化路由和运行时诊断。容量不是越大越好，必须让 `.map` 文件证明 BLE/USB 栈、TMOS、应用状态、栈和余量都能放进 32KB SRAM。
 
 ```c
 typedef struct
@@ -343,7 +345,8 @@ M4 的实际 USB Host 静态对象还包括：USB2 Host RX/TX DMA `64 B × 2`，
 | USB/BLE CDC/NUS 数据队列 | 8 × 24 B × 2 | 384 B |
 | 端点缓冲实际布局 | 192 B + 128 B × 3 | 576 B |
 | UART 分帧工作区 | 20 B | 20 B |
-| **M1/M2/M3/M4/M5 规划应用侧合计（不含 BLE 堆）** |  | **约 5.6 KB，最终以 map 为准** |
+| FirmwareDiagnostics 运行态与最近快照 | 228 B（44 B + 184 B） | 服务计时、超时、Ring 高水位和汇总统计 |
+| **M1/M2/M3/M4/M5/M6 规划应用侧合计（不含 BLE 堆）** |  | **约 5.9 KB，最终以 map 为准** |
 
 建议应用层所有静态对象（包括协议状态、固定 Report Descriptor map、统计量和测试注入队列）先控制在 8KB 以内，把剩余 SRAM 留给 BLE/USB/TMOS 和运行栈。最终以链接器 map、启动时栈水位和最坏并发场景为准。
 
@@ -461,17 +464,18 @@ M4 代码验收已通过 RISC-V GCC 8.2.0 全工程语法检查、交叉链接�
 
 验收：PS/2、USB Host、UART 的输入可按策略到达 USB Device、BLE HOGP、CDC/NUS；切换链路不会产生 stuck key；上行暂时不可用时不阻塞输入任务；恢复后能发送最新完整快照而不是过期指针。
 
-### Milestone 6：资源、可靠性和开发板到 PCB 的收口
+### Milestone 6：资源、可靠性和开发板到 PCB 的收口（诊断代码完成，硬件验收待执行）
 
 范围：
 
 - 以 map 文件核对代码 Flash、DataFlash、SRAM、C 栈、TMOS/BLE/USB 保留区；做源码和链接产物的动态分配审计。
 - 做长时间输入、快速拔插、USB reset、BLE 重连、MTU 变化、队列溢出和同时多源输入测试。
 - 记录端到端延迟、丢包/丢帧计数、最大任务执行时间和 SRAM 峰值；补齐故障恢复与诊断日志。
+- 使用 `FirmwareDiagnostics_GetSnapshot()` 读取服务周期、超时、高水位和各模块统计；可选看门狗只在开发板电源/复位路径确认后启用。
 - 最后才把开发板连线映射到自制 PCB，复核 USB 电源、PS/2 电平、WCH-Link、RF 和引脚复用。
 
-验收：所有定义的功能有可复现实验步骤；无应用层 `malloc/free`；错误可恢复或明确报告；在目标容量和最坏并发下有余量；PCB 迁移只改变 board/pin 层，不改变 router 中间格式。
+验收：所有定义的功能有可复现实验步骤；无应用层 `malloc/free`；错误可恢复或明确报告；在目标容量和最坏并发下有余量；开发板测试矩阵有记录；PCB 迁移只改变 board/pin 层，不改变 router 中间格式。
 
 ## 10. 后续实现纪律
 
-下一轮只实现 M6，不提前扩展 PCB 迁移之外的协议功能。每个新模块先给出：输入/输出队列、静态内存大小、TMOS 事件位、所有权、溢出策略和验收用例，然后再写 `.c/.h`。
+M6 代码已完成，后续只执行开发板测试、缺陷修复和 PCB 收口，不新增协议功能。任何修复仍需说明输入/输出队列、静态内存、TMOS 事件位、所有权、溢出策略和验收用例。

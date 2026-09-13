@@ -255,8 +255,12 @@ static uint8_t g_usb_host_error_ticks;
 static uint16_t g_usb_host_config_length;
 static uint8_t g_usb_host_keyboard_seen;
 static uint8_t g_usb_host_mouse_seen;
+static uint8_t g_usb_host_keyboard_release_pending;
+static uint8_t g_usb_host_mouse_release_pending;
 static uint8_t g_usb_host_device_address;
 static uint8_t g_usb_host_configuration_value;
+
+static void UsbHostHid_InjectReleaseAll(void);
 
 static void UsbHostHid_Copy(uint8_t *dst, const uint8_t *src, uint16_t length)
 {
@@ -1323,7 +1327,15 @@ static uint8_t UsbHostHid_ParseConfiguration(void)
 
 static void UsbHostHid_SetError(void)
 {
+    /* Enumeration/transfer failure can happen while a prior report is still
+     * logically pressed.  Release it before retrying so recovery cannot
+     * leave a stuck key or button in the canonical router state. */
+    UsbHostHid_InjectReleaseAll();
     UsbHostHid_StopTransfer();
+    /* The raw-report producer is this TMOS task, so after stopping the
+     * transaction it is safe to discard reports that belong to the failed
+     * enumeration/session. */
+    StaticSpscRing_Clear(&g_usb_host_report_ring);
     g_usb_host_control.running = 0u;
     g_usb_host_ready = 0u;
     g_usb_host_state = USB_HOST_STATE_ERROR;
@@ -1338,22 +1350,38 @@ static void UsbHostHid_InjectReleaseAll(void)
 
     if(g_usb_host_keyboard_seen)
     {
+        g_usb_host_keyboard_release_pending = 1u;
+    }
+    if(g_usb_host_keyboard_release_pending)
+    {
         UsbHostHid_ClearBytes(keyboard.bytes, HID_KEYBOARD_REPORT_LEN);
-        (void)EventRouter_InjectKeyboardReport(ROUTER_SRC_USB_KEYBOARD, &keyboard);
+        if(EventRouter_InjectKeyboardReport(ROUTER_SRC_USB_KEYBOARD,
+                                             &keyboard))
+        {
+            g_usb_host_keyboard_release_pending = 0u;
+            g_usb_host_keyboard_seen = 0u;
+        }
     }
     if(g_usb_host_mouse_seen)
     {
-        UsbHostHid_ClearBytes(mouse.bytes, HID_MOUSE_REPORT_LEN);
-        (void)EventRouter_InjectMouseReport(ROUTER_SRC_USB_MOUSE, &mouse);
+        g_usb_host_mouse_release_pending = 1u;
     }
-    g_usb_host_keyboard_seen = 0u;
-    g_usb_host_mouse_seen = 0u;
+    if(g_usb_host_mouse_release_pending)
+    {
+        UsbHostHid_ClearBytes(mouse.bytes, HID_MOUSE_REPORT_LEN);
+        if(EventRouter_InjectMouseReport(ROUTER_SRC_USB_MOUSE, &mouse))
+        {
+            g_usb_host_mouse_release_pending = 0u;
+            g_usb_host_mouse_seen = 0u;
+        }
+    }
 }
 
 static void UsbHostHid_HandleDetach(void)
 {
     UsbHostHid_InjectReleaseAll();
     UsbHostHid_StopTransfer();
+    StaticSpscRing_Clear(&g_usb_host_report_ring);
     R8_U2HOST_CTRL &= (uint8_t)~(RB_UH_PORT_EN | RB_UH_LOW_SPEED);
     R8_USB2_INT_FG = 0xFFu;
     g_usb_host_control.running = 0u;
@@ -1842,8 +1870,14 @@ static void UsbHostHid_StartReset(void)
     UsbHostHid_StopTransfer();
     g_usb_host_control.running = 0u;
     g_usb_host_ready = 0u;
-    g_usb_host_keyboard_seen = 0u;
-    g_usb_host_mouse_seen = 0u;
+    if(!g_usb_host_keyboard_release_pending)
+    {
+        g_usb_host_keyboard_seen = 0u;
+    }
+    if(!g_usb_host_mouse_release_pending)
+    {
+        g_usb_host_mouse_seen = 0u;
+    }
     g_usb_host_interface_count = 0u;
     g_usb_host_enum_interface = 0u;
     g_usb_host_poll_interface = 0u;
@@ -2109,11 +2143,22 @@ void UsbHostHid_Init(void)
     g_usb_host_poll_due_ticks = 0u;
     g_usb_host_keyboard_seen = 0u;
     g_usb_host_mouse_seen = 0u;
+    g_usb_host_keyboard_release_pending = 0u;
+    g_usb_host_mouse_release_pending = 0u;
 }
 
 void UsbHostHid_Process(void)
 {
     uint8_t attached = UsbHostHid_IsAttached();
+
+    if(g_usb_host_keyboard_release_pending ||
+       g_usb_host_mouse_release_pending)
+    {
+        /* Retry until the router accepts the release snapshot.  This keeps
+         * a full input Ring from turning a transient Host error into a
+         * permanent stuck key/button. */
+        UsbHostHid_InjectReleaseAll();
+    }
 
     if(R8_USB2_INT_FG & RB_UIF_DETECT)
     {
