@@ -64,6 +64,6 @@ ISR 不解析 HID、不调用路由器，也不等待发送完成。EP2 OUT ISR 
 
 若要启用 M1 的台架按键注入，在工程 C 预处理宏中临时加入 `CH582M_M1_TEST_PATTERN=1` 后重新 Build；默认值为 0，不会自动向主机发送按键。CDC 验收可从主机向 CDC OUT 写入最多 64 字节，设备应在下一个 TMOS 周期通过 CDC IN 回送。
 
-本机 MRS 自带 RISC-V GCC 8.2.0 的交叉编译结果为：代码 Flash 使用 26,456 B / 448 KB，RAM 使用 15,388 B / 32 KB（含 WCH BLE 库、外设驱动和应用，最终仍以 MRS 生成的 map 为准）。若 MRS GUI 重新生成工程配置，应确认 `BLE/HAL/include`、`BLE/LIB`、`CH58xBLE` 和上述预处理宏没有丢失。
+本机 MRS 自带 RISC-V GCC 8.2.0 的交叉编译结果为：代码 Flash 使用 26,460 B / 448 KB，RAM 使用 15,388 B / 32 KB（含 WCH BLE 库、外设驱动和应用，最终仍以 MRS 生成的 map 为准）。若 MRS GUI 重新生成工程配置，应确认 `BLE/HAL/include`、`BLE/LIB`、`CH58xBLE` 和上述预处理宏没有丢失。
 
 不同版本的 MounRiver Studio 可能使用不同的 SDK 安装路径；工程文件保留了芯片、编译器、链接脚本和下载目标配置，但不把本机 SDK 安装目录写入仓库。

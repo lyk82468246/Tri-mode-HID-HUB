@@ -103,5 +103,5 @@ API 可以取得当前页 PNG 渲染用于复查；当前 Gateway 下 PDF 导出
 3. 新增固定容量 SPSC Ring、`Event_Router` 中间格式和 M1 路由实现。键盘/鼠标/手柄分别使用 8/4/8 字节 payload，数据流切成不超过 20 字节的静态队列项。
 4. 新增 USB Device 复合描述符和控制器：一个多 Report ID HID 接口（Keyboard/Mouse/Gamepad）加 CDC ACM；EP2 OUT ISR 只复制并入队，TMOS 任务负责 CDC 回送和 HID IN 提交。
 5. 保留 WCH `CH58x_usbdev.h` 接口，但排除原始 `CH58x_usbdev.c`，由 `src/usb_device.c` 提供复合控制器所需符号，避免同名初始化/中断处理函数冲突。
-6. 使用 MounRiver Studio 自带 RISC-V Embedded GCC 8.2.0 完成交叉编译和链接验证：Flash 26,456 B / 448 KB，RAM 15,388 B / 32 KB；尚未连接开发板执行真实 USB 枚举、HID 主机识别或 CDC 收发验收。
+6. 使用 MounRiver Studio 自带 RISC-V Embedded GCC 8.2.0 完成交叉编译和链接验证：Flash 26,460 B / 448 KB，RAM 15,388 B / 32 KB；尚未连接开发板执行真实 USB 枚举、HID 主机识别或 CDC 收发验收。
 7. M1 仅预留 BLE HID/数据队列，不启动 BLE 广播、HOGP 或 NUS；下一步进入 M2 前需先审查 BLE SDK 报文 Buffer 所有权和 MTU 分片策略。
