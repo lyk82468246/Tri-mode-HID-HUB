@@ -2,7 +2,9 @@
 
 #include "ble_output.h"
 #include "event_router.h"
+#include "ps2_input.h"
 #include "tmos_app.h"
+#include "uart_input.h"
 #include "usb_device.h"
 
 #define FIRMWARE_SERVICE_EVENT      0x0001u
@@ -64,6 +66,8 @@ static tmosEvents Firmware_ProcessEvent(tmosTaskID task_id, tmosEvents events)
                                                 cdc_length);
         }
 
+        Ps2Input_Process();
+        UartInput_Process();
         BleOutput_ProcessInput();
         EventRouter_Process();
         UsbDevice_ProcessTask();
@@ -106,6 +110,8 @@ void Firmware_Init(void)
     HAL_Init();
     (void)GAPRole_PeripheralInit();
     EventRouter_Init();
+    Ps2Input_Init();
+    UartInput_Init();
     UsbDevice_Init();
     BleOutput_Init();
     EventRouter_SetOutputMask(ROUTER_OUTPUT_BOTH);

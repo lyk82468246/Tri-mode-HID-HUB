@@ -12,7 +12,7 @@
 - 暂不纳入 2.4 GHz 接收端软硬件；2.4 GHz 这里仅指 CH582M 的 BLE/RF 部分。
 - 尚未开始 PCB；当前原理图是可继续审查的工程首版，不是可直接打板的 release 版本。
 - USB-C、USB-A、DB9、电池座、OLED/排针、晶振、天线和按键中仍有若干 C990 Extended Part 机械候选，尚未达到生产 BOM 的可追溯要求。
-- 已加入根目录的 CH582M MounRiver Studio 固件工程；Milestone 1 的 USB Device HID/CDC 与 Milestone 2 的 BLE HOGP/NUS-compatible 输出已经落地，下行输入仍按 Roadmap 排队。
+- 已加入根目录的 CH582M MounRiver Studio 固件工程；Milestone 1 的 USB Device HID/CDC、Milestone 2 的 BLE HOGP/NUS-compatible 输出和 Milestone 3 的 PS/2/UART 输入适配器代码已经落地，USB Host HID 仍按 Roadmap 排队。
 
 ## 嘉立创 EDA 工程
 
@@ -41,7 +41,7 @@
 
 MounRiver Studio 入口为 [`CH582M.wvproj`](CH582M.wvproj)，固件源码从 [`src/Main.c`](src/Main.c) 开始；启动文件、链接脚本、RVMSIS 和 WCH 外设驱动也随工程一并纳入仓库。工程目标为 CH582M / CH58X / RISC-V / NoneOS，下载接口为 WCH-Link。
 
-当前固件已经进入 M2：TMOS 运行官方 WCH BLE 库，USB Device 控制器提供一个多 Report ID HID 接口（Keyboard/Mouse/Gamepad）和一个 CDC ACM 接口；BLE 外设广播标准 HID Service（键盘、鼠标、手柄 Report Map/CCCD/Boot Report）及 Nordic UART Service UUID 兼容的 RX/TX 服务。CDC/NUS 输入都经静态路由队列，USB 与 BLE 输出各自拥有队列；可选的 `CH582M_M1_TEST_PATTERN=1` 仍会周期性注入 `a` 键按下/释放。USB Host HID、PS/2、RS232 和 OLED 功能会按硬件引脚规划逐步加入，详见 [`docs/firmware.md`](docs/firmware.md)。
+当前固件已经进入 M3：TMOS 运行官方 WCH BLE 库，USB Device 控制器提供一个多 Report ID HID 接口（Keyboard/Mouse/Gamepad）和一个 CDC ACM 接口；BLE 外设广播标准 HID Service（键盘、鼠标、手柄 Report Map/CCCD/Boot Report）及 Nordic UART Service UUID 兼容的 RX/TX 服务。两路 PS/2 使用 PA0/PA1、PA2/PA3 的 GPIOA 边沿采样与 Set 2/三键鼠标解码，UART1 使用 PA8/PA9 接收 RS232 转换器数据；所有输入先进入静态 Ring，再由 TMOS 路由。USB Host HID、OLED 和全链路策略会按硬件引脚规划逐步加入，详见 [`docs/firmware.md`](docs/firmware.md)。
 
 系统级路由器、静态内存模型和六阶段实现顺序见 [`docs/firmware-architecture.md`](docs/firmware-architecture.md)。
 
@@ -64,7 +64,7 @@ J6 按“自带保护板的 1S 锂电池”建模。充电电流、终止电流�
 2. 确认 USB 主从控制器映射、CH582M 官方参考布局、电源开关与天线 keep-out。
 3. 确认 PS/2 插座实际针脚定义、RS232 DB9 的 DTE/DCE 角色和 OLED 接插件方向。
 4. 依据确认后的电流预算与电池型号修订充电/升压参数，再开始 PCB placement/routing。
-5. 在开发板上完成 M1/M2 的 USB 枚举、BLE 配对、HID/NUS 收发验收；下一阶段进入 M3，实现 PS/2 与 UART 输入，再继续按六个 Milestone 实现 USB Host 和全链路路由。
+5. 在开发板上完成 M1/M2/M3 的 USB、BLE、PS/2、UART 物理收发验收；下一阶段进入 M4，实现 USB Host HID 枚举与固定上限报表解析，再继续按六个 Milestone 实现全链路路由。
 
 ## 参考资料
 

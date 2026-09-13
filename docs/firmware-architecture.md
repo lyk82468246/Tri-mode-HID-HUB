@@ -1,6 +1,6 @@
 # 固件系统架构与六阶段 Roadmap
 
-状态：Architecture v0.3。Milestone 1 已落地 TMOS 基础、静态 SPSC Ring、USB Device HID/CDC 复合输出和 CDC 回送；Milestone 2 已落地 BLE HOGP/NUS-compatible 输出。PS/2、USB Host 和活跃链路策略仍待后续里程碑。
+状态：Architecture v0.4。Milestone 1 已落地 TMOS 基础、静态 SPSC Ring、USB Device HID/CDC 复合输出和 CDC 回送；Milestone 2 已落地 BLE HOGP/NUS-compatible 输出；Milestone 3 已落地 PS/2 与 UART 输入适配器。USB Host、活跃链路策略和最终可靠性收口仍待后续里程碑。
 
 ## 0. 约束与芯片容量校准
 
@@ -45,7 +45,7 @@ USB 下行 Host ── transfer callback ─> usb_host_report_ring ─┘       
                    CDC 对端                                      NUS 对端
 ```
 
-这里的“上行/下行”按数据方向描述，不直接把开发板丝印中的 PA/PB 当作 MCU GPIO 端口名。M1 必须依据开发板原理图和 WCH USB 示例确认：上行物理 USB 口使用 Device 控制器，下行物理 USB 口使用 Host 控制器，以及对应的 DP/DN 引脚。
+这里的“上行/下行”按数据方向描述，不直接把开发板丝印中的 PA/PB 当作 MCU GPIO 端口名。USB Device 的复合描述符和端点状态机已在 M1 完成；下行物理 USB 口的 Host 控制器、VBUS 和 DP/DN 映射仍由 M4 按开发板原理图和 WCH USB 示例确认。当前 PS/2 与 UART 的首版开发板映射集中在 `src/board_pins.h`，与 [`docs/pin-plan.md`](pin-plan.md) 的 PA0/PA1、PA2/PA3、PA8/PA9 规划一致，迁移 PCB 时只需覆盖 board/pin 配置。
 
 关键原则是：输入适配器先产生统一的 `RouterEvent`，路由器再复制成具体输出队列项；路由器不直接调用 USB 或 BLE 发送函数。
 
@@ -71,7 +71,8 @@ PS/2 使用 Set 2 扫描码状态机处理 `F0` break、`E0` extended 和 `E1` �
 
 - 鼠标中间报表固定为 4 字节：`buttons, dx, dy, wheel`；位移使用二补码 `int8_t` 语义，线上的字节仍按原始 8 位传输。
 - 手柄中间报表先固定 8 字节槽位，具体按钮、Hat 和轴的含义由 M1 的 USB/BLE Report Map 定义；路由器不解析传输层 Report ID。
-- UART 数据不是键盘事件，先切成不超过 20 字节的 `ROUTER_EVENT_STREAM_DATA`。20 字节是默认 BLE ATT 有效负载预算，M2 完成 MTU 协商后才能放宽；USB CDC 可在输出端重新分片。
+- UART 数据不是键盘事件，先切成不超过 20 字节的 `ROUTER_EVENT_STREAM_DATA`。M2/M3 的默认 BLE ATT 有效负载预算为 20 字节；M5 完成 MTU/链路策略后才考虑放宽，USB CDC 可在输出端重新分片。
+- PS/2 键盘和鼠标都在 GPIOA 时钟下降沿采样 DATA，TMOS 再消费 11 位帧（start、8 个 LSB-first data、odd parity、stop）。键盘解码 Set 2 的 `F0` break、`E0` extended 和 `E1` Pause 序列；鼠标先校验首字节同步位，再按标准 3 字节包生成 `buttons/dx/dy/wheel`，并把 PS/2 的正 Y 方向转换为 USB 的正 Y 方向。鼠标上电后发送 `F4` 进入数据报告模式，发送、ACK 和失败重试均为非阻塞状态机。
 
 ## 3. C 语言核心类型定义
 
@@ -252,14 +253,14 @@ typedef struct
 
 ## 4. 静态 Buffer 与所有权
 
-这些是整个项目的建议容量，定义应只出现在一个 `.c` 文件中；头文件只声明类型和接口。M1/M2 已实现 USB Device、CDC、BLE HOGP/NUS 队列，PS/2 edge、UART RX、USB Host raw report 的存储在 M3/M4 再加入。容量不是越大越好，必须让 `.map` 文件证明 BLE/USB 栈、TMOS、应用状态、栈和余量都能放进 32KB SRAM。
+这些是整个项目的建议容量，定义应只出现在一个 `.c` 文件中；头文件只声明类型和接口。M1/M2/M3 已实现 USB Device、CDC、BLE HOGP/NUS、PS/2 edge 和 UART RX 队列，USB Host raw report 的存储在 M4 再加入。容量不是越大越好，必须让 `.map` 文件证明 BLE/USB 栈、TMOS、应用状态、栈和余量都能放进 32KB SRAM。
 
 ```c
 typedef struct
 {
-    uint16_t tick16;
     uint8_t data_level;
     uint8_t flags;
+    uint16_t reserved;
 } Ps2EdgeSample; /* 4 bytes; 一个物理 PS/2 口一个 SPSC 队列 */
 
 typedef struct
@@ -282,6 +283,7 @@ static Ps2EdgeSample g_ps2_keyboard_edge_storage[64] EVENT_ROUTER_ALIGN4;
 static Ps2EdgeSample g_ps2_mouse_edge_storage[64]    EVENT_ROUTER_ALIGN4;
 static UartRxItem    g_uart_rx_storage[128]           EVENT_ROUTER_ALIGN4;
 static UsbHostReport g_usb_host_report_storage[4]     EVENT_ROUTER_ALIGN4;
+static uint8_t       g_uart_frame[20]                 EVENT_ROUTER_ALIGN4;
 
 static RouterEvent g_router_input_storage[16] EVENT_ROUTER_ALIGN4;
 static HidTxFrame g_usb_hid_tx_storage[4]     EVENT_ROUTER_ALIGN4;
@@ -307,7 +309,8 @@ static Event_Router g_event_router EVENT_ROUTER_ALIGN4;
 | USB/BLE HID 输出队列 | 4 × 24 B × 2 | 192 B |
 | USB/BLE CDC/NUS 数据队列 | 8 × 24 B × 2 | 384 B |
 | 端点缓冲实际布局 | 192 B + 128 B × 3 | 576 B |
-| **M1/M2 规划应用侧合计（不含 BLE 堆）** |  | **约 2.9 KB** |
+| UART 分帧工作区 | 20 B | 20 B |
+| **M1/M2/M3 规划应用侧合计（不含 BLE 堆）** |  | **约 3.0 KB** |
 
 建议应用层所有静态对象（包括协议状态、固定 Report Descriptor map、统计量和测试注入队列）先控制在 8KB 以内，把剩余 SRAM 留给 BLE/USB/TMOS 和运行栈。最终以链接器 map、启动时栈水位和最坏并发场景为准。
 
@@ -345,7 +348,18 @@ M2 的 BLE 外设任务已经按 WCH 官方外设流程接入：系统初始化 
 
 M2 的代码级验收已通过 MounRiver 自带 RISC-V GCC 8.2.0 交叉编译、`-Wall -Wextra -fsyntax-only`、工程 JSON/XML 解析和 ELF 静态对象检查：Flash `155,436 B / 448 KB`，RAM `20,204 B / 32 KB`；HOGP Report Map、GATT 属性表、CCCD 数量和静态 NUS RX Ring 均已进入最终镜像。电脑/手机实际 BLE 配对、CCCD 写入、HID 收发和 MTU 协商仍需在 CH582M 开发板上执行，不能由交叉编译替代。
 
-## 7. 六个 Milestone
+## 7. Milestone 3 已落地的输入适配边界
+
+M3 把开发板阶段的物理输入限制在 `src/board_pins.h`：键盘 PS/2 为 PA0 CLK / PA1 DATA，鼠标 PS/2 为 PA2 CLK / PA3 DATA，RS232 经 MAX3232 后接 UART1 PA8 RX / PA9 TX，默认 115200 8N1。宏均可在工程配置中覆盖，协议层不依赖这些具体 GPIO。
+
+- PS/2 GPIOA ISR 只读取 DATA 电平并向两个独立的 `Ps2EdgeSample[64]` SPSC Ring 入队；TMOS 每个端口每次最多消费 32 个 edge，并按 10 ms 无边沿超时复位。完整帧执行 start/data/parity/stop 校验，错误和 edge 溢出都有统计量。
+- 键盘适配器支持 Set 2 常用键、修饰键、扩展键、Pause 序列和自动重复去重，输出完整 8 字节键盘快照；解码错误或溢出会 release-all/resync。鼠标适配器支持标准三字节包、按钮、X/Y 饱和转换和 Y 轴方向修正。
+- 鼠标 `F4` 初始化在 TMOS 与 GPIOA ISR 之间以状态机完成：ISR 仅推进时钟边沿、发送位和 ACK 采样，任务上下文负责超时、结果处理和 1 s 重试，不阻塞等待外设。
+- UART1 ISR 只排空 FIFO 并把字节及线路状态放入 `UartRxItem[128]` Ring；TMOS 按 20 B 满帧、CR/LF 或 6 ms 空闲分帧，路由器背压时保留当前帧，线路错误字节丢弃并计数。
+
+M3 的代码级验收已通过 RISC-V GCC 8.2.0 全工程语法检查、交叉链接、ELF 静态对象检查和动态分配调用审计；真实开发板的 PS/2 电平、UART 收发、USB/BLE 枚举及端到端报告仍需接线后执行。
+
+## 8. 六个 Milestone
 
 后续实现严格按 M1 → M2 → M3 → M4 → M5 → M6。每个里程碑必须先通过验收、提交 Git，再进入下一个；未通过时只修当前里程碑，不提前并行扩展协议栈。
 
@@ -371,7 +385,7 @@ M2 的代码级验收已通过 MounRiver 自带 RISC-V GCC 8.2.0 交叉编译、
 
 代码验收：交叉编译、语法检查、GATT 属性表/Report Map/静态对象检查通过；USB 与 BLE 使用独立 HID/数据队列，NUS 数据不会与 HOGP 报表串线。硬件验收：电脑/手机实际配对为 BLE 键鼠，验证完整键盘按下/释放、鼠标报表、NUS 数据、CCCD、断连重连和 MTU 协商；该部分待开发板接入后执行。
 
-### Milestone 3：PS/2 与 UART 输入适配器
+### Milestone 3：PS/2 与 UART 输入适配器（代码完成，硬件验收待执行）
 
 范围：
 
@@ -379,7 +393,7 @@ M2 的代码级验收已通过 MounRiver 自带 RISC-V GCC 8.2.0 交叉编译、
 - 实现 PS/2 Set 2 非阻塞状态机、超时、奇偶校验、ACK/命令阶段和 HID Usage 映射；先支持标准键盘和三键鼠标。
 - 实现 UART RX ring、固定长度/超时分帧和 `STREAM_DATA`；若要把 UART 命令变成 HID，另定义显式上层协议，不把任意字节当按键。
 
-验收：开发板杜邦线接 PS/2 键盘/鼠标可生成 M1 的 USB 报表；UART 输入可经 CDC/NUS 透传；故意制造 edge ring 溢出后能统计、复位解码器并发送 release-all；ISR 执行时间保持在采样级别。
+代码验收：两个 PS/2 edge Ring、Set 2/鼠标解码、奇偶校验、超时、溢出 resync、非阻塞 `F4`/ACK 状态机、UART 固定长度/超时分帧和背压路径均已进入工程，并通过交叉编译与静态对象检查。硬件验收：开发板杜邦线接 PS/2 键盘/鼠标可生成 M1 的 USB/BLE 报表；UART 输入可经 CDC/NUS 透传；故意制造 edge Ring 溢出后能统计、复位解码器并发送 release-all；ISR 执行时间保持在采样级别。该硬件验收待开发板接入后执行。
 
 ### Milestone 4：USB Host HID 枚举与报表解析
 
@@ -413,6 +427,6 @@ M2 的代码级验收已通过 MounRiver 自带 RISC-V GCC 8.2.0 交叉编译、
 
 验收：所有定义的功能有可复现实验步骤；无应用层 `malloc/free`；错误可恢复或明确报告；在目标容量和最坏并发下有余量；PCB 迁移只改变 board/pin 层，不改变 router 中间格式。
 
-## 8. 后续实现纪律
+## 9. 后续实现纪律
 
-下一轮只实现 M3，不提前写 USB Host 或全链路活跃链路策略。每个新模块先给出：输入/输出队列、静态内存大小、TMOS 事件位、所有权、溢出策略和验收用例，然后再写 `.c/.h`。
+下一轮只实现 M4，不提前写全链路活跃链路策略。每个新模块先给出：输入/输出队列、静态内存大小、TMOS 事件位、所有权、溢出策略和验收用例，然后再写 `.c/.h`。

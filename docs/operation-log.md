@@ -116,3 +116,14 @@ API 可以取得当前页 PNG 渲染用于复查；当前 Gateway 下 PDF 导出
 6. 应用层未发现 libc `malloc/free/calloc/realloc` 调用。BLE 通知使用 WCH SDK 要求的协议栈报文池：`GATT_bm_alloc()` 成功后由协议栈接管，失败立即 `GATT_bm_free()`；这不等同于应用层动态分配，边界已写入架构文档。
 7. 使用 MounRiver Studio 自带 RISC-V GCC 8.2.0 完成交叉编译和链接：Flash `155,436 B / 448 KB`，RAM `20,204 B / 32 KB`。`-Wall -Wextra -fsyntax-only`、工程 JSON/XML 解析、ELF 符号和 Report Map/属性表大小检查均通过。
 8. 尚未接入 CH582M 开发板进行真实 BLE 配对、HID 主机识别、CCCD 写入、NUS 收发、MTU 协商和断连重连验证；下一阶段按顺序进入 M3，实现两路 PS/2 与 UART 输入适配器。
+
+## 2026-09-13 Milestone 3：PS/2 与 UART 输入适配器
+
+1. 新增 `src/board_pins.h`，把开发板/首版 PCB 规划中的 PS/2 键盘 PA0/PA1、PS/2 鼠标 PA2/PA3、UART1 PA8/PA9 和 115200 波特率集中管理；后续 PCB 复用只需覆盖 board/pin 宏，不改变路由器中间格式。
+2. 新增 `src/ps2_input.c/.h`：GPIOA ISR 在时钟下降沿只采样 DATA 并写入两个独立的 `Ps2EdgeSample[64]` 静态 SPSC Ring；TMOS 侧完成 11 位帧的 start/8-bit/odd-parity/stop 校验、10 ms 无边沿超时、溢出统计和解码器 resync。
+3. PS/2 键盘适配器实现 Set 2 常用键、`F0` break、`E0` extended、`E1` Pause、修饰键和 ErrorRollOver 处理，统一输出完整 8 字节 Keyboard Report；鼠标适配器解析标准 3 字节包，处理按钮、X/Y 饱和和 PS/2 到 USB 的 Y 轴方向转换。
+4. 鼠标上电初始化通过非阻塞 GPIOA 中断状态机发送 `F4`（enable data reporting），包含主机 inhibit、数据位/奇偶校验、设备 ACK、超时和 1 s 重试；ISR 不执行协议解析、路由或阻塞等待。
+5. 新增 `src/uart_input.c/.h`：UART1 ISR 仅排空 FIFO 并将字节与线路状态写入 `UartRxItem[128]` 静态 Ring；TMOS 侧按 20 B 满帧、CR/LF 或 6 ms 空闲分帧，路由器背压时保留当前帧，线路错误字节丢弃并计数。
+6. 修改 `tmos_app.c`，在每个 2 ms 服务周期按固定顺序消费 PS/2、UART、CDC/NUS 输入，再运行路由器和 USB/BLE 输出；未引入 FreeRTOS、运行时 `malloc/free` 或阻塞式外设等待。
+7. 使用 MounRiver Studio 自带 RISC-V Embedded GCC 8.2.0 完成全工程 `-Wall -Wextra -fsyntax-only` 与交叉链接验证：Flash `159,692 B / 448 KB`，RAM `21,876 B / 32 KB`；ELF 静态对象大小、工程 JSON/XML 解析和动态分配调用审计通过。
+8. 尚未接入 CH582M 开发板执行 PS/2 电平/时序、鼠标 ACK、UART MAX3232 收发及 USB/BLE 端到端验收；下一阶段按顺序进入 M4，实现下行 USB Host HID 枚举与固定上限报表解析。
