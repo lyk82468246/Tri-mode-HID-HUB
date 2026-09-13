@@ -12,7 +12,7 @@
 - 暂不纳入 2.4 GHz 接收端软硬件；2.4 GHz 这里仅指 CH582M 的 BLE/RF 部分。
 - 尚未开始 PCB；当前原理图是可继续审查的工程首版，不是可直接打板的 release 版本。
 - USB-C、USB-A、DB9、电池座、OLED/排针、晶振、天线和按键中仍有若干 C990 Extended Part 机械候选，尚未达到生产 BOM 的可追溯要求。
-- 已加入根目录的 CH582M MounRiver Studio 固件工程；当前 `src/Main.c` 仍是 UART1 收发模板，三模 HID 协议栈尚未实现。
+- 已加入根目录的 CH582M MounRiver Studio 固件工程；Milestone 1 已完成 TMOS 基础、静态 SPSC Ring、USB Device HID/CDC 复合输出骨架，BLE HOGP/NUS 和下行输入仍按 Roadmap 排队。
 
 ## 嘉立创 EDA 工程
 
@@ -41,7 +41,7 @@
 
 MounRiver Studio 入口为 [`CH582M.wvproj`](CH582M.wvproj)，固件源码从 [`src/Main.c`](src/Main.c) 开始；启动文件、链接脚本、RVMSIS 和 WCH 外设驱动也随工程一并纳入仓库。工程目标为 CH582M / CH58X / RISC-V / NoneOS，下载接口为 WCH-Link。
 
-当前固件只是可继续开发的 CH582M 基础工程：上电发送 UART1 示例字符串并回显接收数据。固件的 USB Host HID、USB Device HID、BLE HOGP、PS/2、RS232 和 OLED 功能会按硬件引脚规划逐步加入，详见 [`docs/firmware.md`](docs/firmware.md)。
+当前固件已经进入 M1：TMOS 运行官方 WCH BLE 库基础、USB Device 控制器提供一个多 Report ID HID 接口（Keyboard/Mouse/Gamepad）和一个 CDC ACM 接口，CDC OUT 数据经静态路由队列回送 CDC IN；可选的 `CH582M_M1_TEST_PATTERN=1` 会周期性注入 `a` 键按下/释放。USB Host HID、BLE HOGP/NUS、PS/2、RS232 和 OLED 功能会按硬件引脚规划逐步加入，详见 [`docs/firmware.md`](docs/firmware.md)。
 
 系统级路由器、静态内存模型和六阶段实现顺序见 [`docs/firmware-architecture.md`](docs/firmware-architecture.md)。
 
@@ -64,7 +64,7 @@ J6 按“自带保护板的 1S 锂电池”建模。充电电流、终止电流�
 2. 确认 USB 主从控制器映射、CH582M 官方参考布局、电源开关与天线 keep-out。
 3. 确认 PS/2 插座实际针脚定义、RS232 DB9 的 DTE/DCE 角色和 OLED 接插件方向。
 4. 依据确认后的电流预算与电池型号修订充电/升压参数，再开始 PCB placement/routing。
-5. 在已纳入仓库的 CH582M 工程上，按 USB Host HID、USB Device HID/CDC、BLE HOGP 和 UART bridge 分阶段实现固件。
+5. 在开发板上完成 M1 USB 枚举、HID/CDC 收发验收，再进入 M2 BLE HOGP/NUS；后续继续按六个 Milestone 实现 USB Host、PS/2、UART 和全链路路由。
 
 ## 参考资料
 

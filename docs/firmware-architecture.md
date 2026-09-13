@@ -1,6 +1,6 @@
 # 固件系统架构与六阶段 Roadmap
 
-状态：Architecture v0.1，当前只定义接口、内存和任务边界，不实现底层驱动。
+状态：Architecture v0.2。Milestone 1 已落地 TMOS 基础、静态 SPSC Ring、USB Device HID/CDC 复合输出和 CDC 回送；PS/2、USB Host、BLE HOGP/NUS 仍未实现。
 
 ## 0. 约束与芯片容量校准
 
@@ -11,7 +11,7 @@
 - ISR 只采样硬件事件、写入 SPSC Ring Buffer、置位标志或投递 TMOS 事件；协议解析、报表转换和发送都在 TMOS 任务中完成。
 - Ring Buffer 存放值而不是指向临时 DMA/端点内存的指针；队列项出队后由消费者拥有，发送完成前不得复用。
 
-当前工程文件和 WCH 公开选型资料都把 CH582M/CH583M 这一档描述为约 448K 代码 Flash、32K SRAM 和 32K DataFlash。WCH 的官方资料还确认该系列为 QingKe V4A / RV32IMAC、BLE 5.3、双全速 USB Host/Device 和多路 UART。[WCH 官方 CH583/CH582 资料仓库](https://github.com/openwch/ch583) [WCH 芯片选型资料](https://www.wch-ic.com/products/productsCenter/mcuInterface?categoryId=63)
+当前工程的 `Ld/Link.ld` 将可执行代码区配置为 448K、SRAM 配置为 32K；WCH 官方 `openwch/ch583` README 对 CH582M/CH583M 系列列出的 Flash 规格为 512KB。这里的 448K 是本工程当前可链接代码区，不应继续把用户给出的“1MB”当作未经料号确认的链接依据；DataFlash 容量也暂不假定，必须以实际采购型号数据手册为准。WCH 官方资料还确认该系列为 QingKe V4A / RV32IMAC、BLE 5.3、双全速 USB Host/Device 和多路 UART。[WCH 官方 CH583/CH582 资料仓库](https://github.com/openwch/ch583)
 
 因此本项目暂不按“1MB 代码 Flash”做链接和内存预算：必须以实际采购料号、数据手册和最终 `.map` 文件为准。如果实物确认是不同容量型号，应新增独立的芯片配置，不能静默沿用 CH582M 配置。
 
@@ -69,7 +69,7 @@ PS/2 使用 Set 2 扫描码状态机处理 `F0` break、`E0` extended 和 `E1` �
 
 ## 3. C 语言核心类型定义
 
-以下定义是后续 `event_router_types.h` 的设计草案。它们只描述内存布局，不包含任何驱动实现。实际接入 WCH SDK 时，TMOS 任务 ID/事件类型应绑定 SDK 的 `tmosTaskID/tmosEvents`，不要复制一套调度器。
+以下定义已经落到 [`src/event_router_types.h`](../src/event_router_types.h)，并由 `src/event_router.c`、`src/tmos_app.c` 使用。它们描述中间格式和内存布局，不把 USB/BLE 发送函数塞进路由器；TMOS 任务 ID/事件类型绑定 WCH SDK 的 `tmosTaskID/tmosEvents`，不复制另一套调度器。
 
 ```c
 #include <stdint.h>
@@ -89,6 +89,7 @@ typedef enum
     ROUTER_SRC_USB_KEYBOARD,
     ROUTER_SRC_USB_MOUSE,
     ROUTER_SRC_UART,
+    ROUTER_SRC_USB_CDC,
     ROUTER_SRC_TEST,
     ROUTER_SOURCE_COUNT
 } RouterInputSource;
@@ -164,6 +165,14 @@ typedef struct
 
 typedef struct
 {
+    uint8_t length;
+    uint8_t flags;
+    uint16_t reserved;
+    uint8_t bytes[STREAM_CHUNK_MAX_LEN];
+} StreamTxFrame; /* 24 bytes */
+
+typedef struct
+{
     uint8_t modifiers;
     uint8_t keycodes[6];
     uint8_t key_count;
@@ -235,7 +244,7 @@ typedef struct
 
 ## 4. 静态 Buffer 与所有权
 
-这些是首版开发板的建议容量，定义应只出现在一个 `.c` 文件中；头文件只声明类型和 `extern`。容量不是越大越好，必须让 `.map` 文件证明 BLE/USB 栈、TMOS、应用状态、栈和余量都能放进 32KB SRAM。
+这些是整个项目的建议容量，定义应只出现在一个 `.c` 文件中；头文件只声明类型和接口。M1 先实现 USB Device 和 CDC 队列，PS/2 edge、UART RX、USB Host raw report 的存储在 M3/M4 再加入。容量不是越大越好，必须让 `.map` 文件证明 BLE/USB 栈、TMOS、应用状态、栈和余量都能放进 32KB SRAM。
 
 ```c
 typedef struct
@@ -269,7 +278,7 @@ static UsbHostReport g_usb_host_report_storage[4]     EVENT_ROUTER_ALIGN4;
 static RouterEvent g_router_input_storage[16] EVENT_ROUTER_ALIGN4;
 static HidTxFrame g_usb_hid_tx_storage[4]     EVENT_ROUTER_ALIGN4;
 static HidTxFrame g_ble_hid_tx_storage[4]     EVENT_ROUTER_ALIGN4;
-static HidTxFrame g_stream_tx_storage[6]      EVENT_ROUTER_ALIGN4;
+static StreamTxFrame g_stream_tx_storage[8]   EVENT_ROUTER_ALIGN4;
 
 /* WCH USB 驱动若要求应用提供端点/DMA 缓冲，再单独按其规则定义；
  * 若 SDK 已经拥有端点缓冲，不能重复分配一份。 */
@@ -287,9 +296,9 @@ static Event_Router g_event_router EVENT_ROUTER_ALIGN4;
 | USB Host 原始报表 | 4 × 68 B | 272 B |
 | Router 输入事件 | 16 × 32 B | 512 B |
 | USB/BLE HID 输出队列 | 4 × 24 B × 2 | 192 B |
-| CDC/NUS 数据队列 | 6 × 24 B | 144 B |
-| 端点缓冲候选 | 4 × 64 B | 256 B |
-| **合计** |  | **约 2.4 KB** |
+| CDC/NUS 数据队列 | 8 × 24 B | 192 B |
+| 端点缓冲实际布局 | 192 B + 128 B × 3 | 576 B |
+| **M1 应用侧合计（不含 BLE 堆）** |  | **约 2.0 KB** |
 
 建议应用层所有静态对象（包括协议状态、固定 Report Descriptor map、统计量和测试注入队列）先控制在 8KB 以内，把剩余 SRAM 留给 BLE/USB/TMOS 和运行栈。最终以链接器 map、启动时栈水位和最坏并发场景为准。
 
@@ -329,7 +338,7 @@ static Event_Router g_event_router EVENT_ROUTER_ALIGN4;
 - 完成 USB Device 描述符和端点状态机：HID Keyboard、Mouse、Gamepad，加 CDC ACM；建议先使用 Report ID 1/2/3。
 - 暂不接真实输入，使用固定按键/鼠标/手柄测试注入，验证 `HidTxFrame` 到端点的非阻塞发送。
 
-验收：PC 能枚举为目标复合设备；模拟键盘按下/释放、鼠标移动和手柄报表能被主机识别；CDC 能收发；应用层无 `malloc/free`；端点 busy、NAK、USB reset 都不会卡死 TMOS。
+验收：交叉编译和链接通过；代码具备 PC 复合设备枚举、HID 报表提交和 CDC 回送路径；实际开发板验收需确认键盘/鼠标/手柄输入报告、CDC 收发、USB reset、端点 busy/NAK 均不阻塞 TMOS。默认测试注入关闭，开启宏后才发送周期性 `a` 按键。
 
 ### Milestone 2：BLE HOGP 与 NUS-compatible 输出
 
@@ -386,4 +395,4 @@ static Event_Router g_event_router EVENT_ROUTER_ALIGN4;
 
 ## 7. 后续实现纪律
 
-下一轮只实现 M1，不提前写 PS/2、USB Host 或 BLE 业务代码。每个新模块先给出：输入/输出队列、静态内存大小、TMOS 事件位、所有权、溢出策略和验收用例，然后再写 `.c/.h`。
+下一轮只实现 M2，不提前写 PS/2、USB Host 或全链路合并代码。每个新模块先给出：输入/输出队列、静态内存大小、TMOS 事件位、所有权、溢出策略和验收用例，然后再写 `.c/.h`。

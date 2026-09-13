@@ -132,14 +132,24 @@
 						"do_not_search_system_directories": false,
 						"preprocess_only": false,
 						"defined_symbols": [
-							"DEBUG=1"
+							"DEBUG=1",
+							"BLE_SNV=0",
+							"TEM_SAMPLE=0",
+							"BLE_CALIBRATION_ENABLE=0",
+							"HAL_SLEEP=0",
+							"HAL_KEY=0",
+							"HAL_LED=0",
+							"BLE_MEMHEAP_SIZE=6144",
+							"CH582M=1"
 						],
 						"undefined_symbols": []
 					},
 					"includes": {
 						"include_paths": [
 							"../StdPeriphDriver/inc",
-							"../RVMSIS"
+							"../RVMSIS",
+							"../BLE/HAL/include",
+							"../BLE/LIB"
 						],
 						"include_system_paths": [],
 						"include_files": []
@@ -214,11 +224,13 @@
 					},
 					"libraries": {
 						"libraries": [
-							"ISP583"
+							"ISP583",
+							"CH58xBLE"
 						],
 						"library_search_path": [
 							"../",
-							"../StdPeriphDriver"
+							"../StdPeriphDriver",
+							"../BLE/LIB"
 						]
 					},
 					"miscellaneous": {
@@ -255,11 +267,13 @@
 					},
 					"libraries": {
 						"libraries": [
-							"ISP583"
+							"ISP583",
+							"CH58xBLE"
 						],
 						"library_search_path": [
 							"../",
-							"../StdPeriphDriver"
+							"../StdPeriphDriver",
+							"../BLE/LIB"
 						]
 					},
 					"miscellaneous": {

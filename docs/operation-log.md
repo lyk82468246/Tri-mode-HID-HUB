@@ -93,5 +93,15 @@ API 可以取得当前页 PNG 渲染用于复查；当前 Gateway 下 PDF 导出
 1. 在未实现底层驱动前，定义 `Event_Router`、统一键鼠/手柄/数据流中间格式、静态 SPSC Ring Buffer、ISR/TMOS/输出后端的所有权边界。
 2. 规定 PS/2/USB Host 键盘都先转换为完整 8 字节 Boot Keyboard Report 快照，再进入 `router_input_ring`；输出端根据 Report ID 映射到 USB HID 或 BLE HOGP。
 3. 规划六个严格串行里程碑：USB Device 复合输出、BLE HOGP/NUS、PS/2/UART 输入、USB Host HID、Event_Router 全链路合并、资源与可靠性收口。
-4. 根据 WCH 公开资料和当前工程配置，将 CH582M 的代码容量按约 448K Flash、32K SRAM、32K DataFlash 预算；1MB 说法暂不作为链接依据，待实物料号和数据手册确认。
+4. 根据当前 `Ld/Link.ld` 将可执行代码区按 448K、SRAM 按 32K 预算；WCH 官方 `openwch/ch583` README 列出该系列 Flash 为 512KB，DataFlash/具体料号容量仍待数据手册确认，1MB 说法暂不作为链接依据。
 5. 记录 WCH BLE 报文缓冲 API 的动态所有权审计为 M2 前置条件，应用层不使用 libc `malloc/free`。
+
+## 2026-09-13 Milestone 1 实现与交叉编译验证
+
+1. 将 WCH 官方 CH58x BLE/TMOS 运行时文件纳入 `BLE/`：HAL 时基、TMOS 初始化头文件、匹配的 `CH58xBLE` 静态库；工程配置同步加入头文件路径、库路径和 `-lCH58xBLE`。
+2. 将 `src/Main.c` 改为 TMOS 主循环，新增 `tmos_app.c/.h`，以 2 ms reload event 驱动有限预算服务；没有引入 FreeRTOS，应用层没有 `malloc/free`。
+3. 新增固定容量 SPSC Ring、`Event_Router` 中间格式和 M1 路由实现。键盘/鼠标/手柄分别使用 8/4/8 字节 payload，数据流切成不超过 20 字节的静态队列项。
+4. 新增 USB Device 复合描述符和控制器：一个多 Report ID HID 接口（Keyboard/Mouse/Gamepad）加 CDC ACM；EP2 OUT ISR 只复制并入队，TMOS 任务负责 CDC 回送和 HID IN 提交。
+5. 保留 WCH `CH58x_usbdev.h` 接口，但排除原始 `CH58x_usbdev.c`，由 `src/usb_device.c` 提供复合控制器所需符号，避免同名初始化/中断处理函数冲突。
+6. 使用 MounRiver Studio 自带 RISC-V Embedded GCC 8.2.0 完成交叉编译和链接验证：Flash 26,456 B / 448 KB，RAM 15,388 B / 32 KB；尚未连接开发板执行真实 USB 枚举、HID 主机识别或 CDC 收发验收。
+7. M1 仅预留 BLE HID/数据队列，不启动 BLE 广播、HOGP 或 NUS；下一步进入 M2 前需先审查 BLE SDK 报文 Buffer 所有权和 MTU 分片策略。
