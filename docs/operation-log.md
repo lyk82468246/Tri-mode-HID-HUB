@@ -127,3 +127,14 @@ API 可以取得当前页 PNG 渲染用于复查；当前 Gateway 下 PDF 导出
 6. 修改 `tmos_app.c`，在每个 2 ms 服务周期按固定顺序消费 PS/2、UART、CDC/NUS 输入，再运行路由器和 USB/BLE 输出；未引入 FreeRTOS、运行时 `malloc/free` 或阻塞式外设等待。
 7. 使用 MounRiver Studio 自带 RISC-V Embedded GCC 8.2.0 完成全工程 `-Wall -Wextra -fsyntax-only` 与交叉链接验证：Flash `159,692 B / 448 KB`，RAM `21,876 B / 32 KB`；ELF 静态对象大小、工程 JSON/XML 解析和动态分配调用审计通过。
 8. 尚未接入 CH582M 开发板执行 PS/2 电平/时序、鼠标 ACK、UART MAX3232 收发及 USB/BLE 端到端验收；下一阶段按顺序进入 M4，实现下行 USB Host HID 枚举与固定上限报表解析。
+
+## 2026-09-13 Milestone 4：USB Host HID 枚举与报表解析
+
+1. 对照本仓库随工程保存的 WCH `CH58x_usbhost.h`、`CH58x_usb2hostBase.c` 和官方 `HostU2Enum` 例程，确认 USB2 Host 使用独立 RX/TX DMA、USB2 控制器寄存器和 `USB2_HostInit()`；上行 USB Device 继续使用另一套控制器。
+2. 明确禁止在 TMOS 中调用 WCH 官方阻塞式 Host 事务/控制传输 helper；新增 `src/usb_host_hid.c/.h`，以每 2 ms 轮询的事务对象实现 SETUP、DATA、STATUS、NAK 重试、40 ms 单事务超时和 200 ms 单控制请求超时。
+3. 新增固定 4 字节对齐的 USB Host DMA、18 B 设备描述符、256 B 配置描述符、两个 256 B Report Descriptor 缓存、两个 HID 接口状态和 `UsbHostHidRawReport[4]` 原始报表 Ring；应用层无 `malloc/free`。
+4. 完成 PB6/HOST_EN 高电平开启 USB-A VBUS、attach/16 ms bus reset/EP0 包长探测/SET_ADDRESS/配置枚举/HID Report Descriptor/Boot `SET_PROTOCOL` 与 `SET_IDLE`/interrupt IN 轮询；只接受最多两个全速 HID interrupt IN 接口，端点报表单包上限 64 B，开发板可覆盖 Host 电源宏。
+5. 完成固定容量 HID Report Descriptor 解析器：支持 Report ID、全局 Push/Pop、键盘修饰键/数组、鼠标按钮/X/Y/Wheel、相对轴、短报表和错误边界；Boot Keyboard/Mouse 统一转换为 8 B/4 B 中间报告并注入 `EventRouter`。
+6. 完成拔出释放快照、事务超时/STALL/描述符错误统计和 100 ms 后非阻塞重新枚举；`tmos_app.c` 将 Host 服务放在 PS/2/UART 之后、`EventRouter_Process()` 之前，保证原始报表在同一 TMOS 周期进入统一路由。
+7. 使用 MounRiver Studio 自带 RISC-V Embedded GCC 8.2.0 完成全工程语法检查和交叉链接：Flash `166,832 B / 448 KB`，RAM `24,572 B / 32 KB`；工程 XML/JSON 解析、ELF 静态对象大小和动态分配调用审计通过。
+8. 尚未接入 CH582M 开发板执行 USB-A VBUS、PB13/PB12、键鼠枚举、不同 Report ID、短报表、热插拔和 USB Device/BLE 并发物理验收；代码完成后按顺序进入 M5，实施活跃上行链路与多源状态合并。

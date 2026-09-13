@@ -6,6 +6,7 @@
 #include "tmos_app.h"
 #include "uart_input.h"
 #include "usb_device.h"
+#include "usb_host_hid.h"
 
 #define FIRMWARE_SERVICE_EVENT      0x0001u
 #define FIRMWARE_TEST_PRESS_EVENT   0x0002u
@@ -68,6 +69,7 @@ static tmosEvents Firmware_ProcessEvent(tmosTaskID task_id, tmosEvents events)
 
         Ps2Input_Process();
         UartInput_Process();
+        UsbHostHid_Process();
         BleOutput_ProcessInput();
         EventRouter_Process();
         UsbDevice_ProcessTask();
@@ -112,6 +114,7 @@ void Firmware_Init(void)
     EventRouter_Init();
     Ps2Input_Init();
     UartInput_Init();
+    UsbHostHid_Init();
     UsbDevice_Init();
     BleOutput_Init();
     EventRouter_SetOutputMask(ROUTER_OUTPUT_BOTH);

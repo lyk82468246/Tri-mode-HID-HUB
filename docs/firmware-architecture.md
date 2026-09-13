@@ -1,6 +1,6 @@
 # 固件系统架构与六阶段 Roadmap
 
-状态：Architecture v0.4。Milestone 1 已落地 TMOS 基础、静态 SPSC Ring、USB Device HID/CDC 复合输出和 CDC 回送；Milestone 2 已落地 BLE HOGP/NUS-compatible 输出；Milestone 3 已落地 PS/2 与 UART 输入适配器。USB Host、活跃链路策略和最终可靠性收口仍待后续里程碑。
+状态：Architecture v0.5。Milestone 1 已落地 TMOS 基础、静态 SPSC Ring、USB Device HID/CDC 复合输出和 CDC 回送；Milestone 2 已落地 BLE HOGP/NUS-compatible 输出；Milestone 3 已落地 PS/2 与 UART 输入适配器；Milestone 4 已落地 USB Host HID 非阻塞枚举、轮询与固定上限报表解析。活跃链路策略和最终可靠性收口仍待后续里程碑。
 
 ## 0. 约束与芯片容量校准
 
@@ -26,7 +26,7 @@ PS/2 CLK/DATA ── EXTI ISR ──> ps2_edge_ring
                                                          │
 UART RX ─────────────── UART ISR ─> uart_rx_ring ────────┤
                                                          ├─> router_input_ring
-USB 下行 Host ── transfer callback ─> usb_host_report_ring ─┘       │
+USB 下行 Host ── USB2 Host/TMOS poll ─> usb_host_report_ring ─┘       │
                                                                     │
                                                         Event_Router TMOS task
                                                                     │
@@ -45,7 +45,7 @@ USB 下行 Host ── transfer callback ─> usb_host_report_ring ─┘       
                    CDC 对端                                      NUS 对端
 ```
 
-这里的“上行/下行”按数据方向描述，不直接把开发板丝印中的 PA/PB 当作 MCU GPIO 端口名。USB Device 的复合描述符和端点状态机已在 M1 完成；下行物理 USB 口的 Host 控制器、VBUS 和 DP/DN 映射仍由 M4 按开发板原理图和 WCH USB 示例确认。当前 PS/2 与 UART 的首版开发板映射集中在 `src/board_pins.h`，与 [`docs/pin-plan.md`](pin-plan.md) 的 PA0/PA1、PA2/PA3、PA8/PA9 规划一致，迁移 PCB 时只需覆盖 board/pin 配置。
+这里的“上行/下行”按数据方向描述，不直接把开发板丝印中的 PA/PB 当作 MCU GPIO 端口名。USB Device 的复合描述符和端点状态机已在 M1 完成；M4 使用 CH582M 的第二个 USB 控制器作为下行 USB Host，首版 PCB 网络规划为 PB13/PB12 对应 USB-A D+/D−，PB6/HOST_EN 控制独立 VBUS 负载开关。当前 PS/2、UART 和 Host 电源的首版开发板映射集中在 `src/board_pins.h`，与 [`docs/pin-plan.md`](pin-plan.md) 的 PA0/PA1、PA2/PA3、PA8/PA9/PB6 规划一致，迁移 PCB 时只需覆盖 board/pin 配置。
 
 关键原则是：输入适配器先产生统一的 `RouterEvent`，路由器再复制成具体输出队列项；路由器不直接调用 USB 或 BLE 发送函数。
 
@@ -253,7 +253,7 @@ typedef struct
 
 ## 4. 静态 Buffer 与所有权
 
-这些是整个项目的建议容量，定义应只出现在一个 `.c` 文件中；头文件只声明类型和接口。M1/M2/M3 已实现 USB Device、CDC、BLE HOGP/NUS、PS/2 edge 和 UART RX 队列，USB Host raw report 的存储在 M4 再加入。容量不是越大越好，必须让 `.map` 文件证明 BLE/USB 栈、TMOS、应用状态、栈和余量都能放进 32KB SRAM。
+这些是整个项目的建议容量，定义应只出现在一个 `.c` 文件中；头文件只声明类型和接口。M1/M2/M3/M4 已实现 USB Device、CDC、BLE HOGP/NUS、PS/2 edge、UART RX 和 USB Host raw report 队列。容量不是越大越好，必须让 `.map` 文件证明 BLE/USB 栈、TMOS、应用状态、栈和余量都能放进 32KB SRAM。
 
 ```c
 typedef struct
@@ -272,17 +272,16 @@ typedef struct
 
 typedef struct
 {
-    uint8_t device_address;
-    uint8_t endpoint;
+    uint8_t interface_index;
     uint8_t length;
-    uint8_t flags;
+    uint8_t reserved[2];
     uint8_t bytes[64]; /* USB full-speed interrupt max packet */
-} UsbHostReport; /* 68 bytes */
+} UsbHostHidRawReport; /* 68 bytes */
 
 static Ps2EdgeSample g_ps2_keyboard_edge_storage[64] EVENT_ROUTER_ALIGN4;
 static Ps2EdgeSample g_ps2_mouse_edge_storage[64]    EVENT_ROUTER_ALIGN4;
 static UartRxItem    g_uart_rx_storage[128]           EVENT_ROUTER_ALIGN4;
-static UsbHostReport g_usb_host_report_storage[4]     EVENT_ROUTER_ALIGN4;
+static UsbHostHidRawReport g_usb_host_report_storage[4] EVENT_ROUTER_ALIGN4;
 static uint8_t       g_uart_frame[20]                 EVENT_ROUTER_ALIGN4;
 
 static RouterEvent g_router_input_storage[16] EVENT_ROUTER_ALIGN4;
@@ -298,6 +297,8 @@ static uint8_t g_usb_endpoint_storage[4][64] EVENT_ROUTER_ALIGN4;
 static Event_Router g_event_router EVENT_ROUTER_ALIGN4;
 ```
 
+M4 的实际 USB Host 静态对象还包括：USB2 Host RX/TX DMA `64 B × 2`，设备描述符 `18 B`，配置描述符 `256 B`，两个 Report Descriptor 缓存 `256 B × 2`，两个 HID 接口状态（每接口最多 24 个固定字段槽位），以及 `UsbHostHidRawReport[4]` 原始报表 Ring。M4 版本链接结果中这些对象由 ELF 符号可见：配置描述符 `0x100 B`、Report Descriptor 总缓存 `0x200 B`、接口状态总量 `0x508 B`、原始报表 Ring `0x110 B`，未使用堆分配。
+
 首版应用自有 Buffer 的粗略预算如下（不含 BLE 协议栈、USB 驱动内部对象和 C 栈）：
 
 | Buffer | 容量 | 约占 SRAM |
@@ -310,14 +311,14 @@ static Event_Router g_event_router EVENT_ROUTER_ALIGN4;
 | USB/BLE CDC/NUS 数据队列 | 8 × 24 B × 2 | 384 B |
 | 端点缓冲实际布局 | 192 B + 128 B × 3 | 576 B |
 | UART 分帧工作区 | 20 B | 20 B |
-| **M1/M2/M3 规划应用侧合计（不含 BLE 堆）** |  | **约 3.0 KB** |
+| **M1/M2/M3/M4 规划应用侧合计（不含 BLE 堆）** |  | **约 5.5 KB，最终以 map 为准** |
 
 建议应用层所有静态对象（包括协议状态、固定 Report Descriptor map、统计量和测试注入队列）先控制在 8KB 以内，把剩余 SRAM 留给 BLE/USB/TMOS 和运行栈。最终以链接器 map、启动时栈水位和最坏并发场景为准。
 
 所有权规则：
 
 1. PS/2 EXTI ISR 只写对应 edge ring；UART ISR 只写 UART ring。每个生产者有独立 SPSC ring，禁止多个 ISR 共写一个 MPSC ring。
-2. USB transfer callback 只复制有限长度报表并置 TMOS 事件；解析器消费 `UsbHostReport`，不能保存端点 DMA 指针。
+2. USB2 Host 硬件事务由 TMOS 每周期轮询完成；事务完成后只复制有限长度报表到 `UsbHostHidRawReport`，解析器不能保存端点 DMA 指针。
 3. 适配器消费 raw ring 后生成 `RouterEvent`，由 router task 消费；`Event_Router` 是规范化状态的唯一拥有者。
 4. 输出后端从自己的 `HidTxFrame` 队列取值，等待端点空闲/CCCD 开启/连接就绪后发送；不得把 ring 内存地址交给异步协议栈长期保存。
 5. 键盘快照可以合并旧帧，UART 数据不能无提示丢弃；每个丢弃路径必须增加统计量并触发 resync/backpressure 策略。
@@ -359,9 +360,21 @@ M3 把开发板阶段的物理输入限制在 `src/board_pins.h`：键盘 PS/2 �
 
 M3 的代码级验收已通过 RISC-V GCC 8.2.0 全工程语法检查、交叉链接、ELF 静态对象检查和动态分配调用审计；真实开发板的 PS/2 电平、UART 收发、USB/BLE 枚举及端到端报告仍需接线后执行。
 
-## 8. 六个 Milestone
+## 8. Milestone 4 已落地的 USB Host HID 边界
 
-后续实现严格按 M1 → M2 → M3 → M4 → M5 → M6。每个里程碑必须先通过验收、提交 Git，再进入下一个；未通过时只修当前里程碑，不提前并行扩展协议栈。
+M4 使用 CH582M 第二 USB 控制器（USB2/U2）作为 USB-A 下行 Host；上行 USB Device 仍由另一套 USB 控制器和 `src/usb_device.c` 管理。`src/usb_host_hid.c` 先把 WCH Host DMA 地址指向静态 64 B RX/TX 缓冲，再调用无等待的 `USB2_HostInit()`；控制传输和中断 IN 事务均由 TMOS 状态机推进。
+
+- 枚举状态依次覆盖 attach、16 ms bus reset、EP0 设备描述符 8 B/完整 18 B、SET_ADDRESS、配置描述符 9 B/完整长度、SET_CONFIGURATION、HID Report Descriptor、Boot `SET_PROTOCOL(0)`/`SET_IDLE(0)` 和 READY。
+- 控制传输拆为 SETUP、分包 DATA、DATA1 STATUS 三个阶段；单个阶段没有忙等，单笔控制请求有 200 ms TMOS 超时，IN endpoint 的 NAK 被当作正常空闲返回。
+- 配置解析只接受全速 HID interrupt IN，最多保留两个接口，每个端点报告不超过 64 B；Report Descriptor 固定上限 256 B，字段数组每接口固定 24 项，拒绝 Hub/Bulk/ISO、超长描述符或无法识别的通用 HID。
+- Boot Keyboard/Mouse 转成与 PS/2 相同的 8 B/4 B 中间报告；`protocol=0` 的通用 HID 解析 Report ID、键盘修饰键/数组、鼠标按钮/X/Y/Wheel 和相对轴。原始报告先进入 `UsbHostHidRawReport[4]` Ring，再由 TMOS 解析并注入 `EventRouter`。
+- 拔出会停止当前事务、关闭 Host root port，并对已见过的键盘/鼠标源投递全释放快照；传输超时、STALL、描述符越界和解析错误计入 `UsbHostHidStats`，在 100 ms 后以非阻塞方式重新枚举。
+
+M4 代码验收已通过 RISC-V GCC 8.2.0 全工程语法检查、交叉链接、ELF 静态对象检查、工程 XML/JSON 解析和应用层动态分配调用审计：Flash `166,832 B / 448 KB`，RAM `24,572 B / 32 KB`。真实开发板仍需验证 USB-A VBUS、PB13/PB12 物理映射、不同键鼠和热插拔时序。
+
+## 9. 六个 Milestone
+
+实现严格按 M1 → M2 → M3 → M4 → M5 → M6。每个里程碑必须先通过代码/硬件验收、提交 Git，再进入下一个；未通过时只修当前里程碑，不提前并行扩展协议栈。
 
 ### Milestone 1：TMOS 基础、静态内存与 USB Device 复合输出（已完成）
 
@@ -395,7 +408,7 @@ M3 的代码级验收已通过 RISC-V GCC 8.2.0 全工程语法检查、交叉�
 
 代码验收：两个 PS/2 edge Ring、Set 2/鼠标解码、奇偶校验、超时、溢出 resync、非阻塞 `F4`/ACK 状态机、UART 固定长度/超时分帧和背压路径均已进入工程，并通过交叉编译与静态对象检查。硬件验收：开发板杜邦线接 PS/2 键盘/鼠标可生成 M1 的 USB/BLE 报表；UART 输入可经 CDC/NUS 透传；故意制造 edge Ring 溢出后能统计、复位解码器并发送 release-all；ISR 执行时间保持在采样级别。该硬件验收待开发板接入后执行。
 
-### Milestone 4：USB Host HID 枚举与报表解析
+### Milestone 4：USB Host HID 枚举与报表解析（代码完成，硬件验收待执行）
 
 范围：
 
@@ -403,7 +416,7 @@ M3 的代码级验收已通过 RISC-V GCC 8.2.0 全工程语法检查、交叉�
 - 先实现 Boot Keyboard/Boot Mouse，再实现有固定上限的 Report Descriptor 字段表；禁止动态字段链表。
 - 处理 Report ID、相对/绝对轴、按钮、短报表、异常长度、拔插和设备复位。
 
-验收：外接至少两种键盘、两种鼠标和一个不同 Report ID 的 HID 设备可枚举；报表转成与 PS/2 相同的 `RouterEvent`；热插拔、短报表和不支持的 HID 不会破坏已连接的 USB Device/BLE 输出。
+代码验收：固定 DMA、非阻塞 EP0 控制传输、配置/HID/Report Descriptor 解析、Boot Keyboard/Mouse 轮询、Report ID/短报表/拔插/错误恢复已进入 `src/usb_host_hid.c`，并通过交叉编译与静态审计。硬件验收：外接至少两种键盘、两种鼠标和一个不同 Report ID 的 HID 设备可枚举；报表转成与 PS/2 相同的 `RouterEvent`；热插拔、短报表和不支持的 HID 不会破坏已连接的 USB Device/BLE 输出。
 
 ### Milestone 5：Event_Router、活跃上行链路与全链路合并
 
@@ -427,6 +440,6 @@ M3 的代码级验收已通过 RISC-V GCC 8.2.0 全工程语法检查、交叉�
 
 验收：所有定义的功能有可复现实验步骤；无应用层 `malloc/free`；错误可恢复或明确报告；在目标容量和最坏并发下有余量；PCB 迁移只改变 board/pin 层，不改变 router 中间格式。
 
-## 9. 后续实现纪律
+## 10. 后续实现纪律
 
-下一轮只实现 M4，不提前写全链路活跃链路策略。每个新模块先给出：输入/输出队列、静态内存大小、TMOS 事件位、所有权、溢出策略和验收用例，然后再写 `.c/.h`。
+下一轮只实现 M5，不提前扩展 M6 的 PCB/长期可靠性收口。每个新模块先给出：输入/输出队列、静态内存大小、TMOS 事件位、所有权、溢出策略和验收用例，然后再写 `.c/.h`。

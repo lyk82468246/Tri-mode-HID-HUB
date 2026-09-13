@@ -31,6 +31,10 @@
 #define BOARD_UART1_TX_PIN               (1u << 9) /* PA9 / UART_TX */
 #endif
 
+#ifndef BOARD_USB_HOST_ENABLE_PIN
+#define BOARD_USB_HOST_ENABLE_PIN        (1u << 6) /* PB6 / HOST_EN, active high */
+#endif
+
 #ifndef BOARD_UART1_BAUDRATE
 #define BOARD_UART1_BAUDRATE             115200u
 #endif
