@@ -1,6 +1,6 @@
 # 固件系统架构与六阶段 Roadmap
 
-状态：Architecture v0.2。Milestone 1 已落地 TMOS 基础、静态 SPSC Ring、USB Device HID/CDC 复合输出和 CDC 回送；PS/2、USB Host、BLE HOGP/NUS 仍未实现。
+状态：Architecture v0.3。Milestone 1 已落地 TMOS 基础、静态 SPSC Ring、USB Device HID/CDC 复合输出和 CDC 回送；Milestone 2 已落地 BLE HOGP/NUS-compatible 输出。PS/2、USB Host 和活跃链路策略仍待后续里程碑。
 
 ## 0. 约束与芯片容量校准
 
@@ -15,7 +15,7 @@
 
 因此本项目暂不按“1MB 代码 Flash”做链接和内存预算：必须以实际采购料号、数据手册和最终 `.map` 文件为准。如果实物确认是不同容量型号，应新增独立的芯片配置，不能静默沿用 CH582M 配置。
 
-WCH BLE 示例中可见 `GATT_bm_alloc()` / `GATT_bm_free()` 这样的协议栈报文缓冲 API。[WCH BLE UART 示例中的使用方式](https://github.com/openwch/ch583/issues/39) 本项目的规则是：应用层禁止 libc `malloc/free`；M2 必须确认这些 SDK API 的所有权、失败路径和可用的固定缓冲池。如果严格静态内存要求与某个 SDK 发送 API 冲突，先停在该里程碑记录冲突，不以宏或封装隐藏它。
+WCH BLE 示例中可见 `GATT_bm_alloc()` / `GATT_bm_free()` 这样的协议栈报文缓冲 API。[WCH BLE UART 示例中的使用方式](https://github.com/openwch/ch583/issues/39) M2 已完成审计：应用层禁止 libc `malloc/free`；通知发送只通过 WCH 协议栈提供的固定报文池申请 ATT 发送报文，成功后所有权转移给协议栈，失败路径立即调用 `GATT_bm_free()`。该 API 不属于应用层动态内存，代码和文档均保留这条边界，不能把它替换成未审计的自定义分配器。
 
 ## 1. 总体数据流
 
@@ -32,11 +32,17 @@ USB 下行 Host ── transfer callback ─> usb_host_report_ring ─┘       
                                                                     │
                          ┌──────────────────────────────────────────┼────────────────────┐
                          │                                          │                    │
-                   usb_hid_tx_ring                            ble_hid_tx_ring      stream_tx_ring
-                         │                                          │                    │
-                 USB Device task                              BLE HOGP task      USB CDC / BLE NUS task
-                         │                                          │                    │
-                   USB 上行 PC                                      BLE 主机        CDC/NUS 对端
+                   usb_hid_tx_ring                            ble_hid_tx_ring
+                         │                                          │
+                 USB Device task                              BLE HOGP task
+                         │                                          │
+                   USB 上行 PC                                      BLE 主机
+
+                   usb_stream_tx_ring                         ble_stream_tx_ring
+                         │                                          │
+                 USB CDC task                                BLE NUS task
+                         │                                          │
+                   CDC 对端                                      NUS 对端
 ```
 
 这里的“上行/下行”按数据方向描述，不直接把开发板丝印中的 PA/PB 当作 MCU GPIO 端口名。M1 必须依据开发板原理图和 WCH USB 示例确认：上行物理 USB 口使用 Device 控制器，下行物理 USB 口使用 Host 控制器，以及对应的 DP/DN 引脚。
@@ -90,6 +96,7 @@ typedef enum
     ROUTER_SRC_USB_MOUSE,
     ROUTER_SRC_UART,
     ROUTER_SRC_USB_CDC,
+    ROUTER_SRC_BLE_NUS,
     ROUTER_SRC_TEST,
     ROUTER_SOURCE_COUNT
 } RouterInputSource;
@@ -236,7 +243,8 @@ typedef struct
     StaticSpscRing input_ring;
     StaticSpscRing usb_hid_tx_ring;
     StaticSpscRing ble_hid_tx_ring;
-    StaticSpscRing stream_tx_ring;
+    StaticSpscRing usb_stream_tx_ring;
+    StaticSpscRing ble_stream_tx_ring;
 } Event_Router;
 ```
 
@@ -244,7 +252,7 @@ typedef struct
 
 ## 4. 静态 Buffer 与所有权
 
-这些是整个项目的建议容量，定义应只出现在一个 `.c` 文件中；头文件只声明类型和接口。M1 先实现 USB Device 和 CDC 队列，PS/2 edge、UART RX、USB Host raw report 的存储在 M3/M4 再加入。容量不是越大越好，必须让 `.map` 文件证明 BLE/USB 栈、TMOS、应用状态、栈和余量都能放进 32KB SRAM。
+这些是整个项目的建议容量，定义应只出现在一个 `.c` 文件中；头文件只声明类型和接口。M1/M2 已实现 USB Device、CDC、BLE HOGP/NUS 队列，PS/2 edge、UART RX、USB Host raw report 的存储在 M3/M4 再加入。容量不是越大越好，必须让 `.map` 文件证明 BLE/USB 栈、TMOS、应用状态、栈和余量都能放进 32KB SRAM。
 
 ```c
 typedef struct
@@ -278,7 +286,8 @@ static UsbHostReport g_usb_host_report_storage[4]     EVENT_ROUTER_ALIGN4;
 static RouterEvent g_router_input_storage[16] EVENT_ROUTER_ALIGN4;
 static HidTxFrame g_usb_hid_tx_storage[4]     EVENT_ROUTER_ALIGN4;
 static HidTxFrame g_ble_hid_tx_storage[4]     EVENT_ROUTER_ALIGN4;
-static StreamTxFrame g_stream_tx_storage[8]   EVENT_ROUTER_ALIGN4;
+static StreamTxFrame g_usb_stream_tx_storage[8] EVENT_ROUTER_ALIGN4;
+static StreamTxFrame g_ble_stream_tx_storage[8] EVENT_ROUTER_ALIGN4;
 
 /* WCH USB 驱动若要求应用提供端点/DMA 缓冲，再单独按其规则定义；
  * 若 SDK 已经拥有端点缓冲，不能重复分配一份。 */
@@ -296,9 +305,9 @@ static Event_Router g_event_router EVENT_ROUTER_ALIGN4;
 | USB Host 原始报表 | 4 × 68 B | 272 B |
 | Router 输入事件 | 16 × 32 B | 512 B |
 | USB/BLE HID 输出队列 | 4 × 24 B × 2 | 192 B |
-| CDC/NUS 数据队列 | 8 × 24 B | 192 B |
+| USB/BLE CDC/NUS 数据队列 | 8 × 24 B × 2 | 384 B |
 | 端点缓冲实际布局 | 192 B + 128 B × 3 | 576 B |
-| **M1 应用侧合计（不含 BLE 堆）** |  | **约 2.0 KB** |
+| **M1/M2 规划应用侧合计（不含 BLE 堆）** |  | **约 2.9 KB** |
 
 建议应用层所有静态对象（包括协议状态、固定 Report Descriptor map、统计量和测试注入队列）先控制在 8KB 以内，把剩余 SRAM 留给 BLE/USB/TMOS 和运行栈。最终以链接器 map、启动时栈水位和最坏并发场景为准。
 
@@ -325,11 +334,22 @@ static Event_Router g_event_router EVENT_ROUTER_ALIGN4;
 
 每个任务每次只处理固定数量的队列项（例如 4 项），还有数据就重新 `set event`。长事务拆成枚举/解析/发送状态机，不能用阻塞式 `while` 把 TMOS 调度器卡住。TMOS 事件位只表示“有工作”，具体数据始终在静态队列中。
 
-## 6. 六个 Milestone
+## 6. Milestone 2 已落地的 BLE 输出边界
+
+M2 的 BLE 外设任务已经按 WCH 官方外设流程接入：系统初始化 `CH58X_BLEInit()`、`HAL_Init()`、`GAPRole_PeripheralInit()`；服务注册完成后由 TMOS start event 调用 `GAPRole_PeripheralStartDevice()`。应用层不直接在路由器中调用 GATT API。
+
+- HOGP 使用标准 HID Service `0x1812`，Report Map 为 193 B，Report ID 与 USB 描述符保持一致：`1 = keyboard`、`2 = mouse`、`3 = gamepad`。键盘、鼠标和手柄均有独立输入 Report Characteristic 与 CCCD，并提供 Boot Keyboard/Mouse；Protocol Mode 在 Report/Boot 之间选择对应输入特征。
+- NUS-compatible 使用 Nordic UART Service 的标准 128 位 UUID。RX 接收 Write/Write Without Response 后只把最多 20 B 复制进 `BleNusRxFrame[4]` 静态 SPSC Ring；TMOS 再以 `ROUTER_SRC_BLE_NUS` 注入 `EventRouter`。TX 受 CCCD 和 `ATT_GetMTU(conn) - 3` 限制，当前默认分片上限为 20 B。
+- 路由器把每个 HID/数据帧分别复制到 USB 与 BLE 队列，BLE 后端用 `Peek` 在连接、CCCD 或发送资源暂不可用时保留队首；每个 2 ms 周期最多尝试一帧 HID 和一帧 NUS，避免忙等和无界重试。M2 联调默认 `ROUTER_OUTPUT_BOTH`，M5 再依据 USB configured、BLE connection/CCCD 状态实现自动活跃链路策略。
+- 断链时复位 HID/NUS CCCD 和 BLE 连接状态，不把 DMA 或 Ring 内存地址交给协议栈长期持有。`GATT_bm_alloc()` 成功后由 WCH BLE 栈接管报文，失败则由应用立即 `GATT_bm_free()`；这是 SDK 规定的栈报文池接口，不是应用层 libc `malloc/free`。
+
+M2 的代码级验收已通过 MounRiver 自带 RISC-V GCC 8.2.0 交叉编译、`-Wall -Wextra -fsyntax-only`、工程 JSON/XML 解析和 ELF 静态对象检查：Flash `155,436 B / 448 KB`，RAM `20,204 B / 32 KB`；HOGP Report Map、GATT 属性表、CCCD 数量和静态 NUS RX Ring 均已进入最终镜像。电脑/手机实际 BLE 配对、CCCD 写入、HID 收发和 MTU 协商仍需在 CH582M 开发板上执行，不能由交叉编译替代。
+
+## 7. 六个 Milestone
 
 后续实现严格按 M1 → M2 → M3 → M4 → M5 → M6。每个里程碑必须先通过验收、提交 Git，再进入下一个；未通过时只修当前里程碑，不提前并行扩展协议栈。
 
-### Milestone 1：TMOS 基础、静态内存与 USB Device 复合输出
+### Milestone 1：TMOS 基础、静态内存与 USB Device 复合输出（已完成）
 
 范围：
 
@@ -340,16 +360,16 @@ static Event_Router g_event_router EVENT_ROUTER_ALIGN4;
 
 验收：交叉编译和链接通过；代码具备 PC 复合设备枚举、HID 报表提交和 CDC 回送路径；实际开发板验收需确认键盘/鼠标/手柄输入报告、CDC 收发、USB reset、端点 busy/NAK 均不阻塞 TMOS。默认测试注入关闭，开启宏后才发送周期性 `a` 按键。
 
-### Milestone 2：BLE HOGP 与 NUS-compatible 输出
+### Milestone 2：BLE HOGP 与 NUS-compatible 输出（代码完成，硬件验收待执行）
 
 范围：
 
 - 接入当前 MRS/官方 SDK 版本对应的 BLE 头文件、ROM 库/静态库和 TMOS 类型。
 - 实现 HOGP 键盘/鼠标/手柄 Report Map、广播、配对、连接、CCCD 和通知队列。
 - 增加 NUS-compatible 128-bit service，用于 UART ↔ BLE 数据透传；处理默认 MTU 与协商 MTU 的分片。
-- 完成 `GATT_bm_alloc/free` 或固定缓冲方案的所有权审计，不接受未记录的动态内存路径。
+- 完成 `GATT_bm_alloc/free` 报文池的所有权审计；应用层不接受未记录的 libc 动态内存路径。
 
-验收：电脑/手机可配对为 BLE 键鼠，能收到完整键盘按下/释放和鼠标报表；NUS 数据不与 HOGP 报表串线；断连后队列清理且不会发送旧报表。
+代码验收：交叉编译、语法检查、GATT 属性表/Report Map/静态对象检查通过；USB 与 BLE 使用独立 HID/数据队列，NUS 数据不会与 HOGP 报表串线。硬件验收：电脑/手机实际配对为 BLE 键鼠，验证完整键盘按下/释放、鼠标报表、NUS 数据、CCCD、断连重连和 MTU 协商；该部分待开发板接入后执行。
 
 ### Milestone 3：PS/2 与 UART 输入适配器
 
@@ -393,6 +413,6 @@ static Event_Router g_event_router EVENT_ROUTER_ALIGN4;
 
 验收：所有定义的功能有可复现实验步骤；无应用层 `malloc/free`；错误可恢复或明确报告；在目标容量和最坏并发下有余量；PCB 迁移只改变 board/pin 层，不改变 router 中间格式。
 
-## 7. 后续实现纪律
+## 8. 后续实现纪律
 
-下一轮只实现 M2，不提前写 PS/2、USB Host 或全链路合并代码。每个新模块先给出：输入/输出队列、静态内存大小、TMOS 事件位、所有权、溢出策略和验收用例，然后再写 `.c/.h`。
+下一轮只实现 M3，不提前写 USB Host 或全链路活跃链路策略。每个新模块先给出：输入/输出队列、静态内存大小、TMOS 事件位、所有权、溢出策略和验收用例，然后再写 `.c/.h`。

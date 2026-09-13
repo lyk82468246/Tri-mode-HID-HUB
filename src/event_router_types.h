@@ -21,6 +21,7 @@ typedef enum
     ROUTER_SRC_USB_MOUSE,
     ROUTER_SRC_UART,
     ROUTER_SRC_USB_CDC,
+    ROUTER_SRC_BLE_NUS,
     ROUTER_SRC_TEST,
     ROUTER_SOURCE_COUNT
 } RouterInputSource;
@@ -167,7 +168,8 @@ typedef struct
     StaticSpscRing input_ring;
     StaticSpscRing usb_hid_tx_ring;
     StaticSpscRing ble_hid_tx_ring;
-    StaticSpscRing stream_tx_ring;
+    StaticSpscRing usb_stream_tx_ring;
+    StaticSpscRing ble_stream_tx_ring;
 } Event_Router;
 
 #endif /* TRI_MODE_HID_HUB_EVENT_ROUTER_TYPES_H */

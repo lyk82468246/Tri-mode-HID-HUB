@@ -76,6 +76,24 @@ uint8_t StaticSpscRing_Pop(StaticSpscRing *ring, void *item)
     return 1;
 }
 
+uint8_t StaticSpscRing_Peek(const StaticSpscRing *ring, void *item)
+{
+    uint16_t tail;
+    uint16_t index;
+    uint8_t *source;
+
+    tail = ring->tail;
+    if(tail == ring->head)
+    {
+        return 0;
+    }
+    index = (uint16_t)(tail & (ring->capacity - 1u));
+    StaticSpscRing_MemoryBarrier();
+    source = &ring->storage[(uint32_t)index * ring->item_size];
+    StaticSpscRing_Copy((uint8_t *)item, source, ring->item_size);
+    return 1;
+}
+
 uint16_t StaticSpscRing_Count(const StaticSpscRing *ring)
 {
     return (uint16_t)(ring->head - ring->tail);

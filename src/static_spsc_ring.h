@@ -27,6 +27,7 @@ void StaticSpscRing_Init(StaticSpscRing *ring,
                          uint16_t capacity);
 
 uint8_t StaticSpscRing_Push(StaticSpscRing *ring, const void *item);
+uint8_t StaticSpscRing_Peek(const StaticSpscRing *ring, void *item);
 uint8_t StaticSpscRing_Pop(StaticSpscRing *ring, void *item);
 uint16_t StaticSpscRing_Count(const StaticSpscRing *ring);
 uint8_t StaticSpscRing_IsEmpty(const StaticSpscRing *ring);

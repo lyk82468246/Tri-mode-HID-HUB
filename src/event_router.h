@@ -5,6 +5,7 @@
 
 void EventRouter_Init(void);
 void EventRouter_Process(void);
+void EventRouter_SetOutputMask(uint8_t output_mask);
 
 uint8_t EventRouter_Post(const RouterEvent *event);
 
@@ -20,6 +21,10 @@ uint8_t EventRouter_InjectStreamData(uint8_t source,
 
 uint8_t EventRouter_DequeueUsbHidFrame(HidTxFrame *frame);
 uint8_t EventRouter_DequeueUsbStreamFrame(StreamTxFrame *frame);
+uint8_t EventRouter_DequeueBleHidFrame(HidTxFrame *frame);
+uint8_t EventRouter_DequeueBleStreamFrame(StreamTxFrame *frame);
+uint8_t EventRouter_PeekBleHidFrame(HidTxFrame *frame);
+uint8_t EventRouter_PeekBleStreamFrame(StreamTxFrame *frame);
 
 Event_Router *EventRouter_GetContext(void);
 

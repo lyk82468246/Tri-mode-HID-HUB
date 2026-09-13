@@ -105,3 +105,14 @@ API 可以取得当前页 PNG 渲染用于复查；当前 Gateway 下 PDF 导出
 5. 保留 WCH `CH58x_usbdev.h` 接口，但排除原始 `CH58x_usbdev.c`，由 `src/usb_device.c` 提供复合控制器所需符号，避免同名初始化/中断处理函数冲突。
 6. 使用 MounRiver Studio 自带 RISC-V Embedded GCC 8.2.0 完成交叉编译和链接验证：Flash 26,460 B / 448 KB，RAM 15,388 B / 32 KB；尚未连接开发板执行真实 USB 枚举、HID 主机识别或 CDC 收发验收。
 7. M1 仅预留 BLE HID/数据队列，不启动 BLE 广播、HOGP 或 NUS；下一步进入 M2 前需先审查 BLE SDK 报文 Buffer 所有权和 MTU 分片策略。
+
+## 2026-09-13 Milestone 2：BLE HOGP/NUS-compatible 输出
+
+1. 对照本仓库随工程保存的 WCH CH58x BLE 头文件、静态库和官方示例，确认外设初始化顺序、GATT 属性回调、CCCD、连接角色回调、TMOS 消息处理以及 `GATT_bm_alloc/free` 的报文所有权。
+2. 新增 `src/ble_hid_service.c/.h`：实现标准 HID Service `0x1812`，包含 193 B Report Map、Keyboard/Mouse/Gamepad Report ID 1/2/3、Boot Keyboard/Mouse、Report Reference、Protocol Mode、HID Control Point 和输入/输出 CCCD。
+3. 新增 `src/ble_nus_service.c/.h`：实现 Nordic UART Service UUID-compatible 的 RX Write/Write Without Response 与 TX Notification；RX 使用 `BleNusRxFrame[4]` 固定 Ring，按 ATT 默认 MTU 预算限制为每帧最多 20 B。
+4. 新增 `src/ble_output.c/.h`：注册 BLE Peripheral/TMOS 任务，配置广播、配对、连接状态、HOGP/NUS 服务和有限预算通知发送。每个 2 ms 周期最多尝试一帧 BLE HID 和一帧 NUS；连接/CCCD/发送资源暂不可用时保留队首，不忙等。
+5. 修改 `Event_Router`：HID 和数据流都按输出掩码分别复制到 USB、BLE 两套队列，避免 USB 与 BLE 竞争同一队列；M2 默认使用 `ROUTER_OUTPUT_BOTH`，动态活跃链路策略留到 M5。
+6. 应用层未发现 libc `malloc/free/calloc/realloc` 调用。BLE 通知使用 WCH SDK 要求的协议栈报文池：`GATT_bm_alloc()` 成功后由协议栈接管，失败立即 `GATT_bm_free()`；这不等同于应用层动态分配，边界已写入架构文档。
+7. 使用 MounRiver Studio 自带 RISC-V GCC 8.2.0 完成交叉编译和链接：Flash `155,436 B / 448 KB`，RAM `20,204 B / 32 KB`。`-Wall -Wextra -fsyntax-only`、工程 JSON/XML 解析、ELF 符号和 Report Map/属性表大小检查均通过。
+8. 尚未接入 CH582M 开发板进行真实 BLE 配对、HID 主机识别、CCCD 写入、NUS 收发、MTU 协商和断连重连验证；下一阶段按顺序进入 M3，实现两路 PS/2 与 UART 输入适配器。

@@ -1,5 +1,6 @@
 #include "HAL.h"
 
+#include "ble_output.h"
 #include "event_router.h"
 #include "tmos_app.h"
 #include "usb_device.h"
@@ -63,8 +64,10 @@ static tmosEvents Firmware_ProcessEvent(tmosTaskID task_id, tmosEvents events)
                                                 cdc_length);
         }
 
+        BleOutput_ProcessInput();
         EventRouter_Process();
         UsbDevice_ProcessTask();
+        BleOutput_Process();
         if(g_firmware_task_id != INVALID_TASK_ID)
         {
             tmos_start_reload_task(g_firmware_task_id,
@@ -98,12 +101,14 @@ static tmosEvents Firmware_ProcessEvent(tmosTaskID task_id, tmosEvents events)
 
 void Firmware_Init(void)
 {
-    /* This is the WCH BLE SDK/TMOS runtime initialization; no BLE role is
-     * started in M1.  HOGP/NUS are intentionally deferred to M2. */
+    /* WCH BLE SDK/TMOS runtime initialization. */
     CH58X_BLEInit();
     HAL_Init();
+    (void)GAPRole_PeripheralInit();
     EventRouter_Init();
     UsbDevice_Init();
+    BleOutput_Init();
+    EventRouter_SetOutputMask(ROUTER_OUTPUT_BOTH);
 
     g_firmware_task_id = TMOS_ProcessEventRegister(Firmware_ProcessEvent);
     EventRouter_GetContext()->task_id = g_firmware_task_id;

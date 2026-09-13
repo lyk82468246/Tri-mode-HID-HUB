@@ -8,7 +8,8 @@
 static RouterEvent g_router_input_storage[ROUTER_INPUT_CAPACITY] EVENT_ROUTER_ALIGN4;
 static HidTxFrame g_usb_hid_tx_storage[ROUTER_HID_TX_CAPACITY] EVENT_ROUTER_ALIGN4;
 static HidTxFrame g_ble_hid_tx_storage[ROUTER_HID_TX_CAPACITY] EVENT_ROUTER_ALIGN4;
-static StreamTxFrame g_stream_tx_storage[ROUTER_STREAM_TX_CAPACITY] EVENT_ROUTER_ALIGN4;
+static StreamTxFrame g_usb_stream_tx_storage[ROUTER_STREAM_TX_CAPACITY] EVENT_ROUTER_ALIGN4;
+static StreamTxFrame g_ble_stream_tx_storage[ROUTER_STREAM_TX_CAPACITY] EVENT_ROUTER_ALIGN4;
 
 static Event_Router g_event_router EVENT_ROUTER_ALIGN4;
 
@@ -44,13 +45,22 @@ void EventRouter_Init(void)
                         g_ble_hid_tx_storage,
                         sizeof(g_ble_hid_tx_storage[0]),
                         ROUTER_HID_TX_CAPACITY);
-    StaticSpscRing_Init(&g_event_router.stream_tx_ring,
-                        g_stream_tx_storage,
-                        sizeof(g_stream_tx_storage[0]),
+    StaticSpscRing_Init(&g_event_router.usb_stream_tx_ring,
+                        g_usb_stream_tx_storage,
+                        sizeof(g_usb_stream_tx_storage[0]),
+                        ROUTER_STREAM_TX_CAPACITY);
+    StaticSpscRing_Init(&g_event_router.ble_stream_tx_ring,
+                        g_ble_stream_tx_storage,
+                        sizeof(g_ble_stream_tx_storage[0]),
                         ROUTER_STREAM_TX_CAPACITY);
 
     g_event_router.output_policy = ROUTER_POLICY_USB_ONLY;
     g_event_router.active_output_mask = ROUTER_OUTPUT_USB;
+}
+
+void EventRouter_SetOutputMask(uint8_t output_mask)
+{
+    g_event_router.active_output_mask = (uint8_t)(output_mask & ROUTER_OUTPUT_BOTH);
 }
 
 uint8_t EventRouter_Post(const RouterEvent *event)
@@ -160,27 +170,42 @@ uint8_t EventRouter_InjectStreamData(uint8_t source,
     return accepted;
 }
 
+static void EventRouter_FillHidFrame(const RouterEvent *event,
+                                     HidTxFrame *frame,
+                                     uint8_t report_id,
+                                     uint8_t length)
+{
+    uint8_t i;
+
+    frame->report_id = report_id;
+    frame->kind = event->kind;
+    frame->length = length;
+    frame->flags = event->flags;
+    for(i = 0; i < ROUTER_EVENT_PAYLOAD_LEN; ++i)
+    {
+        frame->bytes[i] = 0;
+    }
+    EventRouter_CopyPayload(frame->bytes,
+                            event->payload.raw,
+                            event->length,
+                            length);
+}
+
 static void EventRouter_QueueHid(const RouterEvent *event,
                                  uint8_t report_id,
                                  uint8_t length)
 {
     HidTxFrame frame;
-    uint8_t i;
 
-    frame.report_id = report_id;
-    frame.kind = event->kind;
-    frame.length = length;
-    frame.flags = event->flags;
-    for(i = 0; i < ROUTER_EVENT_PAYLOAD_LEN; ++i)
+    EventRouter_FillHidFrame(event, &frame, report_id, length);
+
+    if((g_event_router.active_output_mask & ROUTER_OUTPUT_USB) &&
+       !StaticSpscRing_Push(&g_event_router.usb_hid_tx_ring, &frame))
     {
-        frame.bytes[i] = 0;
+        g_event_router.stats.hid_tx_drop++;
     }
-    EventRouter_CopyPayload(frame.bytes,
-                            event->payload.raw,
-                            event->length,
-                            length);
-
-    if(!StaticSpscRing_Push(&g_event_router.usb_hid_tx_ring, &frame))
+    if((g_event_router.active_output_mask & ROUTER_OUTPUT_BLE) &&
+       !StaticSpscRing_Push(&g_event_router.ble_hid_tx_ring, &frame))
     {
         g_event_router.stats.hid_tx_drop++;
     }
@@ -202,7 +227,13 @@ static void EventRouter_QueueStream(const RouterEvent *event)
         frame.bytes[i] = 0;
     }
 
-    if(!StaticSpscRing_Push(&g_event_router.stream_tx_ring, &frame))
+    if((g_event_router.active_output_mask & ROUTER_OUTPUT_USB) &&
+       !StaticSpscRing_Push(&g_event_router.usb_stream_tx_ring, &frame))
+    {
+        g_event_router.stats.stream_tx_drop++;
+    }
+    if((g_event_router.active_output_mask & ROUTER_OUTPUT_BLE) &&
+       !StaticSpscRing_Push(&g_event_router.ble_stream_tx_ring, &frame))
     {
         g_event_router.stats.stream_tx_drop++;
     }
@@ -216,12 +247,6 @@ void EventRouter_Process(void)
     while((processed < ROUTER_PROCESS_BUDGET) &&
           StaticSpscRing_Pop(&g_event_router.input_ring, &event))
     {
-        if(!(g_event_router.active_output_mask & ROUTER_OUTPUT_USB))
-        {
-            ++processed;
-            continue;
-        }
-
         switch(event.kind)
         {
             case ROUTER_EVENT_KEYBOARD_REPORT:
@@ -264,7 +289,27 @@ uint8_t EventRouter_DequeueUsbHidFrame(HidTxFrame *frame)
 
 uint8_t EventRouter_DequeueUsbStreamFrame(StreamTxFrame *frame)
 {
-    return StaticSpscRing_Pop(&g_event_router.stream_tx_ring, frame);
+    return StaticSpscRing_Pop(&g_event_router.usb_stream_tx_ring, frame);
+}
+
+uint8_t EventRouter_DequeueBleHidFrame(HidTxFrame *frame)
+{
+    return StaticSpscRing_Pop(&g_event_router.ble_hid_tx_ring, frame);
+}
+
+uint8_t EventRouter_DequeueBleStreamFrame(StreamTxFrame *frame)
+{
+    return StaticSpscRing_Pop(&g_event_router.ble_stream_tx_ring, frame);
+}
+
+uint8_t EventRouter_PeekBleHidFrame(HidTxFrame *frame)
+{
+    return StaticSpscRing_Peek(&g_event_router.ble_hid_tx_ring, frame);
+}
+
+uint8_t EventRouter_PeekBleStreamFrame(StreamTxFrame *frame)
+{
+    return StaticSpscRing_Peek(&g_event_router.ble_stream_tx_ring, frame);
 }
 
 Event_Router *EventRouter_GetContext(void)
