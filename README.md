@@ -2,6 +2,17 @@
 
 基于 CH582M 的三模 HID 转接器首版工程记录与固件工程。
 
+## 文档导航与版本
+
+| 内容 | 入口 | 状态 |
+|---|---|---|
+| 硬件设计资料 | [硬件文档索引](docs/hardware/README.md) | 区分 Rev A 实际记录与 Rev B 提案 |
+| 信用卡尺寸 PCB 规划 | [Rev B 设计说明](docs/hardware/pcb-design-study.md)、[布局 SVG](docs/hardware/pcb-concept-revb.svg)、[引脚表](docs/hardware/pin-allocation-revb.md) | 2026-09-21 提案，尚未同步云端原理图或固件 |
+| 首版原理图记录 | [Rev A 引脚规划](docs/pin-plan.md)、[设计取舍](docs/design-decisions.md) | 历史记录，包含待整改项目 |
+| 固件实现与架构 | [固件说明](docs/firmware.md)、[架构与里程碑](docs/firmware-architecture.md) | M1–M6 代码已落地 |
+| 实测验收 | [M6 验证清单](docs/m6-validation.md) | 开发板及 PCB 物理验收待完成 |
+| 变更记录 | [操作日志](docs/operation-log.md) | 按日期保留设计与实现过程 |
+
 ## 当前状态
 
 - 已在嘉立创 EDA 专业版中通过 Run API Gateway 完成单页原理图的结构重排版（Rev A），并完成一次 API 网表审计。
@@ -10,7 +21,7 @@
 - J3/J4 已更换为 6 针圆形 DIN-6 PS/2 插座候选 C23689424；原先错误的 9 针长条封装已移除。
 - 原理图按电源、USB、CH582M/RF、PS/2、RS232、调试/扩展分区；短引线不显示重复网络名，网络由引脚处端口维护。
 - 暂不纳入 2.4 GHz 接收端软硬件；2.4 GHz 这里仅指 CH582M 的 BLE/RF 部分。
-- 尚未开始 PCB；当前原理图是可继续审查的工程首版，不是可直接打板的 release 版本。
+- 已完成 Rev B PCB 概念布局和引脚分配；尚未建立可制造的 PCB 布局布线工程。云端原理图仍是待审查的 Rev A，不是可直接打板的 release 版本。
 - USB-C、USB-A、DB9、电池座、OLED/排针、晶振、天线和按键中仍有若干 C990 Extended Part 机械候选，尚未达到生产 BOM 的可追溯要求。
 - 已加入根目录的 CH582M MounRiver Studio 固件工程；Milestone 1 的 USB Device HID/CDC、Milestone 2 的 BLE HOGP/NUS-compatible 输出、Milestone 3 的 PS/2/UART 输入适配器、Milestone 4 的 USB Host HID 枚举/解析、Milestone 5 的 Event_Router 全链路合并和 Milestone 6 的运行时诊断代码已经落地。真实开发板验收仍需按 Roadmap 执行。
 
@@ -45,14 +56,17 @@ MounRiver Studio 入口为 [`CH582M.wvproj`](CH582M.wvproj)，固件源码从 [`
 
 系统级路由器、静态内存模型和六阶段实现顺序见 [`docs/firmware-architecture.md`](docs/firmware-architecture.md)。
 
-## 电源方案
+## 电源设计意图与待核对项
 
 ```text
-USB-C VBUS_RAW ── BQ24074 ── SYS ── TPS63031 ── 3V3
-                         └── BAT ── TPS61023 ── 5V_HOST ── SY6280 ── VBUS_HOST
+USB-C VBUS_RAW ── BQ24074 ── SYS ─┬─ TPS63031 ── 3V3
+                      │         └─ TPS61023 ── 5V_HOST ── 受控限流开关 ── VBUS_HOST
+                      └── BAT ── 1S 受保护电池
 ```
 
 J6 按“自带保护板的 1S 锂电池”建模。充电电流、终止电流、TS/NTC、输入限流和 USB-A 最大负载仍需结合最终电池规格及热设计确认。
+
+上述图按 `docs/pin-plan.md` 的 SYS 供电意图修正了旧 README 中 BAT 直供升压的矛盾，实际云端网表仍待读回复核。Rev A 开关记录为 SY6280；Rev B 提议改为 TPS2553 并增加 FAULT#，尚未实施，详见 [Rev B 方案](docs/hardware/pcb-design-study.md)。
 
 ## 被动件封装约束
 

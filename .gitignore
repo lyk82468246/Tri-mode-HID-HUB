@@ -16,3 +16,6 @@ out/
 *.lst
 *.o
 *.d
+
+# Downloaded datasheets and temporary renders for hardware research
+tmp/pcb-research/

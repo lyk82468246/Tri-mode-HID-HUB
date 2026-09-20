@@ -1,0 +1,346 @@
+{
+  "board_mm": [
+    85.6,
+    53.98
+  ],
+  "origin": "top-left, x right, y down, top view",
+  "rotation": "0 deg = pin1 SW",
+  "antenna_reservation_mm": {
+    "x": 32,
+    "y": 0,
+    "w": 25,
+    "h": 10
+  },
+  "components": [
+    {
+      "ref": "J3",
+      "label": "PS/2 键盘",
+      "detail": "Mini-DIN-6",
+      "x_mm": 0,
+      "y_mm": 8,
+      "w_mm": 15,
+      "h_mm": 15,
+      "group": "ps2",
+      "facing": "west"
+    },
+    {
+      "ref": "J4",
+      "label": "PS/2 鼠标",
+      "detail": "Mini-DIN-6",
+      "x_mm": 0,
+      "y_mm": 27,
+      "w_mm": 15,
+      "h_mm": 15,
+      "group": "ps2",
+      "facing": "west"
+    },
+    {
+      "ref": "J1",
+      "label": "USB-C",
+      "detail": "Device / 5 V IN",
+      "x_mm": 76.6,
+      "y_mm": 12,
+      "w_mm": 9,
+      "h_mm": 10,
+      "group": "usb",
+      "facing": "east"
+    },
+    {
+      "ref": "J2",
+      "label": "USB-A",
+      "detail": "Host / 5 V OUT",
+      "x_mm": 73.6,
+      "y_mm": 25,
+      "w_mm": 12,
+      "h_mm": 16,
+      "group": "usb",
+      "facing": "east"
+    },
+    {
+      "ref": "J5",
+      "label": "RS232 · DB9 公座",
+      "detail": "DTE · TX / RX / GND",
+      "x_mm": 26,
+      "y_mm": 39.98,
+      "w_mm": 32,
+      "h_mm": 14,
+      "group": "uart",
+      "facing": "south"
+    },
+    {
+      "ref": "J6",
+      "label": "1S BAT",
+      "detail": "带保护电池",
+      "x_mm": 78,
+      "y_mm": 43.5,
+      "w_mm": 7.6,
+      "h_mm": 8,
+      "group": "power",
+      "facing": "east"
+    },
+    {
+      "ref": "J7",
+      "label": "I²C / OLED",
+      "detail": "1×4 · 3V3",
+      "x_mm": 50,
+      "y_mm": 11.5,
+      "w_mm": 11,
+      "h_mm": 4,
+      "group": "i2c",
+      "facing": "up"
+    },
+    {
+      "ref": "J8",
+      "label": "SPI0",
+      "detail": "2×4 · 3V3",
+      "x_mm": 5,
+      "y_mm": 46.5,
+      "w_mm": 11,
+      "h_mm": 5.5,
+      "group": "spi",
+      "facing": "up"
+    },
+    {
+      "ref": "J9",
+      "label": "WCH-Link",
+      "detail": "2×3 · VTref",
+      "x_mm": 53,
+      "y_mm": 34,
+      "w_mm": 8,
+      "h_mm": 5.5,
+      "group": "debug",
+      "facing": "up"
+    },
+    {
+      "ref": "J10",
+      "label": "UART3 TTL",
+      "detail": "1×4 · 3V3",
+      "x_mm": 20,
+      "y_mm": 2,
+      "w_mm": 11,
+      "h_mm": 4,
+      "group": "uart",
+      "facing": "up"
+    },
+    {
+      "ref": "U9",
+      "label": "IrDA SIR",
+      "detail": "TFBS4711",
+      "x_mm": 61,
+      "y_mm": 0,
+      "w_mm": 6.5,
+      "h_mm": 3.5,
+      "group": "ir",
+      "facing": "north"
+    },
+    {
+      "ref": "U11",
+      "label": "38 kHz RX",
+      "detail": "TSOP38438",
+      "x_mm": 70,
+      "y_mm": 0,
+      "w_mm": 5.5,
+      "h_mm": 5.5,
+      "group": "ir",
+      "facing": "north"
+    },
+    {
+      "ref": "D_IR",
+      "label": "940 nm TX",
+      "detail": "独立 LED",
+      "x_mm": 77,
+      "y_mm": 0,
+      "w_mm": 5,
+      "h_mm": 7,
+      "group": "ir",
+      "facing": "north"
+    },
+    {
+      "ref": "U10+X2",
+      "label": "MCP2120 + 7.3728 MHz",
+      "detail": "IrDA 编解码 / 本地去耦",
+      "x_mm": 62,
+      "y_mm": 7,
+      "w_mm": 13,
+      "h_mm": 11,
+      "group": "ir",
+      "facing": "zone"
+    },
+    {
+      "ref": "Q_IR",
+      "label": "LED 驱动",
+      "detail": "MOSFET / 限流",
+      "x_mm": 77,
+      "y_mm": 8,
+      "w_mm": 6,
+      "h_mm": 3,
+      "group": "ir",
+      "facing": "zone"
+    },
+    {
+      "ref": "PS2-K",
+      "label": "BSS138 ×2",
+      "detail": "上拉 / ESD / 限流",
+      "x_mm": 17,
+      "y_mm": 11,
+      "w_mm": 9,
+      "h_mm": 9,
+      "group": "ps2",
+      "facing": "zone"
+    },
+    {
+      "ref": "PS2-M",
+      "label": "BSS138 ×2",
+      "detail": "上拉 / ESD / 限流",
+      "x_mm": 17,
+      "y_mm": 29,
+      "w_mm": 9,
+      "h_mm": 9,
+      "group": "ps2",
+      "facing": "zone"
+    },
+    {
+      "ref": "U6",
+      "label": "MAX3232E",
+      "detail": "电荷泵电容",
+      "x_mm": 35,
+      "y_mm": 32,
+      "w_mm": 12,
+      "h_mm": 6.5,
+      "group": "uart",
+      "facing": "zone"
+    },
+    {
+      "ref": "U4",
+      "label": "TPS61023",
+      "detail": "5V_HOST + L/C",
+      "x_mm": 63,
+      "y_mm": 32.5,
+      "w_mm": 8.5,
+      "h_mm": 8.5,
+      "group": "power",
+      "facing": "zone"
+    },
+    {
+      "ref": "U3",
+      "label": "TPS63031",
+      "detail": "3V3 + L/C",
+      "x_mm": 60,
+      "y_mm": 43,
+      "w_mm": 8,
+      "h_mm": 9,
+      "group": "power",
+      "facing": "zone"
+    },
+    {
+      "ref": "U2",
+      "label": "BQ24074",
+      "detail": "充电 / SYS",
+      "x_mm": 69,
+      "y_mm": 43,
+      "w_mm": 8,
+      "h_mm": 9,
+      "group": "power",
+      "facing": "zone"
+    },
+    {
+      "ref": "U5",
+      "label": "TPS2553",
+      "detail": "限流 / FAULT#",
+      "x_mm": 62,
+      "y_mm": 25,
+      "w_mm": 6.5,
+      "h_mm": 3,
+      "group": "power",
+      "facing": "zone"
+    },
+    {
+      "ref": "U7",
+      "label": "ESD-C",
+      "detail": "短接地",
+      "x_mm": 72,
+      "y_mm": 19,
+      "w_mm": 3.5,
+      "h_mm": 3.5,
+      "group": "usb",
+      "facing": "zone"
+    },
+    {
+      "ref": "U8",
+      "label": "ESD-A",
+      "detail": "短接地",
+      "x_mm": 70,
+      "y_mm": 29,
+      "w_mm": 3,
+      "h_mm": 3,
+      "group": "usb",
+      "facing": "zone"
+    },
+    {
+      "ref": "X1",
+      "label": "32 MHz",
+      "detail": "晶振及负载",
+      "x_mm": 43,
+      "y_mm": 17,
+      "w_mm": 6,
+      "h_mm": 4,
+      "group": "rf",
+      "facing": "zone"
+    },
+    {
+      "ref": "RF-M",
+      "label": "RF 调谐",
+      "detail": "预留焊盘",
+      "x_mm": 39,
+      "y_mm": 16.5,
+      "w_mm": 3,
+      "h_mm": 3.5,
+      "group": "rf",
+      "facing": "zone"
+    },
+    {
+      "ref": "LSE",
+      "label": "32.768k",
+      "detail": "可选 DNP",
+      "x_mm": 34,
+      "y_mm": 28.5,
+      "w_mm": 6,
+      "h_mm": 3,
+      "group": "spare",
+      "facing": "zone"
+    },
+    {
+      "ref": "DCDC",
+      "label": "U1 去耦 / L",
+      "detail": "本地回路",
+      "x_mm": 35,
+      "y_mm": 26,
+      "w_mm": 5,
+      "h_mm": 2,
+      "group": "power",
+      "facing": "zone"
+    },
+    {
+      "ref": "KEYS",
+      "label": "USER / RST / BOOT",
+      "detail": "3 个顶部按键",
+      "x_mm": 52,
+      "y_mm": 19,
+      "w_mm": 11,
+      "h_mm": 3.5,
+      "group": "debug",
+      "facing": "zone"
+    },
+    {
+      "ref": "U1",
+      "label": "CH582M",
+      "detail": "5×5 mm",
+      "x_mm": 40.5,
+      "y_mm": 22.0,
+      "w_mm": 5,
+      "h_mm": 5,
+      "group": "debug",
+      "facing": "chip"
+    }
+  ]
+}

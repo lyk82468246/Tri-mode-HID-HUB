@@ -1,0 +1,50 @@
+﻿pin,silicon,side_top_view,net,group,note
+1,VDCID,南,CH_VDCI,power,内部电源节点；连接 VDCIA；按 DCDC/LDO 模式去耦
+2,VSW,南,CH_VSW,power,到本地电感再到 VDCID；是否启用内部 DCDC 与固件一致
+3,VIO33/VDD33,南,3V3,power,电源输入；贴近引脚去耦
+4,PA7/AIN11,南,USB_C_VBUS_ADC,power,新增：VBUS_RAW 分压/RC；禁止 5 V 直连
+5,PA8/RXD1,南,RS232_RX_TTL,uart,UART1 默认映射；MAX3232 ROUT1 到 MCU
+6,PA9/TXD1,南,RS232_TX_TTL,uart,UART1 默认映射；MCU 到 MAX3232 DIN1
+7,PB9,南,CHG_N,power,BQ24074 CHG#；开漏，外部上拉到 3V3
+8,PB8,南,CHG_EN1,power,BQ24074 EN1；外部下拉，上电默认 USB100
+9,PB17,南,CHG_EN2,power,BQ24074 EN2；外部下拉，上电默认 USB100
+10,PB16,南,INPUT_PGOOD_N,power,BQ24074 PGOOD#；数字输入，非 ADC
+11,PB15/TCK,东,WCH_TCK,debug,保留 WCH 两线调试，不复用 SPI
+12,PB14/TIO,东,WCH_TIO,debug,保留 WCH 两线调试，不复用 SPI
+13,PB13/U2D+,东,USB_HOST_DP_MCU,usb,USB2 Host，固定数据引脚
+14,PB12/U2D-,东,USB_HOST_DN_MCU,usb,USB2 Host；禁止 I2C 默认映射占用
+15,PB11/UD+,东,USB_DEV_DP_MCU,usb,USB Device，固定数据引脚
+16,PB10/UD-,东,USB_DEV_DN_MCU,usb,USB Device，固定数据引脚
+17,PB7/TXD0,东,IRDA_UART_TX,ir,到 MCP2120 pin12 TX；UART0 默认映射
+18,PB6,东,HOST_EN,power,TPS2553 EN，高有效；外部下拉，上电关断
+19,PB5,东,HOST_FAULT_N,power,TPS2553 FAULT#；外部上拉到 3V3；不是电压合格指示
+20,PB4/RXD0,东,IRDA_UART_RX,ir,来自 MCP2120 pin11 RX；UART0 默认映射
+21,PB3,东,IRDA_CODEC_EN,ir,MCP2120 pin13 EN，高有效；外部下拉
+22,PB2,东,IRDA_MODE,ir,MCP2120 pin7 MODE；高为数据，低为配置
+23,PB1,东,IR_REMOTE_RX,ir,TSOP38438 OUT；GPIOB 边沿中断，软件切换极性并记时间戳
+24,PB0/PWM6,东,IR_REMOTE_TX,ir,PWM6 约 38 kHz，经 MOSFET 驱动独立 940 nm LED
+25,PB23/RST#,北,RESET_N,debug,低有效复位；按键与调试口共用，不重映射 UART2
+26,PB22,北,BOOT_N,debug,低有效下载按键；保留 ISP 配置
+27,PB21/SCL_,北,I2C_SCL,i2c,I2C 必须重映射 RB_PIN_I2C=1
+28,PB20/SDA_,北,I2C_SDA,i2c,裸 I2C/OLED 共用 J7，外部上拉到 3V3
+29,PB19,北,IRDA_SD,ir,TFBS4711 pin4 SD，高关断；外部上拉
+30,PB18,北,USER_N,debug,用户键迁至此；外部上拉，按下接地
+31,X32MO,北,X32MO,rf,32 MHz 晶振；负载由晶体 CL 与寄生计算
+32,X32MI,北,X32MI,rf,32 MHz 晶振；最短回路，与 RF 馈线分开
+33,VINTA,北,CH_VINTA,power,内部模拟节点；只按手册去耦，不作为外部负载电源
+34,ANT,北,RF_ANT,rf,向北，50 ohm 馈线；可选调谐焊盘贴近馈点
+35,VDCIA,西,CH_VDCI,power,按 WCH 参考与 VDCID 相连并本地去耦
+36,PA4/RXD3,西,UART_TTL_RX,uart,新增 J10 裸串口；UART3 默认映射
+37,PA5/TXD3,西,UART_TTL_TX,uart,新增 J10 裸串口；MCU 视角命名，3.3 V
+38,PA6/AIN10,西,VBAT_SENSE,power,BAT 分压/RC；从不支持 ADC 的 PB16 迁入
+39,PA0,西,KBD_CLK_MCU,ps2,保留；GPIOA 中断，经 BSS138 开漏电平转换
+40,PA1,西,KBD_DATA_MCU,ps2,保留；仅拉低/释放，经 BSS138
+41,PA2,西,MOUSE_CLK_MCU,ps2,保留；GPIOA 中断，经 BSS138
+42,PA3,西,MOUSE_DATA_MCU,ps2,保留；仅拉低/释放，经 BSS138
+43,PA15/MISO,西,SPI_MISO,spi,SPI0 默认映射；禁止 UART0 重映射占用
+44,PA14/MOSI,西,SPI_MOSI,spi,SPI0 默认映射
+45,PA13/SCK0,西,SPI_SCK,spi,SPI0 默认映射；不启用 PWM5 输出
+46,PA12/SCS,西,SPI_CS_N,spi,SPI0 默认映射；不启用 PWM4 输出
+47,PA11/X32KO,西,LSE_OUT_RESERVED,spare,可选 32.768 kHz 晶振；未装时 NC，不接排针
+48,PA10/X32KI,西,LSE_IN_RESERVED,spare,可选 32.768 kHz 晶振；当前 LSI 方案可不装
+49,EP / GND (datasheet pin 0),底部 EP,GND,power,EP 接完整地平面与接地过孔；核对库的 0/49 编号映射

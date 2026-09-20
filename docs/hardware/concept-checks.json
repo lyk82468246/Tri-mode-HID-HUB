@@ -1,0 +1,390 @@
+{
+  "pin_rows": 49,
+  "unique_gpio": 40,
+  "planning_envelopes": 30,
+  "envelope_overlaps": [],
+  "antenna_envelope_conflicts": 0,
+  "board_mm": [
+    85.6,
+    53.98
+  ],
+  "mcu_mm": [
+    43.0,
+    24.5
+  ],
+  "verified_scope": "Automated: pin uniqueness, envelope bounds/non-overlap, SVG XML. Peripheral mapping reviewed manually against WCH datasheet and SDK. Not ERC, DRC, SI, RF or assembly sign-off.",
+  "comparisons": [
+    {
+      "rotation_cw_deg": 0,
+      "mean_departure_angle_deg": 26.39,
+      "backward_groups": 0,
+      "groups": [
+        {
+          "group": "RF",
+          "angle_deg": 2.03,
+          "straight_distance_mm": 12.01
+        },
+        {
+          "group": "USB-A",
+          "angle_deg": 10.89,
+          "straight_distance_mm": 26.99
+        },
+        {
+          "group": "USB-C",
+          "angle_deg": 11.87,
+          "straight_distance_mm": 30.14
+        },
+        {
+          "group": "PS/2 K",
+          "angle_deg": 28.28,
+          "straight_distance_mm": 16.46
+        },
+        {
+          "group": "PS/2 M",
+          "angle_deg": 30.38,
+          "straight_distance_mm": 16.81
+        },
+        {
+          "group": "SPI0",
+          "angle_deg": 41.2,
+          "straight_distance_mm": 32.56
+        },
+        {
+          "group": "UART3",
+          "angle_deg": 47.37,
+          "straight_distance_mm": 21.41
+        },
+        {
+          "group": "RS232",
+          "angle_deg": 21.8,
+          "straight_distance_mm": 5.39
+        },
+        {
+          "group": "IrDA",
+          "angle_deg": 18.39,
+          "straight_distance_mm": 19.5
+        },
+        {
+          "group": "38 kHz",
+          "angle_deg": 23.04,
+          "straight_distance_mm": 34.23
+        },
+        {
+          "group": "I2C",
+          "angle_deg": 55.05,
+          "straight_distance_mm": 11.35
+        }
+      ]
+    },
+    {
+      "rotation_cw_deg": 45,
+      "mean_departure_angle_deg": 48.38,
+      "backward_groups": 0,
+      "groups": [
+        {
+          "group": "RF",
+          "angle_deg": 57.87,
+          "straight_distance_mm": 11.92
+        },
+        {
+          "group": "USB-A",
+          "angle_deg": 37.45,
+          "straight_distance_mm": 28.47
+        },
+        {
+          "group": "USB-C",
+          "angle_deg": 59.18,
+          "straight_distance_mm": 31.69
+        },
+        {
+          "group": "PS/2 K",
+          "angle_deg": 23.37,
+          "straight_distance_mm": 16.92
+        },
+        {
+          "group": "PS/2 M",
+          "angle_deg": 78.98,
+          "straight_distance_mm": 18.37
+        },
+        {
+          "group": "SPI0",
+          "angle_deg": 88.85,
+          "straight_distance_mm": 33.96
+        },
+        {
+          "group": "UART3",
+          "angle_deg": 3.65,
+          "straight_distance_mm": 21.94
+        },
+        {
+          "group": "RS232",
+          "angle_deg": 42.68,
+          "straight_distance_mm": 5.74
+        },
+        {
+          "group": "IrDA",
+          "angle_deg": 67.9,
+          "straight_distance_mm": 20.61
+        },
+        {
+          "group": "38 kHz",
+          "angle_deg": 72.17,
+          "straight_distance_mm": 34.56
+        },
+        {
+          "group": "I2C",
+          "angle_deg": 0.04,
+          "straight_distance_mm": 10.94
+        }
+      ]
+    },
+    {
+      "rotation_cw_deg": -45,
+      "mean_departure_angle_deg": 53.63,
+      "backward_groups": 2,
+      "groups": [
+        {
+          "group": "RF",
+          "angle_deg": 48.64,
+          "straight_distance_mm": 13.87
+        },
+        {
+          "group": "USB-A",
+          "angle_deg": 60.5,
+          "straight_distance_mm": 27.23
+        },
+        {
+          "group": "USB-C",
+          "angle_deg": 36.91,
+          "straight_distance_mm": 30.04
+        },
+        {
+          "group": "PS/2 K",
+          "angle_deg": 78.55,
+          "straight_distance_mm": 17.68
+        },
+        {
+          "group": "PS/2 M",
+          "angle_deg": 21.16,
+          "straight_distance_mm": 16.65
+        },
+        {
+          "group": "SPI0",
+          "angle_deg": 7.42,
+          "straight_distance_mm": 32.78
+        },
+        {
+          "group": "UART3",
+          "angle_deg": 97.18,
+          "straight_distance_mm": 22.82
+        },
+        {
+          "group": "RS232",
+          "angle_deg": 78.32,
+          "straight_distance_mm": 6.86
+        },
+        {
+          "group": "IrDA",
+          "angle_deg": 32.03,
+          "straight_distance_mm": 19.99
+        },
+        {
+          "group": "38 kHz",
+          "angle_deg": 25.04,
+          "straight_distance_mm": 35.87
+        },
+        {
+          "group": "I2C",
+          "angle_deg": 104.14,
+          "straight_distance_mm": 13.13
+        }
+      ]
+    },
+    {
+      "rotation_cw_deg": 90,
+      "mean_departure_angle_deg": 95.82,
+      "backward_groups": 7,
+      "groups": [
+        {
+          "group": "RF",
+          "angle_deg": 109.2,
+          "straight_distance_mm": 13.69
+        },
+        {
+          "group": "USB-A",
+          "angle_deg": 82.5,
+          "straight_distance_mm": 30.66
+        },
+        {
+          "group": "USB-C",
+          "angle_deg": 103.75,
+          "straight_distance_mm": 33.66
+        },
+        {
+          "group": "PS/2 K",
+          "angle_deg": 71.27,
+          "straight_distance_mm": 18.69
+        },
+        {
+          "group": "PS/2 M",
+          "angle_deg": 122.91,
+          "straight_distance_mm": 20.25
+        },
+        {
+          "group": "SPI0",
+          "angle_deg": 133.93,
+          "straight_distance_mm": 36.03
+        },
+        {
+          "group": "UART3",
+          "angle_deg": 51.34,
+          "straight_distance_mm": 24.01
+        },
+        {
+          "group": "RS232",
+          "angle_deg": 93.81,
+          "straight_distance_mm": 7.52
+        },
+        {
+          "group": "IrDA",
+          "angle_deg": 113.55,
+          "straight_distance_mm": 22.53
+        },
+        {
+          "group": "38 kHz",
+          "angle_deg": 119.43,
+          "straight_distance_mm": 36.63
+        },
+        {
+          "group": "I2C",
+          "angle_deg": 52.29,
+          "straight_distance_mm": 12.26
+        }
+      ]
+    },
+    {
+      "rotation_cw_deg": 180,
+      "mean_departure_angle_deg": 156.17,
+      "backward_groups": 11,
+      "groups": [
+        {
+          "group": "RF",
+          "angle_deg": 168.12,
+          "straight_distance_mm": 17.37
+        },
+        {
+          "group": "USB-A",
+          "angle_deg": 165.92,
+          "straight_distance_mm": 32.48
+        },
+        {
+          "group": "USB-C",
+          "angle_deg": 172.08,
+          "straight_distance_mm": 34.83
+        },
+        {
+          "group": "PS/2 K",
+          "angle_deg": 154.74,
+          "straight_distance_mm": 21.56
+        },
+        {
+          "group": "PS/2 M",
+          "angle_deg": 156.45,
+          "straight_distance_mm": 21.27
+        },
+        {
+          "group": "SPI0",
+          "angle_deg": 141.4,
+          "straight_distance_mm": 37.75
+        },
+        {
+          "group": "UART3",
+          "angle_deg": 135.37,
+          "straight_distance_mm": 27.4
+        },
+        {
+          "group": "RS232",
+          "angle_deg": 168.69,
+          "straight_distance_mm": 10.2
+        },
+        {
+          "group": "IrDA",
+          "angle_deg": 163.75,
+          "straight_distance_mm": 24.48
+        },
+        {
+          "group": "38 kHz",
+          "angle_deg": 154.26,
+          "straight_distance_mm": 40.52
+        },
+        {
+          "group": "I2C",
+          "angle_deg": 137.06,
+          "straight_distance_mm": 15.71
+        }
+      ]
+    },
+    {
+      "rotation_cw_deg": 270,
+      "mean_departure_angle_deg": 99.37,
+      "backward_groups": 6,
+      "groups": [
+        {
+          "group": "RF",
+          "angle_deg": 91.78,
+          "straight_distance_mm": 16.08
+        },
+        {
+          "group": "USB-A",
+          "angle_deg": 108.06,
+          "straight_distance_mm": 29.03
+        },
+        {
+          "group": "USB-C",
+          "angle_deg": 84.53,
+          "straight_distance_mm": 31.44
+        },
+        {
+          "group": "PS/2 K",
+          "angle_deg": 124.01,
+          "straight_distance_mm": 19.66
+        },
+        {
+          "group": "PS/2 M",
+          "angle_deg": 70.56,
+          "straight_distance_mm": 18.03
+        },
+        {
+          "group": "SPI0",
+          "angle_deg": 54.51,
+          "straight_distance_mm": 34.45
+        },
+        {
+          "group": "UART3",
+          "angle_deg": 142.67,
+          "straight_distance_mm": 25.15
+        },
+        {
+          "group": "RS232",
+          "angle_deg": 120.96,
+          "straight_distance_mm": 8.75
+        },
+        {
+          "group": "IrDA",
+          "angle_deg": 79.39,
+          "straight_distance_mm": 21.72
+        },
+        {
+          "group": "38 kHz",
+          "angle_deg": 70.2,
+          "straight_distance_mm": 38.37
+        },
+        {
+          "group": "I2C",
+          "angle_deg": 146.42,
+          "straight_distance_mm": 15.0
+        }
+      ]
+    }
+  ]
+}

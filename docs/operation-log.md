@@ -159,3 +159,12 @@ API 可以取得当前页 PNG 渲染用于复查；当前 Gateway 下 PDF 导出
 5. 新增 [`docs/m6-validation.md`](m6-validation.md)，固定代码验收、复位/USB/BLE/多源/溢出/8 h 长稳测试矩阵、诊断快照记录方法和开发板到首版 PCB 的引脚/电源/电平/RF 复核条件。
 6. 使用本机 MounRiver Studio 自带 RISC-V GCC 8.2.0 完成 M6 全工程交叉链接：Flash `170,796 B / 448 KB`，RAM `24,868 B / 32 KB`；全量 `src/` 语法检查、应用层动态分配审计、USB Host 阻塞 helper 审计和工程 XML/JSON 解析通过。
 7. 尚未执行开发板物理验收和 PCB 迁移；M6 代码验收后，下一步只执行 `docs/m6-validation.md` 中的实测、缺陷修复和硬件收口，不新增协议功能。
+
+## 2026-09-21 Rev B PCB 概念布局与文档整理
+
+1. 核对 WCH 官方引脚和 QFN48 封装图，以及连接器、IrDA、遥控红外的制造商资料，形成 85.60 × 53.98 mm 信用卡尺寸 PCB 提案；正放 MCU，接口围绕中央布置。
+2. 用户确认保留完整 DB9 公座、两个独立 Mini-DIN-6 插座，以及标准 IrDA 和 38 kHz 遥控收发两套功能。新增 UART0 IrDA 和 UART3 裸串口规划，保留 UART1 RS232。
+3. 新增 `docs/hardware/` 的设计说明、布局和引脚 SVG/PNG、49 行引脚表、CSV、毫米坐标 JSON、生成脚本和几何检查结果。PB16 的错误 ADC 分配在提案中改为 PA6/AIN10，并加入上行 VBUS 检测。
+4. 整理根 README 与硬件索引，明确 Rev A 历史记录、Rev B 提案和当前固件的边界；在历史文档顶部注明已知错误，修正 README 电源树中 BAT/SYS 供电意图不一致的说明。
+5. 已核对 GPIO 分配、复用限制、预留矩形的边界/重叠、SVG/表格生成及本地文档链接，图形预览已渲染检查。下载的参考 PDF 和临时研究文件不纳入版本控制。
+6. 云端原理图、生产 BOM、实际 PCB 布局布线与运行固件尚未按 Rev B 更新。ERC/DRC、实际封装、连接器插拔、RF、热设计及硬件实测仍属于下一阶段。
