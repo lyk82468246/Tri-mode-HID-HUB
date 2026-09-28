@@ -46,6 +46,9 @@ typedef struct
     BoardBusStats bus;
 } FirmwareDiagnosticsSnapshot;
 
+/* Refreshed every 256 service turns; convenient for a debugger watch window. */
+extern FirmwareDiagnosticsSnapshot g_firmware_diagnostics_snapshot;
+
 void FirmwareDiagnostics_Init(void);
 uint32_t FirmwareDiagnostics_BeginService(void);
 void FirmwareDiagnostics_SampleQueues(void);

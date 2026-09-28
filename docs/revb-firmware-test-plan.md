@@ -9,6 +9,49 @@
 3. 初次上电必须串入限流电源，并把 USB Host 外设、PS/2、红外 LED、OLED 都断开；先确认 3V3、复位和 WCH-Link 正常。
 4. 不要把 PB5 `HOST_FAULT_N` 当作 5 V 电压或 power-good；PB16 是数字 `PGOOD_N`，不是 ADC。PA6/AIN10 和 PA7/AIN11 只在分压阻值和标定数据确定后才能换算成电压。
 
+### 0.1 工装、软件和安全边界
+
+首次拿到开发板或 Rev B PCB 时，先准备以下工装并把型号写入测试记录：
+
+| 工装 | 最低要求 | 用途 |
+|---|---|---|
+| WCH-Link + MounRiver Studio | 能识别 CH582M、可下载/单步/观察全局变量 | 烧录、复位原因和诊断快照 |
+| 限流电源或 USB 电流计 | 可设置电流上限，建议首轮从 100 mA 开始 | 上电、Host VBUS 和异常电流保护 |
+| 示波器/逻辑分析仪 | 至少 2 个模拟/数字通道；USB/PS2/UART/红外测试时按需扩展 | 电平、时序、复位和并发观测 |
+| PC + USB/BLE 工具 | 可查看复合 USB 接口、HID 报告和 BLE GATT/CCCD | Device、HOGP、NUS 验收 |
+| 可替换外设 | USB 键盘、USB 鼠标、PS/2 键盘、PS/2 鼠标 | 下行枚举和输入合并 |
+| 串口与总线工装 | RS232 分析仪、3.3 V TTL 转换器、已知 I²C/SPI 从设备 | UART、I²C、SPI 收发和错误注入 |
+
+所有 MCU GPIO 测量必须以 3.3 V 域为边界；PB5/PB16/PB18 的故障/状态模拟只能用板上允许的上拉、开漏或限流方式，禁止把 5 V 直接接到 MCU 引脚。首次上电时不要同时连接 USB Device 主机、Host 外设、电池和外部 5 V，避免形成反向供电路径。
+
+### 0.2 固件、下载和诊断观测
+
+每次测试开始前固定 commit 和构建产物：
+
+```powershell
+git status --short --branch
+git rev-parse HEAD
+.\tools\validate-revb.ps1 -Build
+```
+
+将以下文件与仪器截图一起归档：`obj/revb-100/CH582M.map`、`obj/revb-500/CH582M.map`、两次构建的完整控制台输出，以及实际烧录的 `.elf`/`.hex` 文件。普通固件与 `-TestPattern` 固件必须分目录保存，烧录前再核对文件名。
+
+M6 诊断快照由 `src/firmware_diagnostics.c` 中的全局对象 `g_firmware_diagnostics_snapshot` 每 256 个服务周期刷新一次，约为 512 ms（服务周期为 2 ms）。在 MounRiver 的 Expressions/Watch 窗口观察以下字段，不要在每个 2 ms 周期上设置断点：
+
+```text
+g_firmware_diagnostics_snapshot.service_overrun
+g_firmware_diagnostics_snapshot.max_service_cycles
+g_firmware_diagnostics_snapshot.router
+g_firmware_diagnostics_snapshot.power
+g_firmware_diagnostics_snapshot.bus
+```
+
+如果 IDE 优化设置导致结构体展开不完整，可在 `FirmwareDiagnostics_GetSnapshot()` 处临时断下读取参数和成员；读取完成后删除断点再做时序测试。持续断点会改变 USB、BLE 和红外时序，不能把断点状态下的数据作为长稳结果。
+
+### 0.3 结果等级
+
+`BUILD PASS` 只表示静态检查、编译、链接或 map 检查通过；`HW PASS` 必须有实测原始波形、主机日志或抓包；`FAIL` 表示有可复现错误；`BLOCKED` 表示前置硬件、芯片参数或外设协议尚未锁定。没有实测证据的项目不得填写 `HW PASS`。
+
 ## 1. 无硬件时：静态检查和可重复构建
 
 在仓库根目录执行：
@@ -39,7 +82,7 @@ USB Device 无外设冒烟还可以直接生成周期性 `a` 键按下/释放版
 | 实时模型 | TMOS 事件循环；ISR 只采样、入 Ring 或推进微型时序状态；应用代码没有直接 `malloc/free` |
 | 构建 100 mA | 链接成功，RAM 不超过 32 KB；当前基线为 Flash 174,792 B、RAM 28,752 B |
 | 构建 500 mA | 链接成功；当前基线为 Flash 174,856 B、RAM 28,752 B |
-| 诊断 | map 文件存在，确认 `service_overrun`、各 Ring 高水位、Host fault、总线错误字段可观察 |
+| 诊断 | map 文件存在；通过 WCH-Link Watch 观察 `g_firmware_diagnostics_snapshot` 的 `service_overrun`、各 Ring 高水位、Host fault 和总线错误字段 |
 
 若 RAM 余量低于 2 KB，停止增加缓存或协议状态机，先做容量削减和 map 分析。
 
@@ -50,6 +93,10 @@ USB Device 无外设冒烟还可以直接生成周期性 `a` 键按下/释放版
 3. 再烧录 500 mA 版本，先用跳线/电阻模拟 `PGOOD_N` 和 `FAULT_N`，验证电源状态机，再接 USB Host/PS2 外设。
 4. 每个硬件测试只改变一个变量；每次拔插、复位或故障注入都记录诊断快照的前后值。
 5. 测试顺序固定为：上电安全 → USB Device/CDC → BLE → UART → PS/2 → USB Host → IrDA → 红外 → I²C/SPI → 并发与长稳。
+
+### 1.2 物理测试的每个用例固定格式
+
+每个用例都按“断电接线 → 上电空载 → 单变量刺激 → 记录原始波形/日志 → 读取诊断 → 复位并确认状态清空”执行。接线改变后先拍照；不要在同一次记录里同时改变 USB 电源模式、外设类型和输出策略。对需要故障注入的项目，先确认电流限制和 MCU 复位入口可用。
 
 ## 2. 下载、启动和电源安全
 
@@ -73,6 +120,12 @@ USB Device 无外设冒烟还可以直接生成周期性 `a` 键按下/释放版
 | 清故障 | 只有 Host 已关闭且 PB5 已释放时调用 `BoardPower_ClearFault()`；随后重新走供电许可流程 |
 
 用逻辑分析仪记录 PB6、PB8、PB17、USB suspend/resume 的先后关系，而不是只读最终电平。
+
+### 2.3 USER、RESET、BOOT 和可选 LSE
+
+1. PB18 `USER_N` 是唯一由固件读取并去抖的用户输入：按下保持至少 20 ms 后，`user_pressed=1` 且 `user_press_count` 只增加一次；释放后回到 0。短于去抖窗口的毛刺不得改变状态，也不得改变 Host 供电。
+2. PB23 `RESET_N` 和 PB22 `BOOT_N` 是保留的复位/ISP 信号，也是底层触摸电极连接点；固件不能把它们配置成普通 GPIO、UART2 或触摸扫描通道。分别验证复位和 ISP 时，应按 WCH-Link/芯片手册的流程操作，不要用示波器地夹或外部信号强驱动这些引脚。
+3. PA10/PA11 的 LSE 是可选装配项。未装 32.768 kHz 晶体时，不能把“没有 LSE 波形”记录为失败；当前固件使用 LSI 方案，只有最终硬件锁定 LSE 后才增加晶体起振和时钟准确度验收。
 
 ## 3. USB Device 上行链路
 

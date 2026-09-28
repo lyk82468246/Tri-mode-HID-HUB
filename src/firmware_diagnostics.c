@@ -23,7 +23,11 @@ typedef struct
 
 static FirmwareDiagnosticsRuntime g_firmware_diagnostics
     __attribute__((aligned(4)));
-static FirmwareDiagnosticsSnapshot g_firmware_diagnostics_snapshot
+/* Keep the periodically refreshed aggregate as a named global so the
+ * WCH-Link debugger can inspect it without stopping the 2 ms service loop to
+ * call a helper.  It is still fixed storage; no diagnostic transport or heap
+ * allocation is introduced. */
+FirmwareDiagnosticsSnapshot g_firmware_diagnostics_snapshot
     __attribute__((aligned(4)));
 
 static void FirmwareDiagnostics_UpdateWatermark(uint16_t value,

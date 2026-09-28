@@ -9,7 +9,7 @@
 			"series": "CH58X",
 			"rtos": "NoneOS",
 			"mcu": "CH582M",
-			"description": "Website: https://www.wch.cn/products/CH583.html?\\nROM(byte): 448K, SRAM(byte): 32K, CHIP PINS: 48, GPIO PORTS: 40.\\nCH583 is a 32-bit RISC microcontroller integrating ble wireless communication. On chip integrated 2Mbps lower-power Bluetooth ble communication module 2 full speed USB hosts and device controllers and transceivers, 2SPIs, 4 serial ports, ADC touch key detection module, RTC and other rich peripheral resources.",
+			"description": "Target: CH582M / CH58X / RISC-V / NoneOS.\\nQingKe V4A RV32IMAC BLE MCU, 32 KB SRAM, 48-pin package.\\nThe bundled WCH CH58X SDK uses CH583-compatible startup, SFR and library names for this device family.",
 			"link": "WCH-Link",
 			"peripheral_version": "2.4",
 			"calibrateSupport": false,

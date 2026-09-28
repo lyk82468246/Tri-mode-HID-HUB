@@ -13,7 +13,7 @@
 - 上次复位原因、系统时钟、BLE NUS RX 丢弃数；
 - Router、PS/2、UART 和 USB Host 的现有错误/丢包统计。
 
-在调试器中调用 `FirmwareDiagnostics_GetSnapshot()`，由调用者提供静态的 `FirmwareDiagnosticsSnapshot` 对象。`max_service_cycles` 使用 `sys_clock_hz` 换算为时间；60 MHz 时，1 个周期约为 16.7 ns。
+`g_firmware_diagnostics_snapshot` 是每 256 个服务周期刷新的、4 字节对齐的固定全局对象，可直接加入 MounRiver/WCH-Link 的 Watch 窗口；这样不会为了读取诊断而暂停 2 ms 服务循环。必要时也可在调试器中调用 `FirmwareDiagnostics_GetSnapshot()`，由调用者提供静态的 `FirmwareDiagnosticsSnapshot` 对象。`max_service_cycles` 使用 `sys_clock_hz` 换算为时间；60 MHz 时，1 个周期约为 16.7 ns。
 
 看门狗默认关闭。确认开发板供电、复位和 WCH-Link 观察链路稳定后，可在 MounRiver 的 C 预处理宏中加入：
 

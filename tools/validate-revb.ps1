@@ -76,9 +76,21 @@ try {
     Assert-Text 'src/board_bus.c' 'BoardBus_ConfigureSpi'
     Assert-Text 'src/board_bus.c' 'SPI0_MasterDefInit'
     Assert-Text 'docs/hardware/pin-allocation-revb.md' '固件已按本表迁移'
+    Assert-Text 'CH582M.wvproj' '"mcu": "CH582M"'
+    Assert-Text 'src/tmos_app.c' 'FIRMWARE_SERVICE_PERIOD_MS  2u'
 
     $projectFiles = @('.cproject', 'CH582M.wvproj')
+    $requiredExcluded = @('CH58x_usbhostClass.c', 'CH58x_usbhostBase.c',
+                          'CH58x_usbdev.c', 'CH58x_uart2.c',
+                          'CH58x_timer3.c', 'CH58x_timer2.c',
+                          'CH58x_timer1.c', 'CH58x_adc.c')
     foreach($projectFile in $projectFiles) {
+        foreach($excluded in $requiredExcluded) {
+            $escaped = [regex]::Escape($excluded)
+            if(!(Select-String -LiteralPath $projectFile -Pattern $escaped -Quiet)) {
+                $failures.Add("$projectFile must exclude $excluded")
+            }
+        }
         foreach($excluded in @('CH58x_uart3.c', 'CH58x_pwm.c', 'CH58x_timer0.c', 'CH58x_spi0.c',
                               'CH58x_i2c.c', 'CH58x_usb2hostBase.c', 'CH58x_usb2dev.c')) {
             $escaped = [regex]::Escape($excluded)
@@ -94,6 +106,13 @@ try {
             -Pattern '(?<![A-Za-z0-9_])(malloc|free)\s*\('
         if($heapUse) {
             $failures.Add('application source contains malloc/free')
+        }
+
+        $blockingUse = Select-String -Path $sourceFiles.FullName `
+            -Pattern '(?<![A-Za-z0-9_])(mDelaymS|mDelayuS|USB2HostTransact|U2HostCtrlTransfer)\s*\('
+        if($blockingUse) {
+            $locations = ($blockingUse | ForEach-Object { $_.Path + ':' + $_.LineNumber }) -join ', '
+            $failures.Add("application source calls a blocking SDK helper: $locations")
         }
     }
 
