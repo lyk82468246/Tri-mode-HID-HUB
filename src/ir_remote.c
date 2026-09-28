@@ -58,6 +58,7 @@ static uint32_t g_nec_data;
 static uint8_t g_nec_last_address;
 static uint8_t g_nec_last_command;
 static uint8_t g_nec_last_valid;
+static uint32_t g_ir_edge_overrun_reported;
 static uint8_t g_rc5_half[32];
 static uint8_t g_rc5_half_count;
 
@@ -128,7 +129,7 @@ static void IrRemote_ProcessNec(uint32_t duration, uint8_t level)
                 g_nec_data = 0u;
                 g_nec_state = IR_NEC_BIT_MARK;
             }
-            else if(level && IrRemote_InRange(duration, 1800u, 2800u) &&
+            else if(!level && IrRemote_InRange(duration, 1800u, 2800u) &&
                     g_nec_last_valid)
             {
                 /* NEC repeat: 9 ms mark, 2.25 ms space, 560 us mark. */
@@ -141,7 +142,7 @@ static void IrRemote_ProcessNec(uint32_t duration, uint8_t level)
             break;
 
         case IR_NEC_REPEAT_MARK:
-            if(!level && IrRemote_InRange(duration, 350u, 800u))
+            if(level && IrRemote_InRange(duration, 350u, 800u))
             {
                 ++g_ir_stats.nec_repeat_count;
                 IrRemote_PostCode(IR_REMOTE_NEC_PROTOCOL,
@@ -348,6 +349,7 @@ void IrRemote_Init(void)
     g_nec_last_address = 0u;
     g_nec_last_command = 0u;
     g_nec_last_valid = 0u;
+    g_ir_edge_overrun_reported = 0u;
     IrRemote_ResetNec();
     IrRemote_ResetRc5();
     g_tx_state = IR_TX_IDLE;
@@ -370,6 +372,21 @@ void IrRemote_Process(void)
     IrRemoteEdge edge;
     uint8_t processed = 0u;
     uint32_t duration;
+
+    if(g_ir_stats.edge_overrun != g_ir_edge_overrun_reported)
+    {
+        g_ir_edge_overrun_reported = g_ir_stats.edge_overrun;
+        /* Discard the partial waveform while the GPIOB producer is quiesced;
+         * decoding a tail of an overrun frame would poison the time base. */
+        PFIC_DisableIRQ(GPIO_B_IRQn);
+        StaticSpscRing_Clear(&g_ir_edge_ring);
+        PFIC_EnableIRQ(GPIO_B_IRQn);
+        g_ir_have_timestamp = 0u;
+        g_ir_last_level = 1u;
+        IrRemote_ResetNec();
+        IrRemote_ResetRc5();
+        ++g_ir_stats.invalid_pulse;
+    }
 
     while(processed < IR_REMOTE_PROCESS_BUDGET &&
           StaticSpscRing_Pop(&g_ir_edge_ring, &edge))

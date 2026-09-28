@@ -109,5 +109,5 @@
 <text x="55.00" y="1115.00" font-size="22" fill="#243447" text-anchor="start" font-weight="700" >必须固定的复用约束</text>
 <text x="55.00" y="1150.00" font-size="17" fill="#243447" text-anchor="start" font-weight="400" >I²C 重映射到 PB21/PB20；UART0/1/3 与 SPI0 保持默认映射。UART2 不启用。</text>
 <text x="55.00" y="1180.00" font-size="17" fill="#243447" text-anchor="start" font-weight="400" >USB2 占 PB13/PB12；调试占 PB15/PB14；复位/下载占 PB23/PB22；这些引脚不能再给其他接口。</text>
-<text x="55.00" y="1210.00" font-size="16" fill="#627186" text-anchor="start" font-weight="400" >本表是布局提案，不表示云端原理图或现有固件已经更新。所有排针信号均为 3.3 V 逻辑。</text>
+<text x="55.00" y="1210.00" font-size="16" fill="#627186" text-anchor="start" font-weight="400" >本表是 Rev B 硬件与固件共同基线；固件已按该表迁移，实测与最终 PCB 仍需按测试计划确认。所有排针信号均为 3.3 V 逻辑。</text>
 </g></svg>

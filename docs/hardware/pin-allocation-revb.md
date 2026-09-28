@@ -1,7 +1,7 @@
 # CH582M Rev B 引脚分配提案
 
 日期：2026-09-28。配套布局：`pcb-concept-revb.svg`；底层用户界面：`pcb-bottom-revb.svg`；物理剖面：`pcb-stack-revb.svg`；顶视放大图：`pinout-revb.svg`。
-这是新的硬件提案，不覆盖 Rev A 云端工程或当前 `src/board_pins.h`。
+这是当前 Rev B 硬件与固件共同基线；固件已按本表迁移，最终电气行为仍需在开发板/PCB 上实测确认。
 
 0° 定义：数据手册第 111 页 Top View，Pin 1 在左下。1–10 南侧从左到右；11–24 东侧从下到上；25–34 北侧从右到左；35–48 西侧从上到下。EP 在手册标 0，本提案 CSV 以库常用的 49 表示。
 

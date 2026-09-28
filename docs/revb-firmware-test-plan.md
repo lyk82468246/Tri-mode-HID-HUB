@@ -27,11 +27,19 @@ git diff --check
 | Rev B 引脚 | `src/board_pins.h` 与 CSV 逐项一致；没有把 Rev A 的 PB8/PB16/PB19/PA4 旧含义带入运行代码 |
 | 工程源文件 | UART3、UART0、PWM、TMR0、SPI0、I2C 的 SDK 源文件没有被工程排除；UART2/SPI1 保持禁用 |
 | 实时模型 | TMOS 事件循环；ISR 只采样、入 Ring 或推进微型时序状态；应用代码没有直接 `malloc/free` |
-| 构建 100 mA | 链接成功，RAM 不超过 32 KB；当前基线为 Flash 174,664 B、RAM 28,744 B |
-| 构建 500 mA | 链接成功；当前基线为 Flash 174,728 B、RAM 28,744 B |
+| 构建 100 mA | 链接成功，RAM 不超过 32 KB；当前基线为 Flash 174,792 B、RAM 28,752 B |
+| 构建 500 mA | 链接成功；当前基线为 Flash 174,856 B、RAM 28,752 B |
 | 诊断 | map 文件存在，确认 `service_overrun`、各 Ring 高水位、Host fault、总线错误字段可观察 |
 
 若 RAM 余量低于 2 KB，停止增加缓存或协议状态机，先做容量削减和 map 分析。
+
+### 1.1 推荐执行顺序
+
+1. 先运行静态检查和两种配置构建，保存 `obj/revb-100/CH582M.map`、`obj/revb-500/CH582M.map` 以及完整控制台输出。
+2. 只烧录 100 mA 版本做 Device、CDC、BLE 和无负载启动；此版本不能用来证明 USB Host 供电能力。
+3. 再烧录 500 mA 版本，先用跳线/电阻模拟 `PGOOD_N` 和 `FAULT_N`，验证电源状态机，再接 USB Host/PS2 外设。
+4. 每个硬件测试只改变一个变量；每次拔插、复位或故障注入都记录诊断快照的前后值。
+5. 测试顺序固定为：上电安全 → USB Device/CDC → BLE → UART → PS/2 → USB Host → IrDA → 红外 → I²C/SPI → 并发与长稳。
 
 ## 2. 下载、启动和电源安全
 
@@ -41,7 +49,7 @@ git diff --check
 2. 示波器/万用表观察 PB6 `HOST_EN`：复位、启动、USB Device 未配置时必须为低。
 3. 观察 PB8/PB17：BQ24074 初始为 `EN2:EN1=00`，即 USB100；不能在启动瞬间进入 `10` 的 ILIM 状态。
 4. 观察 PB5、PB9、PB16、PB18 的空闲电平：FAULT/CHG/PGOOD/USER 均为外部上拉、有效低。
-5. 观察 PB3/PB19/PB2：MCP2120 未完成初始化前 EN 不应误开启，TFBS4711 的 SD 应保持高，MODE 应保持低或按初始化状态机变化。
+5. 观察 PB3/PB19/PB2 的状态机：Board_Init 安全态应为 EN=低、SD=高、MODE=高；IrDA 初始化开始后应切到 EN=高、SD=低、MODE=低，收到配置回显并进入 DATA 后 MODE 才回到高。
 
 ### 2.2 电源状态矩阵
 
@@ -115,10 +123,11 @@ Host 默认受电源策略关闭。只有 `500 mA` 配置、输入 PGOOD 有效�
 
 1. PB0 接示波器，确认 PWM6 约 38 kHz、占空比约 10/32；LED 必须经过 NMOS 和限流，不得直接由 GPIO 带脉冲大电流。
 2. PB1 接 TSOP38438 输出，使用逻辑分析仪记录边沿时间戳；ISR 只切换下一边沿极性并入 128 项 Ring（Ring 容量保持为 2 的幂）。
-3. 分别发送 NEC 普通 32 位帧、地址/命令反码错误帧、长间隔重复帧；只允许地址/命令反码正确的帧进入路由器。
+3. 分别发送 NEC 普通 32 位帧、地址/命令反码错误帧、长间隔重复帧；重复码的 2.25 ms 高电平间隔结束于下降沿、随后 560 us 低电平结束于上升沿，只有这组极性和时序同时满足时才计入 `nec_repeat_count`。
 4. 发送 RC5 不同 toggle、地址和命令，检查半位时间、Manchester 解码和非法脉冲统计。
 5. 调用 `IrRemote_SendNec()`、`IrRemote_SendRc5()` 测量 leader、bit mark/space、RC5 半位和最终关断；发射期间不得并发第二帧。
 6. 发射期间观察 TFBS SD 和 PB0，确认两套光学链路不会同时发射；TMR0 的资源占用需在 BLE 活跃、USB 活跃时一起验证。
+7. 用高频噪声或持续脉冲填满 PB1 边沿 Ring；确认 `edge_overrun` 增加后解码器清空时间基准和协议状态，下一帧完整 NEC/RC5 仍可重新识别。
 
 ## 8. I²C/SPI 外设总线控制帧
 
@@ -169,6 +178,13 @@ B5 11 <status> <len_or_0> <rx bytes...>
 ```
 
 接逻辑分析仪验证 Mode 0、MSB first、CS 包络和每个字节的全双工回读；测试超时和 Ring/stream 背压，确认不会在 ISR 里发布 CDC/NUS 数据。
+
+### 8.3 总线故障恢复
+
+1. SPI 事务开始后暂时断开从设备或保持时钟线无响应，等待 `status=2` 超时结果；确认 CS 释放为高、`spi_busy=0`、SPI IRQ 已关闭。
+2. 在不复位 MCU 的情况下立即提交第二笔 1 字节 SPI 事务；必须能重新输出 Mode 0 的时钟和 CS 包络，不能只停留在第一次超时状态。
+3. I²C 用无应答地址和 SDA 持低分别制造错误/超时；确认事务回到 idle、结果只发布一次，随后接入正常从设备可以成功读写。
+4. 发送超过最大长度、零长度、忙时重复提交的控制帧；确认只增加 reject/parser 计数，不破坏后续合法事务。
 
 ## 9. 压力、故障和长时间运行
 

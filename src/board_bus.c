@@ -70,6 +70,20 @@ static void BoardBus_DisableI2cIrq(void)
     I2C_ITConfig(I2C_IT_ERR, DISABLE);
 }
 
+static void BoardBus_ConfigureSpi(void)
+{
+    GPIOA_SetBits(BOARD_SPI_CS_PIN);
+    GPIOA_ModeCfg(BOARD_SPI_CS_PIN | BOARD_SPI_SCK_PIN |
+                  BOARD_SPI_MOSI_PIN, GPIO_ModeOut_PP_5mA);
+    GPIOA_ModeCfg(BOARD_SPI_MISO_PIN, GPIO_ModeIN_Floating);
+    SPI0_MasterDefInit();
+    SPI0_CLKCfg(4u);
+    SPI0_DataMode(Mode0_HighBitINFront);
+    SPI0_ITCfg(DISABLE, SPI0_IT_CNT_END | SPI0_IT_BYTE_END |
+                        SPI0_IT_FIFO_OV);
+    PFIC_EnableIRQ(SPI0_IRQn);
+}
+
 static void BoardBus_I2cFinish(uint8_t status)
 {
     I2C_GenerateSTOP(ENABLE);
@@ -182,16 +196,7 @@ void BoardBus_Init(void)
     BoardBus_DisableI2cIrq();
     PFIC_EnableIRQ(I2C_IRQn);
 
-    GPIOA_SetBits(BOARD_SPI_CS_PIN);
-    GPIOA_ModeCfg(BOARD_SPI_CS_PIN | BOARD_SPI_SCK_PIN |
-                  BOARD_SPI_MOSI_PIN, GPIO_ModeOut_PP_5mA);
-    GPIOA_ModeCfg(BOARD_SPI_MISO_PIN, GPIO_ModeIN_Floating);
-    SPI0_MasterDefInit();
-    SPI0_CLKCfg(4u);
-    SPI0_DataMode(Mode0_HighBitINFront);
-    SPI0_ITCfg(DISABLE, SPI0_IT_CNT_END | SPI0_IT_BYTE_END |
-                        SPI0_IT_FIFO_OV);
-    PFIC_EnableIRQ(SPI0_IRQn);
+    BoardBus_ConfigureSpi();
 }
 
 uint8_t BoardBus_SubmitI2c(uint8_t address7,
@@ -240,6 +245,8 @@ uint8_t BoardBus_SubmitSpi(const uint8_t *tx_data, uint8_t length)
         ++g_bus_stats.spi_reject;
         return 0u;
     }
+    /* Reapply the complete mode after a timeout/error may have cleared CTRL_MOD. */
+    BoardBus_ConfigureSpi();
     for(i = 0u; i < length; ++i)
     {
         g_spi_tx[i] = tx_data[i];

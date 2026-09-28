@@ -3,7 +3,7 @@
 
 /*
  * CH582M Rev B. Authoritative assignment:
- * docs/hardware/pin-allocation-revb.csv (2026-09-21).
+ * docs/hardware/pin-allocation-revb.csv (2026-09-28).
  * All masks below are port-local; comments specify port and polarity.
  * Peripheral alternate mappings are owned by Board_Init(), not drivers.
  */

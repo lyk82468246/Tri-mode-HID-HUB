@@ -1,7 +1,7 @@
 # Rev B 固件迁移跟踪
 
-目标：依据硬件提交 `fb2e215` 全面迁移运行固件。基准为
-`hardware/pin-allocation-revb.csv`、同名 Markdown 和 `pcb-design-study.md`。
+目标：依据当前 `main` 中的 Rev B 硬件基线全面迁移运行固件。基准为
+`docs/hardware/pin-allocation-revb.csv`、同名 Markdown 和 `pcb-design-study.md`。
 当前开发板未连接；代码构建、主机测试和硬件实测分别记录，不互相替代。
 
 ## 要求与验收证据
@@ -20,7 +20,7 @@
 | PB1 遥控边沿接收、PB0 PWM6 发射 | GPIOB 时间戳 Ring、TMOS NEC/RC5 解码、PWM6 38 kHz 和 TMR0 包络已接入；光学仲裁和实测待完成 | 进行中 |
 | PB21/20 I2C，PA12–15 SPI0 | 单笔中断驱动异步事务、超时/错误诊断、CDC/NUS 控制帧和结果流已接入；OLED型号未锁定，需实测 | 进行中 |
 | Router/控制协议覆盖新增功能 | 保留原 HID 行为；CDC/NUS `A5 5A 03/04` 电源、`20/21` 红外和 `10/11` 总线命令均已接入，I²C/SPI 结果以 `B5` 流返回 | 已接入，待协议回归 |
-| 32KB RAM、静态对齐、TMOS、无 libc 堆和阻塞 | 100/500 mA 全量链接、map、可重复构建；RAM 28,744 B / 32 KB | 构建通过，待边界回归 |
+| 32KB RAM、静态对齐、TMOS、无 libc 堆和阻塞 | 100/500 mA 全量链接、map、可重复构建；RAM 28,752 B / 32 KB | 构建通过，待边界回归 |
 | 同步软件说明、测试指南与工程源文件配置 | Rev B 文档、测试行动指南、工程源文件和排除项已同步 | 已同步，待硬件执行 |
 
 ## 尚未锁定的硬件参数
@@ -36,4 +36,5 @@
 2026-09-28：启用 SDK UART3 驱动，新增 UART3 PA4/PA5 独立 RX Ring、TMOS 分帧、
 路由源和诊断计数；随后接入 UART0/MCP2120/TFBS4711 SIR 物理层、NEC/RC5 红外、
 PB21/PB20 I2C、PA12–PA15 SPI0 和统一总线控制帧。100 mA/500 mA 配置均交叉编译
-通过；当前仍是“代码已迁移、硬件待验证”，不宣称完整 IrLAP/IrLMP 或最终 PCB 验收。
+通过；修正 NEC 重复码边沿极性、增加红外边沿溢出复位和 SPI 超时后的完整外设重配；
+当前仍是“代码已迁移、硬件待验证”，不宣称完整 IrLAP/IrLMP 或最终 PCB 验收。
