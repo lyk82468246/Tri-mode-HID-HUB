@@ -7,6 +7,7 @@
 
 #define BLE_OUTPUT_START_DEVICE_EVENT       0x0001u
 #define BLE_OUTPUT_MAX_RX_FRAMES_PER_TICK   2u
+#define BLE_OUTPUT_MAX_MSGS_PER_EVENT       4u
 #define BLE_OUTPUT_ADVERTISING_INTERVAL     32u
 #define BLE_OUTPUT_MIN_CONN_INTERVAL        8u
 #define BLE_OUTPUT_MAX_CONN_INTERVAL        16u
@@ -108,16 +109,24 @@ static void BleOutput_ProcessTMOSMsg(tmos_event_hdr_t *message)
 static tmosEvents BleOutput_ProcessEvent(tmosTaskID task_id, tmosEvents events)
 {
     uint8_t *message;
+    uint8_t messages_processed = 0u;
 
     (void)task_id;
     if(events & SYS_EVENT_MSG)
     {
-        while((message = tmos_msg_receive(g_ble_output_task_id)) != NULL)
+        while(messages_processed < BLE_OUTPUT_MAX_MSGS_PER_EVENT &&
+              (message = tmos_msg_receive(g_ble_output_task_id)) != NULL)
         {
             BleOutput_ProcessTMOSMsg((tmos_event_hdr_t *)message);
             tmos_msg_deallocate(message);
+            ++messages_processed;
         }
-        events ^= SYS_EVENT_MSG;
+        /* Keep SYS_EVENT_MSG set when the fixed budget was exhausted.  TMOS
+         * will call us again and the next turn can drain the remainder. */
+        if(messages_processed < BLE_OUTPUT_MAX_MSGS_PER_EVENT)
+        {
+            events ^= SYS_EVENT_MSG;
+        }
     }
 
     if(events & BLE_OUTPUT_START_DEVICE_EVENT)

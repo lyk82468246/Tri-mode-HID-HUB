@@ -80,8 +80,8 @@ USB Device 无外设冒烟还可以直接生成周期性 `a` 键按下/释放版
 | Rev B 引脚 | `src/board_pins.h` 与 CSV 逐项一致；没有把 Rev A 的 PB8/PB16/PB19/PA4 旧含义带入运行代码 |
 | 工程源文件 | UART3、UART0、PWM、TMR0、SPI0、I2C 的 SDK 源文件没有被工程排除；UART2/SPI1 保持禁用 |
 | 实时模型 | TMOS 事件循环；ISR 只采样、入 Ring 或推进微型时序状态；应用代码没有直接 `malloc/free` |
-| 构建 100 mA | 链接成功，RAM 不超过 32 KB；当前基线为 Flash 174,804 B、RAM 28,752 B |
-| 构建 500 mA | 链接成功；当前基线为 Flash 174,868 B、RAM 28,752 B |
+| 构建 100 mA | 链接成功，RAM 不超过 32 KB；当前基线为 Flash 175,044 B、RAM 28,752 B |
+| 构建 500 mA | 链接成功；当前基线为 Flash 175,108 B、RAM 28,752 B |
 | 诊断 | map 文件存在；通过 WCH-Link Watch 观察 `g_firmware_diagnostics_snapshot` 的 `service_overrun`、各 Ring 高水位、Host fault 和总线错误字段 |
 
 若 RAM 余量低于 2 KB，停止增加缓存或协议状态机，先做容量削减和 map 分析。
@@ -155,6 +155,7 @@ Host 默认受电源策略关闭。只有 `500 mA` 配置、输入 PGOOD 有效�
 2. 许可后接入键盘，示波器确认时钟下降沿采样，验证 Set 2 普通键、扩展键、断码和错误校验。
 3. 接入鼠标，验证 BAT、`F4`、ACK/RESEND 状态机和三字节数据包；不能在 ISR 中执行完整命令序列。
 4. 断电、拔线或 Host fault 时，确认键盘和鼠标都生成 release-all，路由器不保留悬挂按键/按钮。
+5. 用持续边沿或错误帧填满 PS/2 edge Ring，确认 `edge_overrun`/重同步计数增加、GPIOA ISR 仍只入 Ring；即使路由器当时满载，后续 TMOS tick 也必须重试 `SOURCE_RESYNC + RELEASE_ALL`，不能留下 stuck key/button。
 
 ## 5. UART1、UART3、BLE 和统一数据流
 

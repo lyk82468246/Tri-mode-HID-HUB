@@ -1,6 +1,6 @@
 # 固件系统架构与六阶段 Roadmap
 
-状态：Architecture v0.7。Milestone 1 已落地 TMOS 基础、静态 SPSC Ring、USB Device HID/CDC 复合输出和 CDC 回送；Milestone 2 已落地 BLE HOGP/NUS-compatible 输出；Milestone 3 已落地 PS/2 与 UART 输入适配器；Milestone 4 已落地 USB Host HID 非阻塞枚举、轮询与固定上限报表解析；Milestone 5 已落地 Event_Router 状态合并、USB/BLE 活跃策略、独立 HID/stream 可用性和恢复重同步；Milestone 6 已加入运行时诊断、服务预算和 USB Host 错误释放保护。开发板长稳与 PCB 收口仍待执行。
+状态：Architecture v0.7。Milestone 1 已落地 TMOS 基础、静态 SPSC Ring、USB Device HID/CDC 复合输出和 CDC 回送；Milestone 2 已落地 BLE HOGP/NUS-compatible 输出；Milestone 3 已落地 PS/2 与 UART 输入适配器；Milestone 4 已落地 USB Host HID 非阻塞枚举、轮询与固定上限报表解析；Milestone 5 已落地 Event_Router 状态合并、USB/BLE 活跃策略、独立 HID/stream 可用性和恢复重同步；Milestone 6 已加入运行时诊断、服务预算、USB Host 错误释放保护和 PS/2 异常释放重试。开发板长稳与 PCB 收口仍待执行。
 
 ## 0. 约束与芯片容量校准
 

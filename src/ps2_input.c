@@ -22,6 +22,9 @@
 #define PS2_TX_WAIT_ACK_RISE              3u
 #define PS2_TX_WAIT_ACK_FALL              4u
 
+#define PS2_RESYNC_KEYBOARD_MASK          1u
+#define PS2_RESYNC_MOUSE_MASK             2u
+
 typedef struct
 {
     uint8_t data_level;
@@ -92,6 +95,7 @@ static uint32_t g_ps2_keyboard_overrun_reported;
 static uint32_t g_ps2_mouse_overrun_reported;
 static uint16_t g_ps2_mouse_init_delay_ticks;
 static uint8_t g_ps2_mouse_init_done;
+static uint8_t g_ps2_resync_pending;
 
 static void Ps2BitDecoder_Reset(Ps2BitDecoder *decoder)
 {
@@ -167,6 +171,20 @@ static void Ps2Mouse_ResetState(void)
     g_ps2_mouse_decoder.idle_ticks = 0u;
 }
 
+static void Ps2Input_RequestSourceResync(uint8_t source, uint8_t mask)
+{
+    if(EventRouter_InjectSourceEvent(source,
+                                     ROUTER_EVENT_SOURCE_RESYNC,
+                                     ROUTER_FLAG_RELEASE_ALL))
+    {
+        g_ps2_resync_pending &= (uint8_t)~mask;
+    }
+    else
+    {
+        g_ps2_resync_pending |= mask;
+    }
+}
+
 static void Ps2Keyboard_EmitReport(void)
 {
     HidKeyboardReport report;
@@ -198,7 +216,8 @@ static void Ps2Keyboard_EmitReport(void)
 static void Ps2Keyboard_ReleaseAll(void)
 {
     Ps2Keyboard_ResetState();
-    Ps2Keyboard_EmitReport();
+    Ps2Input_RequestSourceResync(ROUTER_SRC_PS2_KEYBOARD,
+                                 PS2_RESYNC_KEYBOARD_MASK);
     ++g_ps2_keyboard_resync;
 }
 
@@ -503,6 +522,14 @@ static void Ps2Mouse_EmitReport(void)
     (void)EventRouter_InjectMouseReport(ROUTER_SRC_PS2_MOUSE, &report);
 }
 
+static void Ps2Mouse_ReleaseAll(void)
+{
+    Ps2Mouse_ResetState();
+    Ps2Input_RequestSourceResync(ROUTER_SRC_PS2_MOUSE,
+                                 PS2_RESYNC_MOUSE_MASK);
+    ++g_ps2_mouse_resync;
+}
+
 static void Ps2Mouse_HandleByte(uint8_t code)
 {
     if(g_ps2_mouse_decoder.packet_index == 0u)
@@ -646,6 +673,10 @@ static void Ps2MouseTx_HandleEdgeFromISR(uint8_t clock_high)
 
 static void Ps2MouseTx_Start(void)
 {
+    /* GPIOA_IRQHandler is the producer for this Ring.  Quiesce it for the
+     * clear and the complete inhibit setup so a stale clock edge cannot be
+     * inserted between the clear and PS2_TX_INHIBIT. */
+    PFIC_DisableIRQ(GPIO_A_IRQn);
     StaticSpscRing_Clear(&g_ps2_mouse_edge_ring);
     Ps2Mouse_ResetState();
 
@@ -661,8 +692,10 @@ static void Ps2MouseTx_Start(void)
      * 2 ms TMOS tick is deliberately conservative and non-blocking. */
     Ps2Bus_Release(BOARD_PS2_MOUSE_DATA_PIN);
     Ps2Bus_DriveLow(BOARD_PS2_MOUSE_CLK_PIN);
+    GPIOA_ClearITFlagBit(BOARD_PS2_MOUSE_CLK_PIN);
     Ps2MouseTx_SelectNextEdge(GPIO_ITMode_FallEdge);
     g_ps2_mouse_tx.state = PS2_TX_INHIBIT;
+    PFIC_EnableIRQ(GPIO_A_IRQn);
 }
 
 static void Ps2MouseTx_ReleaseInhibit(void)
@@ -712,6 +745,10 @@ static void Ps2Input_ProcessKeyboardEdges(void)
             Ps2Keyboard_ReleaseAll();
         }
         ++processed;
+        if(g_ps2_resync_pending & PS2_RESYNC_KEYBOARD_MASK)
+        {
+            break;
+        }
     }
 
     if((processed == 0u) && (g_ps2_keyboard_decoder.frame.bit_index != 0u))
@@ -750,9 +787,13 @@ static void Ps2Input_ProcessMouseEdges(void)
         {
             ++g_ps2_frame_error;
             ++g_ps2_mouse_packet_error;
-            Ps2Mouse_ResetState();
+            Ps2Mouse_ReleaseAll();
         }
         ++processed;
+        if(g_ps2_resync_pending & PS2_RESYNC_MOUSE_MASK)
+        {
+            break;
+        }
     }
 
     if((processed == 0u) && (g_ps2_mouse_decoder.frame.bit_index != 0u))
@@ -760,12 +801,7 @@ static void Ps2Input_ProcessMouseEdges(void)
         if(++g_ps2_mouse_decoder.idle_ticks >= PS2_IDLE_TIMEOUT_TICKS)
         {
             ++g_ps2_frame_error;
-            Ps2Mouse_ResetState();
-            ++g_ps2_mouse_resync;
-            {
-                HidMouseReport report = {{0u, 0u, 0u, 0u}};
-                (void)EventRouter_InjectMouseReport(ROUTER_SRC_PS2_MOUSE, &report);
-            }
+            Ps2Mouse_ReleaseAll();
         }
     }
 }
@@ -774,23 +810,54 @@ static void Ps2Input_HandleOverrun(void)
 {
     uint32_t keyboard_overrun = g_ps2_keyboard_edge_overrun;
     uint32_t mouse_overrun = g_ps2_mouse_edge_overrun;
+    uint8_t keyboard_reset = 0u;
+    uint8_t mouse_reset = 0u;
 
     if(keyboard_overrun != g_ps2_keyboard_overrun_reported)
     {
         g_ps2_keyboard_overrun_reported = keyboard_overrun;
-        StaticSpscRing_Clear(&g_ps2_keyboard_edge_ring);
-        Ps2Keyboard_ReleaseAll();
+        keyboard_reset = 1u;
     }
     if(mouse_overrun != g_ps2_mouse_overrun_reported)
     {
         g_ps2_mouse_overrun_reported = mouse_overrun;
-        StaticSpscRing_Clear(&g_ps2_mouse_edge_ring);
-        Ps2Mouse_ResetState();
-        ++g_ps2_mouse_resync;
+        mouse_reset = 1u;
+    }
+    if(keyboard_reset || mouse_reset)
+    {
+        /* Both rings are produced by GPIOA_IRQHandler. */
+        PFIC_DisableIRQ(GPIO_A_IRQn);
+        if(keyboard_reset)
         {
-            HidMouseReport report = {{0u, 0u, 0u, 0u}};
-            (void)EventRouter_InjectMouseReport(ROUTER_SRC_PS2_MOUSE, &report);
+            StaticSpscRing_Clear(&g_ps2_keyboard_edge_ring);
         }
+        if(mouse_reset)
+        {
+            StaticSpscRing_Clear(&g_ps2_mouse_edge_ring);
+        }
+        PFIC_EnableIRQ(GPIO_A_IRQn);
+    }
+    if(keyboard_reset)
+    {
+        Ps2Keyboard_ReleaseAll();
+    }
+    if(mouse_reset)
+    {
+        Ps2Mouse_ReleaseAll();
+    }
+}
+
+static void Ps2Input_ProcessPendingResync(void)
+{
+    if(g_ps2_resync_pending & PS2_RESYNC_KEYBOARD_MASK)
+    {
+        Ps2Input_RequestSourceResync(ROUTER_SRC_PS2_KEYBOARD,
+                                     PS2_RESYNC_KEYBOARD_MASK);
+    }
+    if(g_ps2_resync_pending & PS2_RESYNC_MOUSE_MASK)
+    {
+        Ps2Input_RequestSourceResync(ROUTER_SRC_PS2_MOUSE,
+                                     PS2_RESYNC_MOUSE_MASK);
     }
 }
 
@@ -885,6 +952,7 @@ void Ps2Input_Init(void)
 
     g_ps2_powered = 0u;
     g_ps2_power_release_pending = 0u;
+    g_ps2_resync_pending = 0u;
     PFIC_DisableIRQ(GPIO_A_IRQn);
     GPIOA_ModeCfg(clock_pins | data_pins, GPIO_ModeIN_Floating);
 }
@@ -905,6 +973,7 @@ void Ps2Input_Process(void)
         StaticSpscRing_Clear(&g_ps2_mouse_edge_ring);
         Ps2Keyboard_ResetState();
         Ps2Mouse_ResetState();
+        g_ps2_resync_pending = 0u;
         g_ps2_power_release_pending = 3u;
         g_ps2_powered = 0u;
     }
@@ -921,6 +990,12 @@ void Ps2Input_Process(void)
                                         ROUTER_EVENT_SOURCE_DOWN, 0u))
             g_ps2_power_release_pending &= (uint8_t)~2u;
     }
+    if(g_ps2_resync_pending != 0u)
+    {
+        Ps2Input_ProcessPendingResync();
+        if(g_ps2_resync_pending != 0u)
+            return;
+    }
     if(!powered || g_ps2_power_release_pending) return;
     if(!g_ps2_powered)
     {
@@ -933,6 +1008,7 @@ void Ps2Input_Process(void)
         PFIC_EnableIRQ(GPIO_A_IRQn);
     }
     Ps2Input_HandleOverrun();
+    if(g_ps2_resync_pending != 0u) return;
     Ps2Input_ProcessKeyboardEdges();
     Ps2Input_ProcessMouseTx();
     Ps2Input_ProcessMouseEdges();
