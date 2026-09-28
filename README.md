@@ -7,7 +7,7 @@
 | 内容 | 入口 | 状态 |
 |---|---|---|
 | 硬件设计资料 | [硬件文档索引](docs/hardware/README.md) | 区分 Rev A 实际记录、Rev B 电气提案与 Rev B-M 机械层叠 |
-| 信用卡尺寸 PCB 规划 | [Rev B/M 设计说明](docs/hardware/pcb-design-study.md)、[布局 SVG](docs/hardware/pcb-concept-revb.svg)、[物理剖面](docs/hardware/pcb-stack-revb.svg)、[引脚表](docs/hardware/pin-allocation-revb.md) | 2026-09-28 提案，尚未同步云端原理图或固件 |
+| 信用卡尺寸 PCB 规划 | [Rev B/M 设计说明](docs/hardware/pcb-design-study.md)、[顶层布局](docs/hardware/pcb-concept-revb.svg)、[底层界面](docs/hardware/pcb-bottom-revb.svg)、[物理剖面](docs/hardware/pcb-stack-revb.svg)、[引脚表](docs/hardware/pin-allocation-revb.md) | 2026-09-28 提案，尚未同步云端原理图或固件 |
 | 首版原理图记录 | [Rev A 引脚规划](docs/pin-plan.md)、[设计取舍](docs/design-decisions.md) | 历史记录，包含待整改项目 |
 | 固件实现与架构 | [固件说明](docs/firmware.md)、[架构与里程碑](docs/firmware-architecture.md) | M1–M6 代码已落地 |
 | 实测验收 | [M6 验证清单](docs/m6-validation.md) | 开发板及 PCB 物理验收待完成 |

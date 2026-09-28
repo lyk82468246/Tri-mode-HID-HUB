@@ -5,12 +5,15 @@
 ## 阅读顺序
 
 1. [设计说明与资料来源](pcb-design-study.md)：接口方位、0°/±45° 比较、机械预算、电源与 RF 约束。
-2. [布局 SVG](pcb-concept-revb.svg)：85.60 × 53.98 mm 顶视图，含侧插排母、底层用户界面、中央电池盆地和四角安装孔；[PNG 预览](pcb-concept-revb.png)便于浏览。
-3. [物理层叠剖面](pcb-stack-revb.svg) / [PNG 预览](pcb-stack-revb.png)：CH582M 面朝盆地、底层屏幕/触摸面朝用户、3D 打印底板与四面墙的非比例剖面。
-4. [完整引脚表](pin-allocation-revb.md)：48 个引脚、EP、接插件脚序、复用约束和 Rev A 迁移清单。
-5. [引脚方向 SVG](pinout-revb.svg) / [PNG](pinout-revb.png)：按照 CH582M 实际的上/下 10 脚、左/右 14 脚封装绘制。
+2. [顶层布局 SVG](pcb-concept-revb.svg)：85.60 × 53.98 mm 顶视图，只含顶层器件、侧插排母和四角安装孔；[PNG 预览](pcb-concept-revb.png)便于浏览。
+3. [底层用户界面 SVG](pcb-bottom-revb.svg) / [PNG 预览](pcb-bottom-revb.png)：OLED、三块触摸电极、FPC、孔环和电池投影单独绘制。
+4. [物理层叠剖面](pcb-stack-revb.svg) / [PNG 预览](pcb-stack-revb.png)：CH582M 面朝盆地、底层屏幕/触摸面朝用户、3D 打印底板与四面墙的非比例剖面。
+5. [完整引脚表](pin-allocation-revb.md)：48 个引脚、EP、接插件脚序、复用约束和 Rev A 迁移清单。
+6. [引脚方向 SVG](pinout-revb.svg) / [PNG](pinout-revb.png)：按照 CH582M 实际的上/下 10 脚、左/右 14 脚封装绘制。
 
 ![Rev B PCB 概念布局](pcb-concept-revb.png)
+
+![Rev B-M 底层用户界面](pcb-bottom-revb.png)
 
 ![Rev B-M 物理层叠剖面](pcb-stack-revb.png)
 
@@ -33,12 +36,12 @@
 python docs/hardware/generate_concept.py
 ```
 
-脚本仅需 Python 3 标准库，会覆盖三张 SVG、Markdown/CSV 引脚表、坐标 JSON 和检查 JSON。`pcb-design-study.md` 是人工维护的说明；若更改布局或比较模型，需要同步更新其中的坐标、比较数值及取舍。
+脚本仅需 Python 3 标准库，会覆盖四张 SVG、Markdown/CSV 引脚表、坐标 JSON 和检查 JSON。`pcb-design-study.md` 是人工维护的说明；若更改布局或比较模型，需要同步更新其中的坐标、比较数值及取舍。
 
-PNG 为 SVG 的浏览预览，脚本不会自动更新。使用 SVG 渲染器重新导出三张同名 PNG，并目视检查文字、连线与边界。已安装 Node.js 和 `sharp` 时，可从仓库根目录运行：
+PNG 为 SVG 的浏览预览，脚本不会自动更新。使用 SVG 渲染器重新导出四张同名 PNG，并目视检查文字、连线与边界。已安装 Node.js 和 `sharp` 时，可从仓库根目录运行：
 
 ```sh
-node -e "const sharp=require('sharp'); Promise.all(['pcb-concept-revb','pcb-stack-revb','pinout-revb'].map(n=>sharp('docs/hardware/'+n+'.svg').png().toFile('docs/hardware/'+n+'.png'))).catch(e=>{console.error(e);process.exitCode=1;})"
+node -e "const sharp=require('sharp'); Promise.all(['pcb-concept-revb','pcb-bottom-revb','pcb-stack-revb','pinout-revb'].map(n=>sharp('docs/hardware/'+n+'.svg').png().toFile('docs/hardware/'+n+'.png'))).catch(e=>{console.error(e);process.exitCode=1;})"
 ```
 
 研究时下载的数据手册和临时渲染位于 `tmp/pcb-research/`，已忽略，不随仓库提交；制造商原始链接在设计说明的资料来源中保留。

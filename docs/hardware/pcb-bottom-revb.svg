@@ -1,0 +1,100 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1500" height="980" viewBox="0 0 1500 980" role="img"><title>CH582M Rev B-M 底层 OLED 与电容触摸布局</title>
+<defs><pattern id="hatch" width="10" height="10" patternUnits="userSpaceOnUse" patternTransform="rotate(45)"><line x1="0" y1="0" x2="0" y2="10" stroke="#e6c778" stroke-width="2"/></pattern><marker id="arrow" markerWidth="8" markerHeight="8" refX="6" refY="4" orient="auto"><path d="M0 0 L8 4 L0 8" fill="none" stroke="#60748b"/></marker></defs>
+<g font-family="Microsoft YaHei, Noto Sans CJK SC, Segoe UI, Arial, sans-serif">
+<rect x="0.00" y="0.00" width="1500.00" height="980.00" rx="0" fill="#f7f9fc" stroke="none" />
+<text x="55.00" y="52.00" font-size="30" fill="#243447" text-anchor="start" font-weight="700" >CH582M · 底层用户界面布局</text>
+<text x="55.00" y="82.00" font-size="16" fill="#627186" text-anchor="start" font-weight="400" >Rev B-M / 2026-09-28   ·   从底层铜面观察   ·   OLED 与触摸有效面朝用户</text>
+<text x="55.00" y="108.00" font-size="15" fill="#627186" text-anchor="start" font-weight="400" >本图只画显示屏、触摸电极、FPC 和安装孔；顶层器件与接口请看 pcb-concept-revb.svg。</text>
+<rect x="70.00" y="175.00" width="1070.00" height="674.75" rx="30" fill="#f1f7fa" stroke="#5b7c8c" stroke-width="2"/>
+<polyline points="70.00,137.50 1140.00,137.50" fill="none" stroke="#718295" stroke-width="1" stroke-linejoin="round" stroke-linecap="round" stroke-dasharray="" />
+<text x="605.00" y="125.00" font-size="15" fill="#243447" text-anchor="middle" font-weight="400" >85.60 mm</text>
+<polyline points="32.50,175.00 32.50,849.75" fill="none" stroke="#718295" stroke-width="1" stroke-linejoin="round" stroke-linecap="round" stroke-dasharray="" />
+<text x="25.00" y="512.38" font-size="15" fill="#243447" text-anchor="start" font-weight="400" transform="rotate(-90 25 512.375)">53.98 mm</text>
+<polyline points="132.50,187.50 132.50,837.25" fill="none" stroke="#d5e5ea" stroke-width="0.5" stroke-linejoin="round" stroke-linecap="round" stroke-dasharray="2 6" />
+<polyline points="195.00,187.50 195.00,837.25" fill="none" stroke="#d5e5ea" stroke-width="0.5" stroke-linejoin="round" stroke-linecap="round" stroke-dasharray="2 6" />
+<polyline points="257.50,187.50 257.50,837.25" fill="none" stroke="#d5e5ea" stroke-width="0.5" stroke-linejoin="round" stroke-linecap="round" stroke-dasharray="2 6" />
+<polyline points="320.00,187.50 320.00,837.25" fill="none" stroke="#d5e5ea" stroke-width="0.5" stroke-linejoin="round" stroke-linecap="round" stroke-dasharray="2 6" />
+<polyline points="382.50,187.50 382.50,837.25" fill="none" stroke="#d5e5ea" stroke-width="0.5" stroke-linejoin="round" stroke-linecap="round" stroke-dasharray="2 6" />
+<polyline points="445.00,187.50 445.00,837.25" fill="none" stroke="#d5e5ea" stroke-width="0.5" stroke-linejoin="round" stroke-linecap="round" stroke-dasharray="2 6" />
+<polyline points="507.50,187.50 507.50,837.25" fill="none" stroke="#d5e5ea" stroke-width="0.5" stroke-linejoin="round" stroke-linecap="round" stroke-dasharray="2 6" />
+<polyline points="570.00,187.50 570.00,837.25" fill="none" stroke="#d5e5ea" stroke-width="0.5" stroke-linejoin="round" stroke-linecap="round" stroke-dasharray="2 6" />
+<polyline points="632.50,187.50 632.50,837.25" fill="none" stroke="#d5e5ea" stroke-width="0.5" stroke-linejoin="round" stroke-linecap="round" stroke-dasharray="2 6" />
+<polyline points="695.00,187.50 695.00,837.25" fill="none" stroke="#d5e5ea" stroke-width="0.5" stroke-linejoin="round" stroke-linecap="round" stroke-dasharray="2 6" />
+<polyline points="757.50,187.50 757.50,837.25" fill="none" stroke="#d5e5ea" stroke-width="0.5" stroke-linejoin="round" stroke-linecap="round" stroke-dasharray="2 6" />
+<polyline points="820.00,187.50 820.00,837.25" fill="none" stroke="#d5e5ea" stroke-width="0.5" stroke-linejoin="round" stroke-linecap="round" stroke-dasharray="2 6" />
+<polyline points="882.50,187.50 882.50,837.25" fill="none" stroke="#d5e5ea" stroke-width="0.5" stroke-linejoin="round" stroke-linecap="round" stroke-dasharray="2 6" />
+<polyline points="945.00,187.50 945.00,837.25" fill="none" stroke="#d5e5ea" stroke-width="0.5" stroke-linejoin="round" stroke-linecap="round" stroke-dasharray="2 6" />
+<polyline points="1007.50,187.50 1007.50,837.25" fill="none" stroke="#d5e5ea" stroke-width="0.5" stroke-linejoin="round" stroke-linecap="round" stroke-dasharray="2 6" />
+<polyline points="1070.00,187.50 1070.00,837.25" fill="none" stroke="#d5e5ea" stroke-width="0.5" stroke-linejoin="round" stroke-linecap="round" stroke-dasharray="2 6" />
+<polyline points="82.50,237.50 1127.50,237.50" fill="none" stroke="#d5e5ea" stroke-width="0.5" stroke-linejoin="round" stroke-linecap="round" stroke-dasharray="2 6" />
+<polyline points="82.50,300.00 1127.50,300.00" fill="none" stroke="#d5e5ea" stroke-width="0.5" stroke-linejoin="round" stroke-linecap="round" stroke-dasharray="2 6" />
+<polyline points="82.50,362.50 1127.50,362.50" fill="none" stroke="#d5e5ea" stroke-width="0.5" stroke-linejoin="round" stroke-linecap="round" stroke-dasharray="2 6" />
+<polyline points="82.50,425.00 1127.50,425.00" fill="none" stroke="#d5e5ea" stroke-width="0.5" stroke-linejoin="round" stroke-linecap="round" stroke-dasharray="2 6" />
+<polyline points="82.50,487.50 1127.50,487.50" fill="none" stroke="#d5e5ea" stroke-width="0.5" stroke-linejoin="round" stroke-linecap="round" stroke-dasharray="2 6" />
+<polyline points="82.50,550.00 1127.50,550.00" fill="none" stroke="#d5e5ea" stroke-width="0.5" stroke-linejoin="round" stroke-linecap="round" stroke-dasharray="2 6" />
+<polyline points="82.50,612.50 1127.50,612.50" fill="none" stroke="#d5e5ea" stroke-width="0.5" stroke-linejoin="round" stroke-linecap="round" stroke-dasharray="2 6" />
+<polyline points="82.50,675.00 1127.50,675.00" fill="none" stroke="#d5e5ea" stroke-width="0.5" stroke-linejoin="round" stroke-linecap="round" stroke-dasharray="2 6" />
+<polyline points="82.50,737.50 1127.50,737.50" fill="none" stroke="#d5e5ea" stroke-width="0.5" stroke-linejoin="round" stroke-linecap="round" stroke-dasharray="2 6" />
+<rect x="382.50" y="368.75" width="475.00" height="300.00" rx="8" fill="#fff8e8" stroke="#c99842" stroke-width="1.2" stroke-dasharray="6 5" opacity="0.32"/>
+<rect x="357.50" y="350.00" width="487.50" height="300.00" rx="5" fill="#d9eef7" stroke="#2d7c9f" stroke-width="1.8"/>
+<rect x="382.50" y="375.00" width="437.50" height="250.00" rx="3" fill="#f7fcfe" stroke="#2d7c9f" stroke-width="1.2"/>
+<text x="601.25" y="415.00" font-size="16" fill="#2d7c9f" text-anchor="middle" font-weight="700" >OLED 显示屏</text>
+<text x="601.25" y="445.00" font-size="11" fill="#2d7c9f" text-anchor="middle" font-weight="400" >底层 · 可视面朝上</text>
+<text x="601.25" y="615.00" font-size="9" fill="#2d7c9f" text-anchor="middle" font-weight="400" >有效区 / 边框 / 压合面待按实物收口</text>
+<rect x="851.25" y="425.00" width="56.25" height="100.00" rx="2" fill="#d9eef7" stroke="#2d7c9f" stroke-width="1.2" stroke-dasharray="3 2"/>
+<text x="879.38" y="483.75" font-size="8" fill="#2d7c9f" text-anchor="middle" font-weight="700" >FPC</text>
+<polyline points="907.50,475.00 957.50,475.00 982.50,500.00" fill="none" stroke="#2d7c9f" stroke-width="1.5" stroke-linejoin="round" stroke-linecap="round" stroke-dasharray="4 3" />
+<rect x="320.00" y="681.25" width="125.00" height="75.00" rx="4" fill="#f9e7f1" stroke="#b04b82" stroke-width="1.4" stroke-dasharray="5 3"/>
+<rect x="332.50" y="693.75" width="100.00" height="50.00" rx="3" fill="#fff8fb" stroke="#b04b82" stroke-width="1.5"/>
+<text x="382.50" y="725.00" font-size="11" fill="#b04b82" text-anchor="middle" font-weight="700" >USER</text>
+<text x="382.50" y="750.00" font-size="8" fill="#b04b82" text-anchor="middle" font-weight="400" >铜箔电极</text>
+<rect x="532.50" y="681.25" width="125.00" height="75.00" rx="4" fill="#f9e7f1" stroke="#b04b82" stroke-width="1.4" stroke-dasharray="5 3"/>
+<rect x="545.00" y="693.75" width="100.00" height="50.00" rx="3" fill="#fff8fb" stroke="#b04b82" stroke-width="1.5"/>
+<text x="595.00" y="725.00" font-size="11" fill="#b04b82" text-anchor="middle" font-weight="700" >RST</text>
+<text x="595.00" y="750.00" font-size="8" fill="#b04b82" text-anchor="middle" font-weight="400" >铜箔电极</text>
+<rect x="745.00" y="681.25" width="125.00" height="75.00" rx="4" fill="#f9e7f1" stroke="#b04b82" stroke-width="1.4" stroke-dasharray="5 3"/>
+<rect x="757.50" y="693.75" width="100.00" height="50.00" rx="3" fill="#fff8fb" stroke="#b04b82" stroke-width="1.5"/>
+<text x="807.50" y="725.00" font-size="11" fill="#b04b82" text-anchor="middle" font-weight="700" >BOOT</text>
+<text x="807.50" y="750.00" font-size="8" fill="#b04b82" text-anchor="middle" font-weight="400" >铜箔电极</text>
+<polyline points="382.50,760.00 382.50,781.25 920.00,781.25" fill="none" stroke="#b04b82" stroke-width="1.4" stroke-linejoin="round" stroke-linecap="round" stroke-dasharray="3 3" />
+<polyline points="595.00,760.00 595.00,781.25 920.00,781.25" fill="none" stroke="#b04b82" stroke-width="1.4" stroke-linejoin="round" stroke-linecap="round" stroke-dasharray="3 3" />
+<polyline points="807.50,760.00 807.50,781.25 920.00,781.25" fill="none" stroke="#b04b82" stroke-width="1.4" stroke-linejoin="round" stroke-linecap="round" stroke-dasharray="3 3" />
+<circle cx="126.25" cy="231.25" r="35.00" fill="#ffffff" fill-opacity="0.8" stroke="#586b78" stroke-width="1.1" stroke-dasharray="4 3"/>
+<circle cx="126.25" cy="231.25" r="20.00" fill="#d9e1e6" stroke="#344955" stroke-width="1.2"/>
+<polyline points="111.25,231.25 141.25,231.25" fill="none" stroke="#70818b" stroke-width="0.7" stroke-linejoin="round" stroke-linecap="round" stroke-dasharray="" />
+<polyline points="126.25,216.25 126.25,246.25" fill="none" stroke="#70818b" stroke-width="0.7" stroke-linejoin="round" stroke-linecap="round" stroke-dasharray="" />
+<text x="126.25" y="283.75" font-size="8" fill="#465b67" text-anchor="middle" font-weight="400" >H1</text>
+<circle cx="1083.75" cy="231.25" r="35.00" fill="#ffffff" fill-opacity="0.8" stroke="#586b78" stroke-width="1.1" stroke-dasharray="4 3"/>
+<circle cx="1083.75" cy="231.25" r="20.00" fill="#d9e1e6" stroke="#344955" stroke-width="1.2"/>
+<polyline points="1068.75,231.25 1098.75,231.25" fill="none" stroke="#70818b" stroke-width="0.7" stroke-linejoin="round" stroke-linecap="round" stroke-dasharray="" />
+<polyline points="1083.75,216.25 1083.75,246.25" fill="none" stroke="#70818b" stroke-width="0.7" stroke-linejoin="round" stroke-linecap="round" stroke-dasharray="" />
+<text x="1083.75" y="283.75" font-size="8" fill="#465b67" text-anchor="middle" font-weight="400" >H2</text>
+<circle cx="126.25" cy="793.50" r="35.00" fill="#ffffff" fill-opacity="0.8" stroke="#586b78" stroke-width="1.1" stroke-dasharray="4 3"/>
+<circle cx="126.25" cy="793.50" r="20.00" fill="#d9e1e6" stroke="#344955" stroke-width="1.2"/>
+<polyline points="111.25,793.50 141.25,793.50" fill="none" stroke="#70818b" stroke-width="0.7" stroke-linejoin="round" stroke-linecap="round" stroke-dasharray="" />
+<polyline points="126.25,778.50 126.25,808.50" fill="none" stroke="#70818b" stroke-width="0.7" stroke-linejoin="round" stroke-linecap="round" stroke-dasharray="" />
+<text x="126.25" y="846.00" font-size="8" fill="#465b67" text-anchor="middle" font-weight="400" >H3</text>
+<circle cx="1083.75" cy="793.50" r="35.00" fill="#ffffff" fill-opacity="0.8" stroke="#586b78" stroke-width="1.1" stroke-dasharray="4 3"/>
+<circle cx="1083.75" cy="793.50" r="20.00" fill="#d9e1e6" stroke="#344955" stroke-width="1.2"/>
+<polyline points="1068.75,793.50 1098.75,793.50" fill="none" stroke="#70818b" stroke-width="0.7" stroke-linejoin="round" stroke-linecap="round" stroke-dasharray="" />
+<polyline points="1083.75,778.50 1083.75,808.50" fill="none" stroke="#70818b" stroke-width="0.7" stroke-linejoin="round" stroke-linecap="round" stroke-dasharray="" />
+<text x="1083.75" y="846.00" font-size="8" fill="#465b67" text-anchor="middle" font-weight="400" >H4</text>
+<rect x="1215.00" y="150.00" width="250.00" height="660.00" rx="14" fill="#ffffff" stroke="#dce3ed" />
+<text x="1235.00" y="188.00" font-size="22" fill="#243447" text-anchor="start" font-weight="700" >底层图例</text>
+<text x="1235.00" y="228.00" font-size="14" fill="#243447" text-anchor="start" font-weight="700" >蓝色大框</text>
+<text x="1235.00" y="249.00" font-size="12" fill="#617086" text-anchor="start" font-weight="400" >OLED 玻璃 / 有效显示区 / FPC</text>
+<text x="1235.00" y="286.00" font-size="14" fill="#243447" text-anchor="start" font-weight="700" >粉色三框</text>
+<text x="1235.00" y="307.00" font-size="12" fill="#617086" text-anchor="start" font-weight="400" >USER / RST / BOOT 触摸电极</text>
+<text x="1235.00" y="344.00" font-size="14" fill="#243447" text-anchor="start" font-weight="700" >浅黄色虚线</text>
+<text x="1235.00" y="365.00" font-size="12" fill="#617086" text-anchor="start" font-weight="400" >顶层电池投影；需验证触摸耦合</text>
+<text x="1235.00" y="402.00" font-size="14" fill="#243447" text-anchor="start" font-weight="700" >孔环</text>
+<text x="1235.00" y="423.00" font-size="12" fill="#617086" text-anchor="start" font-weight="400" >初始 Ø3.2 通孔 / Ø5.6 keep-out</text>
+<text x="1235.00" y="466.00" font-size="15" fill="#243447" text-anchor="start" font-weight="700" >必须确认</text>
+<text x="1235.00" y="495.00" font-size="12" fill="#536575" text-anchor="start" font-weight="400" >1. 底层镜像和 FPC 出线方向</text>
+<text x="1235.00" y="523.00" font-size="12" fill="#536575" text-anchor="start" font-weight="400" >2. 电池、屏蔽层对触摸灵敏度的影响</text>
+<text x="1235.00" y="551.00" font-size="12" fill="#536575" text-anchor="start" font-weight="400" >3. 触摸 guard、RC 和 ESD 方案</text>
+<text x="1235.00" y="579.00" font-size="12" fill="#536575" text-anchor="start" font-weight="400" >4. 屏幕窗口、压合和维修空间</text>
+<rect x="70.00" y="880.00" width="1100.00" height="55.00" rx="9" fill="#ffffff" stroke="#cfdae5" />
+<text x="90.00" y="904.00" font-size="14" fill="#243447" text-anchor="start" font-weight="700" >安装姿态</text>
+<text x="190.00" y="904.00" font-size="12" fill="#617086" text-anchor="start" font-weight="400" >用户从上方看到 OLED/触摸；PCB 顶层在另一侧朝向电池盆地。此图不是顶层元件布局，也不是显示屏采购尺寸。</text>
+</g></svg>

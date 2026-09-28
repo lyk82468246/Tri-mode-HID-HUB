@@ -5,6 +5,7 @@
 交付物：
 
 - [布局 SVG](pcb-concept-revb.svg) / [PNG 预览](pcb-concept-revb.png)
+- [底层用户界面 SVG](pcb-bottom-revb.svg) / [PNG 预览](pcb-bottom-revb.png)
 - [物理层叠剖面 SVG](pcb-stack-revb.svg)：PCB、中央电池盆地、四角螺丝和 3D 打印底板/四面墙。
 - [完整引脚分配表](pin-allocation-revb.md) / [CSV](pin-allocation-revb.csv)
 - [真实封装方向的引脚图](pinout-revb.svg)
@@ -122,7 +123,7 @@ WCH 的封装图确认 CH582M QFN48 是 **5 × 5 mm，0.35 mm 间距，上/下�
 
 ## 9. 已完成检查与下一阶段边界
 
-已逐项核对芯片物理脚号、ADC/串口/SPI/I2C/PWM 可用映射；49 行引脚表完整，40 个 GPIO 各只分配一次。24 个顶层电气预留包络在外形矩形范围内，没有相互重叠，也没有侵入天线预留矩形；另有 4 个侧插排母、4 个底层用户区和 4 个安装孔作为机械覆盖层。三张 SVG 已通过 XML/边界生成检查，浏览器目视检查仍需随实际 footprint 继续迭代。
+已逐项核对芯片物理脚号、ADC/串口/SPI/I2C/PWM 可用映射；49 行引脚表完整，40 个 GPIO 各只分配一次。24 个顶层电气预留包络在外形矩形范围内，没有相互重叠，也没有侵入天线预留矩形；另有 4 个侧插排母、4 个底层用户区和 4 个安装孔作为机械覆盖层。四张 SVG 已通过 XML/边界生成检查，并分别完成顶层、底层和剖面 PNG 的浏览检查；正式 footprint 仍需继续迭代。
 
 这证明的是**本次请求的布局示意和引脚分配提案自洽**。预留矩形不是精确 courtyard，尚无云端网表、精确 footprint 或 routed PCB，因此不宣称通过 ERC/DRC、圆角处焊盘边距、连接器插拔、USB 信号完整性、RF 匹配或热验证。下一阶段先把本表同步到原理图、锁定连接器和天线，再做真实封装布局与布线。
 

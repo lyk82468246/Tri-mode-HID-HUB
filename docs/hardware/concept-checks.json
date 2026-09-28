@@ -30,6 +30,12 @@
       24
     ]
   },
+  "views": [
+    "pcb-concept-revb.svg",
+    "pcb-bottom-revb.svg",
+    "pcb-stack-revb.svg",
+    "pinout-revb.svg"
+  ],
   "verified_scope": "Automated: pin uniqueness, envelope bounds/non-overlap, SVG XML. Peripheral mapping reviewed manually against WCH datasheet and SDK. Not ERC, DRC, SI, RF or assembly sign-off.",
   "comparisons": [
     {

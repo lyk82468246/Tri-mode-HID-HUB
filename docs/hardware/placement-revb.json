@@ -404,6 +404,7 @@
       "w": 38,
       "h": 24
     },
+    "bottom_svg": "pcb-bottom-revb.svg",
     "stack_svg": "pcb-stack-revb.svg"
   }
 }

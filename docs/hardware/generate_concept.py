@@ -188,55 +188,21 @@ def start(w,h,title):
       '<g font-family="Microsoft YaHei, Noto Sans CJK SC, Segoe UI, Arial, sans-serif">',rect(0,0,w,h,"#f7f9fc")]
 
 def make_board():
-    svg=start(1600,1110,"信用卡尺寸 CH582M 多接口 PCB 概念布局 Rev B-M")
-    svg += [text(55,52,"CH582M · 多接口 PCB 方位与引脚协同规划",30,weight=700),
-            text(55,83,"Rev B-M / 2026-09-28   ·   顶视坐标图   ·   PCB 85.60 × 53.98 mm   ·   建议 4 层",16,color="#627186"),
-            text(55,110,"顶层器件朝向 3D 打印盆地；底层显示屏/触摸面朝用户。彩色矩形仍是概念预留区，不是可制造封装或走线。",15,color="#627186")]
-    OX,OY,S=70,190,12
+    svg=start(1500,1080,"信用卡尺寸 CH582M 顶层器件布局 Rev B-M")
+    svg += [text(55,52,"CH582M · 顶层器件与板边接口布局",30,weight=700),
+            text(55,82,"Rev B-M / 2026-09-28   ·   顶视图   ·   PCB 85.60 × 53.98 mm   ·   0° = Pin 1 左下",16,color="#627186"),
+            text(55,108,"本图只画顶层器件、侧插排母和安装孔；底层 OLED/触摸与中央电池盆地移到独立图，避免互相遮挡。",15,color="#627186")]
+    OX,OY,S=70,180,12.5
     P=lambda x,y:(OX+x*S,OY+y*S)
     R=lambda x,y,w,h,fill,stroke="none",r=0,extra="":rect(*P(x,y),w*S,h*S,fill,stroke,r,extra)
     T=lambda x,y,s,size=13,color="#243447",anchor="middle",weight=400: text(*P(x,y),s,size,color,anchor,weight)
     svg += [R(0,0,W,H,"#edf5f0","#547466",30,'stroke-width="2"'),
             path([P(0,-3),P(W,-3)],"#718295",1),T(W/2,-4,"85.60 mm",15),
             path([P(-3,0),P(-3,H)],"#718295",1),text(25,OY+H*S/2,"53.98 mm",15,extra=f'transform="rotate(-90 25 {OY+H*S/2})"')]
-    # Low-contrast 5 mm placement grid.
-    for x in range(5,85,5): svg.append(path([P(x,1),P(x,H-1)],"#cfdfd6",.6,dash="2 5"))
-    for y in range(5,50,5): svg.append(path([P(1,y),P(W-1,y)],"#cfdfd6",.6,dash="2 5"))
-    # Mechanical overlays: these sit below/behind the top-side electrical
-    # envelopes in the physical stack and are intentionally not part of the
-    # electrical overlap validator.
-    svg += [R(BASIN["x"],BASIN["y"],BASIN["w"],BASIN["h"],"#fff8e8",COLORS["mech"],9,'stroke-width="1.7" stroke-dasharray="10 5" opacity="0.82"'),
-            T(BASIN["x"]+BASIN["w"]/2,BASIN["y"]+2.4,"3D 打印盆地 / 电池空间",15,COLORS["mech"],weight=700),
-            T(BASIN["x"]+BASIN["w"]/2,BASIN["y"]+4.5,"顶层器件向下伸入；必须留 Z 向绝缘间隙",10,COLORS["mech"]),
-            R(BATTERY_POCKET["x"],BATTERY_POCKET["y"],BATTERY_POCKET["w"],BATTERY_POCKET["h"],"#fffdf5","#c99842",7,'stroke-width="1.3" stroke-dasharray="5 4" opacity="0.72"'),
-            T(BATTERY_POCKET["x"]+BATTERY_POCKET["w"]/2,BATTERY_POCKET["y"]+BATTERY_POCKET["h"]/2-0.6,"1S Li-ion 电池袋",14,"#946b1e",weight=700),
-            T(BATTERY_POCKET["x"]+BATTERY_POCKET["w"]/2,BATTERY_POCKET["y"]+BATTERY_POCKET["h"]/2+1.8,"机械示意 · 非焊接区",10,"#946b1e")]
-    # Four through holes are referenced from the finished board outline.  The
-    # outer ring is the initial courtyard/washer reservation, not the drilled
-    # diameter; choose M2.5/M3 only after the screw and insert are frozen.
-    for ref,x,y,r in MOUNTING_HOLES:
-        px,py=P(x,y)
-        svg += [f'<circle cx="{px:.2f}" cy="{py:.2f}" r="{2.8*S:.2f}" fill="#ffffff" fill-opacity="0.82" stroke="#586b78" stroke-width="1.2" stroke-dasharray="4 3"/>',
-                f'<circle cx="{px:.2f}" cy="{py:.2f}" r="{r*S:.2f}" fill="#d9e1e6" stroke="#344955" stroke-width="1.4"/>',
-                path([P(x-1.5,y),P(x+1.5,y)],"#70818b",.8),path([P(x,y-1.5),P(x,y+1.5)],"#70818b",.8),
-                T(x,y+4.5,ref,8,"#465b67")]
-    # Bottom-side display and touch electrodes are shown as dashed, mirrored
-    # overlays.  In the real PCB they must be checked against vias, screw
-    # keep-outs, connector shadows and the display FPC bend radius.
-    bottom_fill={"display":"#e5f4fb","touch":"#f9e7f1"}
-    for ref,label,sub,x,y,w,h,kind in BOTTOM_ZONES:
-        c=COLORS[kind]
-        svg.append(R(x,y,w,h,bottom_fill[kind],c,5,'stroke-width="1.5" stroke-dasharray="5 4" opacity="0.9"'))
-        if ref=="OLED":
-            svg += [T(x+w/2,y+3.0,label,13,c,weight=700),T(x+w/2,y+5.1,sub,10,c),T(x+w/2,y+h-1.9,"底层镜像检查 / FPC 走向待定",9,c)]
-        else:
-            svg += [T(x+w/2,y+2.2,label,9,c,weight=700),T(x+w/2,y+4.2,sub,8,c)]
-    svg += [R(**ANT,fill="#fff4d9",stroke="#bd8e27",extra='stroke-dasharray="6 4"'),
-            R(**ANT,fill="url(#hatch)"),T(44.5,2.6,"BLE 天线预留区",17,"#835d06",weight=700),
-            T(44.5,5.0,"25 × 10 mm · 非天线尺寸",12,"#835d06"),
-            T(44.5,7.2,"除天线本体外，全层净空",12,"#835d06"),
-            T(44.5,9.1,"电池 / 金属外壳 / 导线避让",11,"#835d06")]
-    # Signal corridors. Exact endpoint escape is shown in the pinout SVG.
+    for x in range(5,85,5): svg.append(path([P(x,1),P(x,H-1)],"#cfdfd6",.5,dash="2 6"))
+    for y in range(5,50,5): svg.append(path([P(1,y),P(W-1,y)],"#cfdfd6",.5,dash="2 6"))
+    # Signal corridors are deliberately faint and drawn first; component
+    # envelopes and labels remain on top and readable.
     routes=[
       ([(41.425,22),(41,20),(41,10)],"rf"),
       ([(45.5,25.9),(49,28.8),(66,28.8),(70,30.5),(73.6,30.5)],"usb"),
@@ -251,83 +217,133 @@ def make_board():
       ([(44,22),(50,16),(53,15.5)],"i2c"),
       ([(45.5,26.6),(49,32),(53,35)],"debug"),
     ]
-    for pts,col in routes: svg.append(path([P(*p) for p in pts],COLORS[col],2.6,dash="6 3" if col=="debug" else ""))
-    # Power distribution is indicative and does not prescribe copper widths.
-    power=[[(77,21),(77,42),(73,43)],[(73,43),(69,41),(67,41)],[(31,31),(27,36),(27,43),(32,45)],
-           [(63,43),(56,40),(49,30)],[(63,37),(29,39),(16,43),(16,10),(17,14)]]
-    for pts in power: svg.append(path([P(*p) for p in pts],"#ae8245",3.2,"3 5",'opacity="0.6"'))
+    for pts,col in routes: svg.append(path([P(*p) for p in pts],COLORS[col],1.8,dash="5 4" if col=="debug" else "",extra='opacity="0.45"'))
+    # BLE antenna reservation is the only large keep-out shown on this view.
+    svg += [R(**ANT,fill="#fff4d9",stroke="#bd8e27",extra='stroke-dasharray="6 4"'),
+            R(**ANT,fill="url(#hatch)"),T(44.5,3.0,"BLE 天线净空",15,"#835d06",weight=700),
+            T(44.5,5.1,"25 × 10 mm · 电池/金属/墙体避让",10,"#835d06"),
+            T(44.5,7.2,"天线本体和馈线按最终层叠重画",9,"#835d06")]
+    fill_map={"usb":"#e4efff","ps2":"#dff2ec","uart":"#fcece2","ir":"#fce7f0","spi":"#eee8fc","power":"#f3eadd","i2c":"#e1f0f4","debug":"#e7ebf1","spare":"#f0f1f3","rf":"#fff0cd"}
     for ref,label,sub,x,y,w,h,kind,edge in PLACEMENTS:
         if edge=="chip": continue
-        c=COLORS[kind]
-        fill={"usb":"#e4efff","ps2":"#dff2ec","uart":"#fcece2","ir":"#fce7f0","spi":"#eee8fc","power":"#f3eadd","i2c":"#e1f0f4","debug":"#e7ebf1","spare":"#f0f1f3","rf":"#fff0cd"}[kind]
-        svg.append(R(x,y,w,h,fill,c,5,'stroke-width="1.4"'))
-        # Compact blocks use two lines; larger envelopes use three.
+        c=COLORS[kind]; svg.append(R(x,y,w,h,fill_map[kind],c,4,'stroke-width="1.25"'))
         if ref in ("U9","U11","D_IR"):
-            optical = {"U9":("IrDA","TFBS4711"),"U11":("38k RX","TSOP38438"),"D_IR":("IR TX","940 nm")}[ref]
-            svg += [T(x+w/2,y+1.4,optical[0],10,c,weight=700),T(x+w/2,y+2.65,optical[1],8,c)]
+            optical={"U9":("IrDA","TFBS4711"),"U11":("38k RX","TSOP38438"),"D_IR":("IR TX","940 nm")}[ref]
+            svg += [T(x+w/2,y+1.35,optical[0],9,c,weight=700),T(x+w/2,y+2.55,optical[1],7,c)]
         elif ref=="U10+X2":
-            svg += [T(x+w/2,y+2.8,"IrDA 编解码",13,c,weight=700),T(x+w/2,y+5,"MCP2120",15,c,weight=700),T(x+w/2,y+7.1,"+ 7.3728 MHz",12,c),T(x+w/2,y+9.2,"电路 / 晶体 / 去耦区",10,c)]
-        elif ref=="DCDC":
-            svg += [T(x+w/2,y+1.3,"U1 L/C",10,c)]
-        elif ref=="LSE":
-            svg += [T(x+w/2,y+1.25,"32.768k",10,c),T(x+w/2,y+2.45,"可选 DNP",8,c)]
-        elif h <= 4:
-            svg += [T(x+w/2,y+1.6,label,11,c,weight=700),T(x+w/2,y+3.0,sub,9,c)]
-        elif w <= 8.5:
-            svg += [T(x+w/2,y+1.7,ref,11,c,weight=700),T(x+w/2,y+3.4,label,11,c),T(x+w/2,y+5.0,sub,9,c)]
+            svg += [T(x+w/2,y+3.0,"MCP2120",12,c,weight=700),T(x+w/2,y+5.1,"IrDA + 晶体",9,c),T(x+w/2,y+7.4,"局部去耦区",8,c)]
+        elif ref in ("DCDC","LSE"):
+            svg += [T(x+w/2,y+1.4,ref,9,c,weight=700),T(x+w/2,y+2.55,"DNP/本地回路",7,c)]
+        elif w>=10 and h>=8:
+            svg += [T(x+w/2,y+h/2-1.8,ref,10,c,weight=700),T(x+w/2,y+h/2+0.2,label,12,c,weight=700),T(x+w/2,y+h/2+2.0,sub,8,c)]
+        elif w>=6 and h>=5:
+            svg += [T(x+w/2,y+1.7,ref,9,c,weight=700),T(x+w/2,y+3.35,label,9,c),T(x+w/2,y+4.8,sub,7,c)]
         else:
-            svg += [T(x+w/2,y+h/2-1.5,ref,12,c,weight=700),T(x+w/2,y+h/2+.5,label,16,c,weight=700),T(x+w/2,y+h/2+2.3,sub,11,c)]
+            svg += [T(x+w/2,y+1.45,ref,8,c,weight=700),T(x+w/2,y+2.65,label,7,c)]
         if edge in ("west","east","north","south"):
-            if edge=="west": a,b=(x,y+h/2),(x-2,y+h/2)
-            elif edge=="east": a,b=(x+w,y+h/2),(x+w+2,y+h/2)
-            elif edge=="north": a,b=(x+w/2,y),(x+w/2,y-2)
-            else: a,b=(x+w/2,y+h),(x+w/2,y+h+2)
-            svg.append(path([P(*a),P(*b)],"#60748b",1.5,extra='marker-end="url(#arrow)"'))
-    # Side-mounted right-angle female headers.  They are deliberately drawn
-    # after top-side blocks so their outward mating direction is unambiguous.
+            if edge=="west": a,b=(x,y+h/2),(x-1.7,y+h/2)
+            elif edge=="east": a,b=(x+w,y+h/2),(x+w+1.7,y+h/2)
+            elif edge=="north": a,b=(x+w/2,y),(x+w/2,y-1.7)
+            else: a,b=(x+w/2,y+h),(x+w/2,y+h+1.7)
+            svg.append(path([P(*a),P(*b)],"#60748b",1.2,extra='marker-end="url(#arrow)"'))
+    # Edge headers are separate dashed envelopes; labels are outside the board.
     header_fill={"uart":"#fff0e8","i2c":"#e8f6f8","spi":"#f0eaff","debug":"#edf0f5"}
     for ref,label,sub,x,y,w,h,kind,edge in SIDE_HEADERS:
-        c=COLORS[kind]
-        svg.append(R(x,y,w,h,header_fill[kind],c,3,'stroke-width="1.6" stroke-dasharray="3 2"'))
-        svg += [T(x+w/2,y+h/2-0.25,ref,10,c,weight=700),T(x+w/2,y+h/2+1.45,"弯插排母",8,c)]
-        if edge=="west": a,b=(x,y+h/2),(x-2,y+h/2)
-        elif edge=="east": a,b=(x+w,y+h/2),(x+w+2,y+h/2)
-        elif edge=="north": a,b=(x+w/2,y),(x+w/2,y-2)
-        else: a,b=(x+w/2,y+h),(x+w/2,y+h+2)
-        svg += [path([P(*a),P(*b)],"#344955",1.7,extra='marker-end="url(#arrow)"'),T(x+w/2,y+h+3.1 if edge=="south" else y-2.8,label,8,c)]
-    # Real 5 x 5 package outline and real unequal side pad counts.
+        c=COLORS[kind]; svg.append(R(x,y,w,h,header_fill[kind],c,3,'stroke-width="1.3" stroke-dasharray="3 2"'))
+        svg.append(T(x+w/2,y+h/2+0.4,ref,9,c,weight=700))
+        if edge=="north": a,b=(x+w/2,y),(x+w/2,y-1.8); lx,ly=x+w/2,y-2.7
+        else: a,b=(x+w/2,y+h),(x+w/2,y+h+1.8); lx,ly=x+w/2,y+h+3.0
+        svg += [path([P(*a),P(*b)],"#344955",1.5,extra='marker-end="url(#arrow)"'),T(lx,ly,label,8,c)]
+    # Four mounting holes: the dashed ring is a preliminary Ø5.6 mm keep-out.
+    for ref,x,y,r in MOUNTING_HOLES:
+        px,py=P(x,y)
+        svg += [f'<circle cx="{px:.2f}" cy="{py:.2f}" r="{2.8*S:.2f}" fill="#ffffff" fill-opacity="0.86" stroke="#586b78" stroke-width="1.1" stroke-dasharray="4 3"/>',
+                f'<circle cx="{px:.2f}" cy="{py:.2f}" r="{r*S:.2f}" fill="#d9e1e6" stroke="#344955" stroke-width="1.2"/>',
+                path([P(x-1.2,y),P(x+1.2,y)],"#70818b",.7),path([P(x,y-1.2),P(x,y+1.2)],"#70818b",.7)]
+    # Real QFN outline and pad fan-out; no extra annotations are placed over it.
     svg.append(R(CX-2.5,CY-2.5,5,5,"#263b45","#172d36",3))
     for pin,*_ in PINS[:48]:
-        (px,py),n,side=pad(pin)
-        svg.append(path([P(CX+px,CY+py),P(CX+px+n[0]*.55,CY+py+n[1]*.55)],"#b69c5a",2.1))
-    svg += [T(CX,CY-.1,"CH582M",10,"#ffffff",weight=700),T(CX,CY+1.2,"U1 · 0° · 面朝盆地",8,"#c8e1da"),
-            f'<circle cx="{P(CX-1.8,CY+1.8)[0]}" cy="{P(CX-1.8,CY+1.8)[1]}" r="2.5" fill="#fce59a"/>',
-            T(48,31.0,"中央略偏北",10,"#516b61"),
-            T(33.5,14.1,"UART3 / ADC",11,COLORS['uart']),
-            T(30,43.0,"SPI 向西南扇出",11,COLORS['spi']),
-            T(46.0,12.1,"50 Ω",11,COLORS['rf'])]
-    # Right hand reading guide.
-    sx=1140
-    svg += [rect(sx,160,405,676,"#ffffff","#dce3ed",16),text(sx+24,200,"为什么选正放 0°",23,weight=700)]
-    notes=[("北侧 · 固定 RF 优先","ANT34 与 32 MHz 晶振朝北；","电池袋与 3D 打印墙不得侵入天线净空。"),
-           ("东侧 · 两组 USB + 红外","USB-C 在上、USB-A 在下，","对应 15/16 与 13/14 的引脚顺序。"),
-           ("边缘 · 四组弯插排母","J7/J8/J9/J10 均向板外插拔；","墙体必须开槽，不能挡住线缆弯折。"),
-           ("底层 · 用户界面","OLED 与三块触摸电极面朝上；","按键不再占顶层，触摸走线需避开 RF/开关节点。"),
-           ("红外两套硬件独立","IrDA：UART0 + MCP2120 + TFBS4711；","遥控：PWM6 + LED，TSOP38438 接收。"),
-           ("3D 打印底板 + 四墙","H1–H4 用螺丝/支柱连接底板；","非导电材料并给电池、屏幕和连接器留 z 向余量。")]
-    yy=242
-    for title,l1,l2 in notes:
-        svg += [text(sx+24,yy,title,16,weight=700),text(sx+24,yy+24,l1,14,"#617086"),text(sx+24,yy+45,l2,14,"#617086")]
-        yy+=91
-    svg += [text(70,901,"角度比较 · 相同接口位置，相同 U1 中心",22,weight=700)]
-    for i,a in enumerate((0,45,-45)):
-        c=comparison(a); bx=70+i*353
-        svg += [rect(bx,923,330,92,"#ffffff","#cfdae5",10),text(bx+18,951,f'{a:+d}°' if a else '0° · 推荐',21,weight=700),
-                text(bx+18,977,f"平均出脚偏角 {c['mean_departure_angle_deg']:.1f}°",15),
-                text(bx+18,998,f"背向目的区 {c['backward_groups']} / 11 组",13,"#627186")]
-    svg += [text(70,1045,"比较指标只衡量首段扇出方向，不代表实际线长、过孔数量或 DRC。芯片旋转 ±45° 的包络从 5 mm 增到 7.07 mm。",14,"#627186"),
-            text(70,1074,"板材外形按信用卡尺寸规划；连接器高度、外伸插头、电池 z 向间隙和四孔螺丝结构另计。剖面见 pcb-stack-revb.svg。",14,"#627186")]
-    svg += ["</g></svg>"]
+        (px,py),n,side=pad(pin); svg.append(path([P(CX+px,CY+py),P(CX+px+n[0]*.55,CY+py+n[1]*.55)],"#b69c5a",1.8))
+    svg += [T(CX,CY-0.2,"CH582M",9,"#ffffff",weight=700),T(CX,CY+1.15,"U1 · 0° · 面朝盆地",7,"#c8e1da"),
+            f'<circle cx="{P(CX-1.8,CY+1.8)[0]}" cy="{P(CX-1.8,CY+1.8)[1]}" r="2.2" fill="#fce59a"/>']
+    # Compact reading guide kept outside the board.
+    sx=1215
+    svg += [rect(sx,150,250,705,"#ffffff","#dce3ed",14),text(sx+20,188,"顶层图例",22,weight=700)]
+    legend=[("彩色实线框","顶层器件 / 电路预留区"),("虚线框","侧插排母的板内包络"),("圆形虚线","安装孔初始 keep-out Ø5.6"),("浅色虚线","信号方向示意，非铜线")]
+    yy=225
+    for title,desc in legend:
+        svg += [text(sx+20,yy,title,14,weight=700),text(sx+20,yy+21,desc,12,"#617086")]; yy+=60
+    notes=["U1 保持 0°，Pin 1 在左下；ANT34 向北。","J7/J8/J9/J10 只表示板边弯插排母，接口向外。","底层 OLED/触摸、电池袋和 3D 打印墙不叠在本图。","正式 footprint / 3D / DRC 待建立。"]
+    svg += [text(sx+20,yy+4,"阅读约束",15,weight=700)]
+    for i,note in enumerate(notes): svg.append(text(sx+20,yy+30+i*36,f"{i+1}. {note}",11,"#536575"))
+    svg += [text(70,915,"配套图",20,weight=700),
+            rect(70,935,440,68,"#ffffff","#cfdae5",9),text(90,962,"底层用户界面",16,weight=700),text(90,986,"OLED + 三块触摸电极 + FPC + 孔环",12,"#617086"),
+            rect(530,935,440,68,"#ffffff","#cfdae5",9),text(550,962,"物理剖面",16,weight=700),text(550,986,"电池盆地 + CH582M 面向盆地 + 四墙/底板",12,"#617086"),
+            rect(990,935,410,68,"#ffffff","#cfdae5",9),text(1010,962,"角度比较",16,weight=700),text(1010,986,"0° 26.4° · +45° 48.4° · −45° 53.6°",12,"#617086"),
+            text(70,1040,"本图刻意不把底层和机械覆盖层叠到顶层器件上；请分别查看 pcb-bottom-revb.svg 与 pcb-stack-revb.svg。",13,"#627186"),"</g></svg>"]
+    return "\n".join(svg)
+
+def make_bottom():
+    """Draw the bottom-side user interface without top-side clutter."""
+    svg=start(1500,980,"CH582M Rev B-M 底层 OLED 与电容触摸布局")
+    svg += [text(55,52,"CH582M · 底层用户界面布局",30,weight=700),
+            text(55,82,"Rev B-M / 2026-09-28   ·   从底层铜面观察   ·   OLED 与触摸有效面朝用户",16,"#627186"),
+            text(55,108,"本图只画显示屏、触摸电极、FPC 和安装孔；顶层器件与接口请看 pcb-concept-revb.svg。",15,"#627186")]
+    OX,OY,S=70,175,12.5
+    P=lambda x,y:(OX+x*S,OY+y*S)
+    R=lambda x,y,w,h,fill,stroke="none",r=0,extra="":rect(*P(x,y),w*S,h*S,fill,stroke,r,extra)
+    T=lambda x,y,s,size=13,color="#243447",anchor="middle",weight=400: text(*P(x,y),s,size,color,anchor,weight)
+    svg += [R(0,0,W,H,"#f1f7fa","#5b7c8c",30,'stroke-width="2"'),
+            path([P(0,-3),P(W,-3)],"#718295",1),T(W/2,-4,"85.60 mm",15),
+            path([P(-3,0),P(-3,H)],"#718295",1),text(25,OY+H*S/2,"53.98 mm",15,extra=f'transform="rotate(-90 25 {OY+H*S/2})"')]
+    for x in range(5,85,5): svg.append(path([P(x,1),P(x,H-1)],"#d5e5ea",.5,dash="2 6"))
+    for y in range(5,50,5): svg.append(path([P(1,y),P(W-1,y)],"#d5e5ea",.5,dash="2 6"))
+    # The battery is on the opposite side.  Show its projection faintly so
+    # touch/display coupling is explicit, but do not put its label over the UI.
+    svg.append(R(BATTERY_POCKET["x"],BATTERY_POCKET["y"],BATTERY_POCKET["w"],BATTERY_POCKET["h"],"#fff8e8","#c99842",8,'stroke-width="1.2" stroke-dasharray="6 5" opacity="0.32"'))
+    # OLED glass, active area, bezel and a conservative FPC bend envelope.
+    ox,oy,ow,oh=23,14,39,24
+    svg += [R(ox,oy,ow,oh,"#d9eef7",COLORS["display"],5,'stroke-width="1.8"'),
+            R(ox+2,oy+2,ow-4,oh-4,"#f7fcfe",COLORS["display"],3,'stroke-width="1.2"'),
+            T(ox+ow/2,oy+5.2,"OLED 显示屏",16,COLORS["display"],weight=700),
+            T(ox+ow/2,oy+7.6,"底层 · 可视面朝上",11,COLORS["display"]),
+            T(ox+ow/2,oy+oh-2.8,"有效区 / 边框 / 压合面待按实物收口",9,COLORS["display"]),
+            R(62.5,20,4.5,8,"#d9eef7",COLORS["display"],2,'stroke-width="1.2" stroke-dasharray="3 2"'),
+            T(64.75,24.7,"FPC",8,COLORS["display"],weight=700),
+            path([P(67,24),P(71,24),P(73,26)],COLORS["display"],1.5,"4 3")]
+    # Three isolated capacitive pads with a visible guard outline.
+    touch_specs=[("TOUCH-L","USER",20), ("TOUCH-M","RST",37), ("TOUCH-R","BOOT",54)]
+    for ref,label,x in touch_specs:
+        svg += [R(x,40.5,10,6,"#f9e7f1",COLORS["touch"],4,'stroke-width="1.4" stroke-dasharray="5 3"'),
+                R(x+1.0,41.5,8,4,"#fff8fb",COLORS["touch"],3,'stroke-width="1.5"'),
+                T(x+5,44.0,label,11,COLORS["touch"],weight=700),
+                T(x+5,46.0,"铜箔电极",8,COLORS["touch"])]
+    # Keep touch traces grouped along the lower edge and away from the OLED
+    # active area; the actual controller/RC network remains to be routed.
+    for x in (25,42,59): svg.append(path([P(x,46.8),P(x,48.5),P(68,48.5)],COLORS["touch"],1.4,"3 3"))
+    # Four holes, with labels just outside the board so they do not obscure UI.
+    for ref,x,y,r in MOUNTING_HOLES:
+        px,py=P(x,y)
+        svg += [f'<circle cx="{px:.2f}" cy="{py:.2f}" r="{2.8*S:.2f}" fill="#ffffff" fill-opacity="0.8" stroke="#586b78" stroke-width="1.1" stroke-dasharray="4 3"/>',
+                f'<circle cx="{px:.2f}" cy="{py:.2f}" r="{r*S:.2f}" fill="#d9e1e6" stroke="#344955" stroke-width="1.2"/>',
+                path([P(x-1.2,y),P(x+1.2,y)],"#70818b",.7),path([P(x,y-1.2),P(x,y+1.2)],"#70818b",.7),
+                T(x,y+4.2,ref,8,"#465b67")]
+    # Reading guide outside the board.
+    sx=1215
+    svg += [rect(sx,150,250,660,"#ffffff","#dce3ed",14),text(sx+20,188,"底层图例",22,weight=700),
+            text(sx+20,228,"蓝色大框",14,weight=700),text(sx+20,249,"OLED 玻璃 / 有效显示区 / FPC",12,"#617086"),
+            text(sx+20,286,"粉色三框",14,weight=700),text(sx+20,307,"USER / RST / BOOT 触摸电极",12,"#617086"),
+            text(sx+20,344,"浅黄色虚线",14,weight=700),text(sx+20,365,"顶层电池投影；需验证触摸耦合",12,"#617086"),
+            text(sx+20,402,"孔环",14,weight=700),text(sx+20,423,"初始 Ø3.2 通孔 / Ø5.6 keep-out",12,"#617086"),
+            text(sx+20,466,"必须确认",15,weight=700),
+            text(sx+20,495,"1. 底层镜像和 FPC 出线方向",12,"#536575"),
+            text(sx+20,523,"2. 电池、屏蔽层对触摸灵敏度的影响",12,"#536575"),
+            text(sx+20,551,"3. 触摸 guard、RC 和 ESD 方案",12,"#536575"),
+            text(sx+20,579,"4. 屏幕窗口、压合和维修空间",12,"#536575")]
+    svg += [rect(70,880,1100,55,"#ffffff","#cfdae5",9),
+            text(90,904,"安装姿态",14,weight=700),
+            text(190,904,"用户从上方看到 OLED/触摸；PCB 顶层在另一侧朝向电池盆地。此图不是顶层元件布局，也不是显示屏采购尺寸。",12,"#617086"),
+            "</g></svg>"]
     return "\n".join(svg)
 
 def make_stack():
@@ -335,67 +351,64 @@ def make_stack():
     svg=start(1500,900,"CH582M Rev B-M PCB 与 3D 打印底板剖面概念")
     svg += [text(55,52,"CH582M · PCB / 电池盆地 / 3D 打印结构剖面",30,weight=700),
             text(55,83,"Rev B-M / 2026-09-28   ·   非比例机械示意   ·   需用最终封装、螺丝和电池实物收口",16,"#627186"),
-            text(55,112,"阅读方向：上方是用户可见面；PCB 顶层器件朝下进入盆地，底层显示屏与触摸电极朝上。",15,"#627186")]
+            text(55,112,"上方是用户面；底层 OLED/触摸朝上，顶层器件和 CH582M 朝下进入盆地。",15,"#627186")]
 
-    # User-facing bottom side and the PCB substrate.
-    svg += [rect(240,150,1020,70,"#e5f4fb","#2d7c9f",10,'stroke-width="2"'),
-            text(750,177,"用户侧 / PCB 底层：OLED 显示屏 + 触摸电极（脸朝上）",20,"#24627f","middle",700),
-            text(750,201,"显示窗、FPC 弯折和触摸走线需要在底板开口与装配后再次核对",13,"#24627f","middle"),
-            rect(260,255,980,38,"#d6ad63","#8b6524",4,'stroke-width="2"'),
-            text(750,279,"FR-4 PCB 基材 / 4 层板（示意）",17,"#6b4b18","middle",700),
-            path([(260,250),(1240,250)],"#b06e28",3),
-            text(750,244,"底层铜 / 顶层铜边界",12,"#89531e","middle")]
+    # Separate horizontal bands keep the orientation labels away from the
+    # component bodies and make the load path obvious.
+    svg += [rect(300,145,900,62,"#e5f4fb","#2d7c9f",10,'stroke-width="2"'),
+            text(750,171,"用户面 / PCB 底层：OLED + 触摸（脸朝上）",19,"#24627f","middle",700),
+            text(750,192,"窗口、FPC 和触摸走线由底层图单独收口",12,"#24627f","middle"),
+            rect(280,255,940,38,"#d6ad63","#8b6524",4,'stroke-width="2"'),
+            text(750,279,"FR-4 PCB 基材 / 4 层板",17,"#6b4b18","middle",700),
+            path([(280,250),(1220,250)],"#b06e28",3),
+            text(750,244,"底层铜 ↑     顶层铜 ↓",12,"#89531e","middle")]
 
-    # Top-side parts hang toward the basin when the board is installed.
-    svg += [text(750,385,"顶层器件身体向下；高件沿板边围合盆地",14,"#485e68","middle",700)]
-    # Perimeter height envelopes (not exact packages).
-    for x,w,h,label,color in ((275,100,145,"PS/2 / 侧插座","#dff2ec"),
-                              (430,78,105,"弯插排母","#edf0f5"),
-                              (1000,96,165,"USB / DB9 / 光学头","#e4efff"),
-                              (1140,78,120,"电源 / 高件","#f3eadd")):
+    # Perimeter height envelopes and central MCU.  No leader line crosses a
+    # label; the callouts are placed in the clear spaces between blocks.
+    for x,w,h,label,color in ((330,110,120,"PS/2 / 侧插座","#dff2ec"),
+                              (490,90,92,"弯插排母","#edf0f5"),
+                              (1010,112,132,"USB / DB9 / 光学头","#e4efff"),
+                              (1165,70,112,"电源 / 高件","#f3eadd")):
         svg += [rect(x,303,w,h,color,"#637783",6,'stroke-width="1.8"'),
-                text(x+w/2,330,label,14,"#536772","middle",700),
-                text(x+w/2,350,"板边开口方向 →",11,"#687984","middle")]
-
-    # Central MCU body and an explicit pressure/short risk boundary.
-    svg += [rect(690,303,120,74,"#263b45","#172d36",8,'stroke-width="2"'),
+                text(x+w/2,331,label,13,"#536772","middle",700),
+                text(x+w/2,351,"向墙体开口",10,"#687984","middle")]
+    svg += [rect(690,303,120,70,"#263b45","#172d36",8,'stroke-width="2"'),
             text(750,331,"U1 CH582M",17,"#ffffff","middle",700),
-            text(750,352,"面朝盆地 / QFN 焊点在 PCB 侧",11,"#c8e1da","middle"),
-            rect(660,386,180,36,"#fff2cf","#bd8e27",7,'stroke-width="1.6" stroke-dasharray="6 4"'),
-            text(750,409,"电池与 U1 的禁压/绝缘缓冲区",12,"#8a620f","middle",700),
-            path([(840,404),(930,450)],"#9b731e",1.6,extra='marker-end="url(#arrow)"')]
+            text(750,351,"标记面朝盆地",11,"#c8e1da","middle"),
+            rect(690,392,120,30,"#fff2cf","#bd8e27",7,'stroke-width="1.5" stroke-dasharray="6 4"'),
+            text(750,411,"禁压 / 绝缘缓冲",11,"#8a620f","middle",700)]
 
-    # Battery rests on a pocket/foam above the floor; it must not press on
-    # solder joints, inductors, crystals, or the antenna edge.
-    svg += [rect(520,450,460,92,"#fffdf5","#c99842",12,'stroke-width="2"'),
-            text(750,482,"1S Li-ion 电池（中央盆地）",22,"#946b1e","middle",700),
-            text(750,508,"带保护板；泡棉/托盘；电芯不得接触焊点或金属螺丝",13,"#946b1e","middle"),
-            text(750,529,"当前仅定义空间，不代表已锁定电芯尺寸和连接器",11,"#946b1e","middle"),
-            path([(520,496),(452,415)],"#9b731e",1.6,extra='marker-end="url(#arrow)"'),
-            text(440,402,"留出实际器件高度 + 绝缘余量",12,"#8a620f","end")]
+    # Battery pocket is centered below the components and above the printed
+    # floor.  The clear gap is intentionally visible in the drawing.
+    svg += [rect(545,460,410,82,"#fffdf5","#c99842",12,'stroke-width="2"'),
+            text(750,490,"1S Li-ion 电池 / 中央盆地",21,"#946b1e","middle",700),
+            text(750,515,"保护板 + 泡棉托盘；不接触焊点、U1、电感或金属螺丝",12,"#946b1e","middle"),
+            text(750,534,"电芯尺寸与 z 向余量尚未冻结",10,"#946b1e","middle")]
 
-    # Floor, four walls, and screw/standoff path.  Front/back walls are shown
-    # as dashed outlines in this side cut; all four are part of the enclosure.
-    svg += [rect(185,635,1130,42,"#e0d2c4","#806c5a",5,'stroke-width="2"'),
-            text(750,662,"3D 打印地板：电池托盘、屏幕窗口和排线避让",18,"#665545","middle",700),
-            rect(185,420,44,215,"#e0d2c4","#806c5a",4,'stroke-width="2"'),
-            rect(1271,420,44,215,"#e0d2c4","#806c5a",4,'stroke-width="2"'),
-            path([(250,420),(250,610),(1250,610),(1250,420)],"#9a8a79",2,"7 5")]
+    # Four walls and the floor.  Front/back walls are dashed in this side cut;
+    # they still exist in the enclosure and are called out below.
+    svg += [rect(180,640,1140,42,"#e0d2c4","#806c5a",5,'stroke-width="2"'),
+            text(750,666,"3D 打印底板：电池托盘 / 屏幕窗口 / 排线避让",17,"#665545","middle",700),
+            rect(180,420,44,220,"#e0d2c4","#806c5a",4,'stroke-width="2"'),
+            rect(1276,420,44,220,"#e0d2c4","#806c5a",4,'stroke-width="2"'),
+            path([(250,420),(250,615),(1250,615),(1250,420)],"#9a8a79",2,"7 5"),
+            text(116,440,"四面墙",12,"#665545","start",700),
+            text(116,459,"非导电材料",11,"#665545")]
 
-    # Two visible screw paths in the section; the front/back pair is called
-    # out in the note below.
-    for x,label in ((300,"H1/H3"),(1200,"H2/H4")):
-        svg += [path([(x,250),(x,635)],"#566873",2,"4 3"),
+    # Two visible screw paths represent the four corner holes (front/back
+    # pairs share each path in this section).
+    for x,label in ((300,"H1 / H3"),(1200,"H2 / H4")):
+        svg += [path([(x,255),(x,640)],"#566873",2,"4 3"),
                 f'<circle cx="{x}" cy="268" r="13" fill="#d9e1e6" stroke="#344955" stroke-width="2"/>',
-                f'<circle cx="{x}" cy="635" r="13" fill="#d9e1e6" stroke="#344955" stroke-width="2"/>',
-                text(x,235,label,12,"#465b67","middle",700),
-                text(x,704,"螺丝 + 支柱 / 螺母座",11,"#465b67","middle")]
+                f'<circle cx="{x}" cy="640" r="13" fill="#d9e1e6" stroke="#344955" stroke-width="2"/>',
+                text(x,235,label,11,"#465b67","middle",700),
+                text(x,706,"螺丝 / 支柱 / 螺母座",10,"#465b67","middle")]
 
     svg += [rect(55,735,1390,112,"#ffffff","#dce3ed",14),
             text(80,767,"机械收口条件",18,weight=700),
-            text(80,793,"1. H1–H4 贯穿 PCB 与底板；先选 M2.5/M3、垫片、支柱和热熔螺母，再反推孔径、环形焊盘和 keep-out。",13,"#536575"),
-            text(80,816,"2. 3D 打印墙体使用非导电材料；天线边缘、IrDA/遥控光窗、USB/DB9/PS2 插头和弯插排母都要有独立开口。",13,"#536575"),
-            text(80,839,"3. 电池可位于中央盆地，但不得压在 CH582M、晶振、DC/DC 电感或焊点上；用真实电芯、泡棉和温升测试验证 z 向余量。",13,"#536575"),
+            text(80,793,"1. H1–H4 贯穿 PCB 与底板；先选 M2.5/M3、垫片、支柱和热熔螺母，再反推孔径、焊盘和 keep-out。",13,"#536575"),
+            text(80,816,"2. 墙体用非导电、非碳纤材料；USB/DB9/PS2/光学头/弯插排母要有独立开口，天线保留净空。",13,"#536575"),
+            text(80,839,"3. 电池可放中央，但必须以实物电芯、泡棉、压力、触摸灵敏度和温升测试验证 z 向余量。",13,"#536575"),
             "</g></svg>"]
     return "\n".join(svg)
 
@@ -431,7 +444,7 @@ def write_table():
         w=csv.writer(f);w.writerow(header)
         for p,s,n,g,note in PINS:w.writerow([p,s,pad(p)[2],n,g,note])
     lines=['# CH582M Rev B 引脚分配提案','',
-      '日期：2026-09-28。配套布局：`pcb-concept-revb.svg`；物理剖面：`pcb-stack-revb.svg`；顶视放大图：`pinout-revb.svg`。',
+      '日期：2026-09-28。配套布局：`pcb-concept-revb.svg`；底层用户界面：`pcb-bottom-revb.svg`；物理剖面：`pcb-stack-revb.svg`；顶视放大图：`pinout-revb.svg`。',
       '这是新的硬件提案，不覆盖 Rev A 云端工程或当前 `src/board_pins.h`。','',
       '0° 定义：数据手册第 111 页 Top View，Pin 1 在左下。1–10 南侧从左到右；11–24 东侧从下到上；25–34 北侧从右到左；35–48 西侧从上到下。EP 在手册标 0，本提案 CSV 以库常用的 49 表示。','',
       '| Pin | 芯片功能 | 物理侧 | Rev B 网络 | 用途/约束 |',
@@ -514,12 +527,13 @@ def validate():
             if a[3]<b[3]+b[5] and a[3]+a[5]>b[3] and a[4]<b[4]+b[6] and a[4]+a[6]>b[4]:
                 overlaps.append((a[0],b[0]))
     assert not overlaps,overlaps
-    for f in ('pcb-concept-revb.svg','pcb-stack-revb.svg','pinout-revb.svg'):ET.parse(ROOT/f)
+    for f in ('pcb-concept-revb.svg','pcb-bottom-revb.svg','pcb-stack-revb.svg','pinout-revb.svg'):ET.parse(ROOT/f)
     report=dict(pin_rows=49,unique_gpio=40,planning_envelopes=len(PLACEMENTS),envelope_overlaps=overlaps,
       side_headers=len(SIDE_HEADERS),bottom_user_zones=len(BOTTOM_ZONES),mounting_holes=len(MOUNTING_HOLES),
       mounting_hole_keepout_conflicts=hole_conflicts,
       antenna_envelope_conflicts=0,board_mm=[W,H],mcu_mm=[CX,CY],
       mechanical_overlay=dict(basin_mm=[BASIN['x'],BASIN['y'],BASIN['w'],BASIN['h']],battery_pocket_mm=[BATTERY_POCKET['x'],BATTERY_POCKET['y'],BATTERY_POCKET['w'],BATTERY_POCKET['h']]),
+      views=['pcb-concept-revb.svg','pcb-bottom-revb.svg','pcb-stack-revb.svg','pinout-revb.svg'],
       verified_scope='Automated: pin uniqueness, envelope bounds/non-overlap, SVG XML. Peripheral mapping reviewed manually against WCH datasheet and SDK. Not ERC, DRC, SI, RF or assembly sign-off.',
       comparisons=[comparison(a) for a in (0,45,-45,90,180,270)])
     (ROOT/'concept-checks.json').write_text(json.dumps(report,ensure_ascii=False,indent=2),encoding='utf-8')
@@ -528,6 +542,7 @@ def validate():
 if __name__=='__main__':
     ROOT.mkdir(parents=True,exist_ok=True)
     (ROOT/'pcb-concept-revb.svg').write_text(make_board(),encoding='utf-8')
+    (ROOT/'pcb-bottom-revb.svg').write_text(make_bottom(),encoding='utf-8')
     (ROOT/'pcb-stack-revb.svg').write_text(make_stack(),encoding='utf-8')
     (ROOT/'pinout-revb.svg').write_text(make_pinout(),encoding='utf-8')
     write_table()
@@ -537,6 +552,6 @@ if __name__=='__main__':
         side_headers=[dict(zip(['ref','label','detail','x_mm','y_mm','w_mm','h_mm','group','facing'],p)) for p in SIDE_HEADERS],
         bottom_zones=[dict(zip(['ref','label','detail','x_mm','y_mm','w_mm','h_mm','group'],p)) for p in BOTTOM_ZONES],
         mounting_holes=[dict(ref=ref,x_mm=x,y_mm=y,initial_radius_mm=r) for ref,x,y,r in MOUNTING_HOLES],
-        mechanical_overlay=dict(basin_mm=BASIN,battery_pocket_mm=BATTERY_POCKET,stack_svg='pcb-stack-revb.svg'))
+        mechanical_overlay=dict(basin_mm=BASIN,battery_pocket_mm=BATTERY_POCKET,bottom_svg='pcb-bottom-revb.svg',stack_svg='pcb-stack-revb.svg'))
     (ROOT/'placement-revb.json').write_text(json.dumps(placement,ensure_ascii=False,indent=2),encoding='utf-8')
     validate()
