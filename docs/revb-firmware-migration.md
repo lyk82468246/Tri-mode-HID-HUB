@@ -14,7 +14,7 @@
 | PB8/PB17 充电模式与描述符电流一致 | BQ24074 EN 表、挂起行为和 100/500 mA 构建配置 | 已接入，待电源实测 |
 | PA6/AIN10、PA7/AIN11 非阻塞采样；PB16 数字 PGOOD | ADC 状态机、超时、校准/分压参数有效性 | 原始采样已接入；标定待硬件参数 |
 | PB18 USER 消抖、PB9 CHG 状态 | TMOS 状态采样与诊断 | 已接入，待触摸/电平实测 |
-| 独立 UART1 RS232、UART3 TTL、UART0 IrDA 收发 | 三路独立有界 ISR/Ring、分帧或 SIR 解析、独立路由源 | 已接入，待收发实测 |
+| 独立 UART1 RS232、UART3 TTL、UART0 IrDA 物理链路 | UART1/UART3 为独立有界 RX ISR/Ring、超时/定长分帧和独立路由源；UART0 为双向 MCP2120/TFBS SIR 物理层与校验解析 | UART1/UART3 RX 已接入，UART0 物理层已接入，待实测 |
 | MCP2120 初始化/速率、TFBS4711 休眠、光学仲裁 | UART0/EN/MODE/SD 非阻塞初始化、9600 软件配置回显、SIR 去转义/FCS、遥控期间关断 TFBS | 物理层已接入；速率/光学实测待完成 |
 | 标准 IrDA 功能 | 明确 IrLAP/IrLMP 与原始光串口边界；实现/验证所需协议 | 待完成，不能用 UART 原始透传冒充标准 IrDA |
 | PB1 遥控边沿接收、PB0 PWM6 发射 | GPIOB 时间戳 Ring、TMOS NEC/RC5 解码、PWM6 38 kHz 和 TMR0 包络已接入；光学仲裁和实测待完成 | 代码已接入，待实测 |
@@ -38,3 +38,11 @@
 PB21/PB20 I2C、PA12–PA15 SPI0 和统一总线控制帧。100 mA/500 mA 配置均交叉编译
 通过；修正 NEC 重复码边沿极性、增加红外边沿溢出复位和 SPI 超时后的完整外设重配；
 当前仍是“代码已迁移、硬件待验证”，不宣称完整 IrLAP/IrLMP 或最终 PCB 验收。
+
+### 串口方向边界
+
+当前应用协议只定义 UART1（RS232）和 UART3（TTL）的输入路径：固件接收两路 RX，
+按 20 B 满帧、CR/LF 或 6 ms 空闲分帧，再作为 `STREAM_DATA` 路由到 USB/BLE。
+PA9/PA5 仍由底层驱动保持空闲高电平，但尚未定义业务 TX 帧格式、发送 API 或回显
+策略，因此不能把 UART1/UART3 写成“固件双向收发已完成”。UART0 则是 MCP2120/TFBS
+物理层的双向 IrDA SIR 链路；完整 IrLAP/IrLMP 仍是独立的后续工作项。
