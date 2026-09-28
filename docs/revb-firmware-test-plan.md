@@ -113,7 +113,7 @@ USB Device 无外设冒烟还可以直接生成周期性 `a` 键按下/释放版
 | 条件 | 预期 |
 |---|---|
 | USB 未配置 | Host 关闭；不向下游 PS/2 供电；充电模式保持安全低功耗模式 |
-| 100 mA 版本、USB 已配置 | 仍不自动声明 500 mA；Host 许可必须受板级策略限制 |
+| 100 mA 版本、USB 已配置 | 不声明 500 mA；当前默认 `BOARD_BATTERY_PERIPHERALS_ALLOWED=0`，因此 Host 保持关闭 |
 | 500 mA 版本、PGOOD 有效、USB 已配置且未挂起 | 切换到 `EN2:EN1=01`，然后才允许 PB6 高 |
 | USB suspend | 先拉低 PB6，再切换充电模式到 suspend；恢复后重新经过许可判断 |
 | PB5 FAULT_N 拉低 | 立即拉低 PB6，锁存故障，Host 停止并释放输入状态；故障解除后不能自动清除锁存 |
