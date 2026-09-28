@@ -20,6 +20,16 @@
 git diff --check
 ```
 
+USB Device 无外设冒烟还可以直接生成周期性 `a` 键按下/释放版本；它只用于
+验证 HID 描述符、EP1 IN、路由器和 PC 端收包，不代表任何下行输入已通过：
+
+```powershell
+.\tools\build-firmware.ps1 -UsbPowerMa 100 -TestPattern
+```
+
+该构建输出在 `obj/revb-100-pattern/`，烧录完成后测试结束必须改回普通构建，
+避免把测试按键固件带入后续输入/长稳测试。
+
 验收记录至少包含：
 
 | 项目 | 通过标准 |
@@ -69,7 +79,7 @@ git diff --check
 1. 烧录后连接 Type-C Device 口，确认 PC 枚举 PB11/PB10 对应的复合设备。
 2. 检查 HID 接口、CDC 控制接口、CDC Bulk EP2 和通知 EP3；VID/PID `0x1209:0x5820` 仍是开发占位值。
 3. CDC OUT 发送 1、19、20、64、65 字节数据，确认设备只使用静态 Ring，按分片规则回送，不阻塞 TMOS。
-4. 编译 `CH582M_M1_TEST_PATTERN=1` 的临时台架版本，确认 PC 收到 Usage ID `0x04` 的按下/释放；测试结束恢复为 0。
+4. 编译 `-TestPattern` 临时台架版本，确认 PC 收到 Usage ID `0x04` 的按下/释放；测试结束恢复为普通构建。
 5. 观察 USB suspend/resume：HID 队列不应无限增长；恢复后应发送当前完整键盘、鼠标、手柄快照。
 6. 长按、快速切换输出策略、拔插 PC，确认不会残留按键；`source down` 后应生成 release-all。
 

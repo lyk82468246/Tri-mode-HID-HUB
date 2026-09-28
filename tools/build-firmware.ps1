@@ -1,6 +1,7 @@
 param(
     [string]$ToolchainBin = 'C:\MounRiver\MounRiver_Studio2\resources\app\resources\win32\components\WCH\Toolchain\RISC-V Embedded GCC\bin',
-    [ValidateSet(100,500)][int]$UsbPowerMa = 100
+    [ValidateSet(100,500)][int]$UsbPowerMa = 100,
+    [switch]$TestPattern
 )
 $ErrorActionPreference = 'Stop'
 $projectRoot = Split-Path $PSScriptRoot -Parent
@@ -10,11 +11,13 @@ try {
     if(!(Test-Path -LiteralPath $compiler)) { throw "Compiler not found: $compiler" }
     $project = Get-Content -Raw CH582M.wvproj | ConvertFrom-Json
     $config = $project.buildConfig.configurations[0]
-    $outDir = "obj/revb-$UsbPowerMa"
+    $testPatternValue = if($TestPattern) { 1 } else { 0 }
+    $outDir = if($TestPattern) { "obj/revb-$UsbPowerMa-pattern" } else { "obj/revb-$UsbPowerMa" }
     New-Item -ItemType Directory -Force $outDir | Out-Null
     $flags = @('-march=rv32imac','-mabi=ilp32','-msmall-data-limit=8',
         '-std=gnu99','-Os','-g','-ffunction-sections','-fdata-sections',
-        '-fno-common','-Wall','-Wextra',"-DBOARD_USB_MAX_POWER_MA=$UsbPowerMa")
+        '-fno-common','-Wall','-Wextra',"-DBOARD_USB_MAX_POWER_MA=$UsbPowerMa",
+        "-DCH582M_M1_TEST_PATTERN=$testPatternValue")
     $flags += $config.ccompiler.preprocessor.defined_symbols | ForEach-Object { "-D$_" }
     $flags += @('-IStdPeriphDriver/inc','-IRVMSIS','-IBLE/HAL/include','-IBLE/LIB','-Isrc')
     $excluded = $config.excludeResources | ForEach-Object { ($_ -replace '\$\{project\}/','') }
