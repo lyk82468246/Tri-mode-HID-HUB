@@ -1,4 +1,5 @@
 #include "event_router.h"
+#include "board_bus.h"
 
 #define ROUTER_INPUT_CAPACITY       16u
 #define ROUTER_HID_TX_CAPACITY      4u
@@ -1052,6 +1053,7 @@ static void EventRouter_ApplySourceEvent(const RouterEvent *event)
     if(event->kind == ROUTER_EVENT_SOURCE_UP)
     {
         EventRouter_ClearSource(source);
+        source->connected = 1u;
         if(g_event_router.gamepad_source == event->source)
         {
             g_event_router.gamepad_source = ROUTER_SOURCE_COUNT;
@@ -1060,7 +1062,6 @@ static void EventRouter_ApplySourceEvent(const RouterEvent *event)
     else if(event->kind == ROUTER_EVENT_SOURCE_DOWN)
     {
         EventRouter_ClearSource(source);
-        source->connected = 1u;
         if(g_event_router.gamepad_source == event->source)
         {
             g_event_router.gamepad_source = ROUTER_SOURCE_COUNT;
@@ -1097,7 +1098,7 @@ static uint8_t EventRouter_HandleControlFrame(const RouterEvent *event)
     {
         return 0u;
     }
-    if((event->length != ROUTER_CONTROL_FRAME_LEN) ||
+    if((event->length < ROUTER_CONTROL_FRAME_LEN) ||
        (event->payload.raw[0] != ROUTER_CONTROL_MAGIC_0) ||
        (event->payload.raw[1] != ROUTER_CONTROL_MAGIC_1))
     {
@@ -1109,6 +1110,11 @@ static uint8_t EventRouter_HandleControlFrame(const RouterEvent *event)
     switch(command)
     {
         case ROUTER_CONTROL_SET_POLICY:
+            if(event->length != ROUTER_CONTROL_FRAME_LEN)
+            {
+                g_event_router.stats.parser_error++;
+                break;
+            }
             if(argument > ROUTER_POLICY_NONE)
             {
                 g_event_router.stats.parser_error++;
@@ -1120,6 +1126,11 @@ static uint8_t EventRouter_HandleControlFrame(const RouterEvent *event)
             break;
 
         case ROUTER_CONTROL_SET_MASK:
+            if(event->length != ROUTER_CONTROL_FRAME_LEN)
+            {
+                g_event_router.stats.parser_error++;
+                break;
+            }
             if((argument & (uint8_t)~ROUTER_OUTPUT_BOTH) != 0u)
             {
                 g_event_router.stats.parser_error++;
@@ -1127,6 +1138,14 @@ static uint8_t EventRouter_HandleControlFrame(const RouterEvent *event)
             else
             {
                 EventRouter_SetOutputMask(argument);
+            }
+            break;
+
+        case ROUTER_CONTROL_I2C_TRANSFER:
+        case ROUTER_CONTROL_SPI_TRANSFER:
+            if(!BoardBus_HandleControlFrame(event))
+            {
+                g_event_router.stats.parser_error++;
             }
             break;
 

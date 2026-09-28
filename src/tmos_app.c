@@ -1,8 +1,12 @@
 #include "HAL.h"
 
 #include "ble_output.h"
+#include "board_bus.h"
+#include "board_power.h"
 #include "event_router.h"
 #include "firmware_diagnostics.h"
+#include "irda_link.h"
+#include "ir_remote.h"
 #include "ps2_input.h"
 #include "tmos_app.h"
 #include "uart_input.h"
@@ -82,6 +86,8 @@ static tmosEvents Firmware_ProcessEvent(tmosTaskID task_id, tmosEvents events)
     if(events & FIRMWARE_SERVICE_EVENT)
     {
         service_start_cycles = FirmwareDiagnostics_BeginService();
+        BoardPower_Process();
+        BoardBus_Process();
         /* CDC RX is copied by the USB ISR; framing and routing happen here. */
         for(i = 0; i < 4u; ++i)
         {
@@ -96,6 +102,8 @@ static tmosEvents Firmware_ProcessEvent(tmosTaskID task_id, tmosEvents events)
 
         Ps2Input_Process();
         UartInput_Process();
+        IrdaLink_Process();
+        IrRemote_Process();
         UsbHostHid_Process();
         BleOutput_ProcessInput();
         FirmwareDiagnostics_SampleQueues();
@@ -150,8 +158,12 @@ void Firmware_Init(void)
     HAL_Init();
     (void)GAPRole_PeripheralInit();
     EventRouter_Init();
+    BoardPower_Init();
+    BoardBus_Init();
     Ps2Input_Init();
     UartInput_Init();
+    IrdaLink_Init();
+    IrRemote_Init();
     UsbHostHid_Init();
     UsbDevice_Init();
     BleOutput_Init();

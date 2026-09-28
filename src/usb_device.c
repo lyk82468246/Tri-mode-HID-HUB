@@ -4,6 +4,8 @@
 #include "event_router.h"
 #include "usb_device.h"
 
+#include "board_config.h"
+
 #define USB_DEVICE_EP0_SIZE             64u
 #define USB_DEVICE_HID_PACKET_SIZE      16u
 #define USB_DEVICE_INTERFACE_HID         0u
@@ -40,7 +42,8 @@ static const uint8_t g_usb_device_descriptor[] =
 static const uint8_t g_usb_configuration_descriptor[] =
 {
     /* Configuration */
-    0x09, 0x02, 0x64, 0x00, 0x03, 0x01, 0x00, 0x80, 0x32,
+    0x09, 0x02, 0x64, 0x00, 0x03, 0x01, 0x00, 0x80,
+    BOARD_USB_MAX_POWER_MA / 2u,
 
     /* Interface 0: one HID interface with three Report IDs */
     0x09, 0x04, 0x00, 0x00, 0x01, 0x03, 0x00, 0x00, 0x00,
@@ -945,6 +948,11 @@ uint8_t UsbDevice_GetConfiguration(void)
 uint8_t UsbDevice_IsReady(void)
 {
     return (g_usb_configuration != 0u && g_usb_suspended == 0u) ? 1u : 0u;
+}
+
+uint8_t UsbDevice_IsSuspended(void)
+{
+    return g_usb_suspended;
 }
 
 uint8_t UsbDevice_GetKeyboardLeds(void)

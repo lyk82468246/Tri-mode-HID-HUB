@@ -11,6 +11,8 @@
  * memory, so an ISR can publish a complete item atomically from the point of
  * view of the consumer.  Clear is a coordinated reset operation: the
  * caller must quiesce the producer and consumer while it advances tail.
+ * Capacities must be powers of two because indexing uses a mask instead of
+ * division; this keeps ISR push/pop bounded on the RV32IMAC core.
  */
 typedef struct
 {

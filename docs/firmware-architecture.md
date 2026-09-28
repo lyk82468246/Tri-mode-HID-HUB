@@ -386,12 +386,12 @@ M2 的代码级验收已通过 MounRiver 自带 RISC-V GCC 8.2.0 交叉编译、
 
 ## 7. Milestone 3 已落地的输入适配边界
 
-M3 把开发板阶段的物理输入限制在 `src/board_pins.h`：键盘 PS/2 为 PA0 CLK / PA1 DATA，鼠标 PS/2 为 PA2 CLK / PA3 DATA，RS232 经 MAX3232 后接 UART1 PA8 RX / PA9 TX，默认 115200 8N1。宏均可在工程配置中覆盖，协议层不依赖这些具体 GPIO。
+M3 把开发板阶段的物理输入限制在 `src/board_pins.h`：键盘 PS/2 为 PA0 CLK / PA1 DATA，鼠标 PS/2 为 PA2 CLK / PA3 DATA，RS232 经 MAX3232 后接 UART1 PA8 RX / PA9 TX，新增 TTL UART3 为 PA4 RX / PA5 TX，默认均为 115200 8N1。Rev B 迁移已沿同一边界接入 UART0/IrDA、红外、I²C/SPI 和电源策略；宏均可在工程配置中覆盖，协议层不依赖这些具体 GPIO。
 
 - PS/2 GPIOA ISR 只读取 DATA 电平并向两个独立的 `Ps2EdgeSample[64]` SPSC Ring 入队；TMOS 每个端口每次最多消费 32 个 edge，并按 10 ms 无边沿超时复位。完整帧执行 start/data/parity/stop 校验，错误和 edge 溢出都有统计量。
 - 键盘适配器支持 Set 2 常用键、修饰键、扩展键、Pause 序列和自动重复去重，输出完整 8 字节键盘快照；解码错误或溢出会 release-all/resync。鼠标适配器支持标准三字节包、按钮、X/Y 饱和转换和 Y 轴方向修正。
 - 鼠标 `F4` 初始化在 TMOS 与 GPIOA ISR 之间以状态机完成：ISR 仅推进时钟边沿、发送位和 ACK 采样，任务上下文负责超时、结果处理和 1 s 重试，不阻塞等待外设。
-- UART1 ISR 只排空 FIFO 并把字节及线路状态放入 `UartRxItem[128]` Ring；TMOS 按 20 B 满帧、CR/LF 或 6 ms 空闲分帧，路由器背压时保留当前帧，线路错误字节丢弃并计数。
+- UART1/UART3 ISR 只排空各自 FIFO 并把字节及线路状态放入两个独立的 `UartRxItem[128]` Ring；TMOS 按 20 B 满帧、CR/LF 或 6 ms 空闲分帧，路由器背压时保留当前帧，线路错误字节丢弃并计数。
 
 M3 的代码级验收已通过 RISC-V GCC 8.2.0 全工程语法检查、交叉链接、ELF 静态对象检查和动态分配调用审计；真实开发板的 PS/2 电平、UART 收发、USB/BLE 枚举及端到端报告仍需接线后执行。
 

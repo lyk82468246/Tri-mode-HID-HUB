@@ -20,6 +20,10 @@ typedef enum
     ROUTER_SRC_USB_KEYBOARD,
     ROUTER_SRC_USB_MOUSE,
     ROUTER_SRC_UART,
+    ROUTER_SRC_UART3,
+    ROUTER_SRC_IRDA,
+    ROUTER_SRC_IR_REMOTE,
+    ROUTER_SRC_BUS,
     ROUTER_SRC_USB_CDC,
     ROUTER_SRC_BLE_NUS,
     ROUTER_SRC_TEST,
@@ -70,6 +74,8 @@ typedef enum
 #define ROUTER_CONTROL_MAGIC_1          0x5Au
 #define ROUTER_CONTROL_SET_POLICY       0x01u
 #define ROUTER_CONTROL_SET_MASK         0x02u
+#define ROUTER_CONTROL_I2C_TRANSFER     0x10u
+#define ROUTER_CONTROL_SPI_TRANSFER     0x11u
 
 /* HID report availability uses one bit per logical report, independent of
  * the transport-level Report ID.  The bit assignments match BLE HOGP. */

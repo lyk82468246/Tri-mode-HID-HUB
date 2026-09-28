@@ -13,12 +13,15 @@ src/usb_device.c    USB Device HID/CDC 复合控制器
 src/event_router.c  输入事件与输出队列路由
 src/static_spsc_ring.c  固定容量 SPSC Ring 实现
 src/firmware_diagnostics.c  M6 服务耗时、Ring 高水位和故障统计
-src/board_pins.h       开发板/首版 PCB 引脚覆盖层
+src/board_pins.h       Rev B PCB 引脚定义与可覆盖宏
 src/ble_hid_service.c   BLE HOGP HID Service
 src/ble_nus_service.c   BLE NUS-compatible Service
 src/ble_output.c        BLE Peripheral/TMOS 输出任务
 src/ps2_input.c         两路 PS/2 GPIO 边沿采样与解码
-src/uart_input.c        UART1 RX Ring 与超时分帧
+src/uart_input.c        UART1/UART3 RX Ring 与超时分帧
+src/irda_link.c         UART0/MCP2120/TFBS4711 初始化、SIR 帧校验与 RX Ring
+src/ir_remote.c         PB1 边沿时间戳、NEC/RC5 解码、PWM6/TMR0 发射包络
+src/board_bus.c         PB21/PB20 I²C 与 PA12–PA15 SPI0 的异步事务和控制帧入口
 src/usb_host_hid.c      USB2 Host 非阻塞枚举、HID 轮询与报表解析
 BLE/                WCH 官方 BLE/TMOS HAL、头文件和静态库
 Startup/            CH583/CH582 系列启动文件
@@ -31,7 +34,7 @@ StdPeriphDriver/    WCH 外设驱动、头文件和 ISP 库
 
 ## Milestone 5 当前状态
 
-M1/M2/M3/M4/M5 已把输入到多路输出的台架链路接入工程：`Main.c` 设置系统时钟后进入 `TMOS_SystemProcess()`；`tmos_app.c` 每 2 ms 运行一次有限预算服务，依次消费 PS/2 edge、UART1 RX、USB2 Host HID 报表、CDC/NUS RX，采样 USB configured/suspend、BLE HOGP CCCD 和 NUS CCCD，执行 `EventRouter_Process()`，再尝试提交 USB HID/CDC IN 和 BLE HOGP/NUS 通知。应用层没有 libc `malloc/free`，输入和输出队列均由编译期静态对象提供。
+M1/M2/M3/M4/M5 已把输入到多路输出的台架链路接入工程：`Main.c` 设置系统时钟后进入 `TMOS_SystemProcess()`；`tmos_app.c` 每 2 ms 运行一次有限预算服务，依次消费 PS/2 edge、UART1/UART3 RX、USB2 Host HID 报表、CDC/NUS RX，采样 USB configured/suspend、BLE HOGP CCCD 和 NUS CCCD，执行 `EventRouter_Process()`，再尝试提交 USB HID/CDC IN 和 BLE HOGP/NUS 通知。应用层没有 libc `malloc/free`，输入和输出队列均由编译期静态对象提供。
 
 M5 的 `Event_Router` 是规范化 HID 状态的唯一拥有者：每个输入源保存自己的键盘/鼠标/手柄状态，键盘按 Usage ID 去重并合并修饰键，鼠标按钮按源 OR 合并、位移按输出端分别累积，手柄采用最后更新的有效源快照。HID 队列满时不阻塞 TMOS，而是保留最新状态的 pending 位；USB/BLE 重新可用时清掉旧队列并发送当前完整键盘、鼠标、手柄快照。
 
@@ -55,6 +58,10 @@ M6 已加入 `FirmwareDiagnostics` 固定内存诊断模块：TMOS 每个 2 ms �
 | PS/2 keyboard | PA0 CLK / PA1 DATA | GPIOA 下降沿采样；Set 2 键盘帧校验、扩展码、按下/释放快照；鼠标初始化命令独立走状态机 |
 | PS/2 mouse | PA2 CLK / PA3 DATA | 3 字节标准鼠标包；按钮、X/Y 增量转换为统一 4 B Mouse Report |
 | RS232/UART | UART1 PA8 RX / PA9 TX | MAX3232 后的 115200 8N1 RX；20 B 满帧或 6 ms 空闲分帧为 `STREAM_DATA` |
+| TTL/UART | UART3 PA4 RX / PA5 TX | 独立 3.3 V TTL RX；与 UART1 使用独立静态 Ring，默认 115200 8N1，按同一规则分帧 |
+| IrDA | UART0 PB4 RX / PB7 TX；PB3/PB2/PB19 控制 MCP2120/TFBS4711 | 非阻塞 9600 软件波特率配置、SIR 字节去转义/FCS 校验；IrLAP/IrLMP 尚未实现 |
+| 红外遥控 | PB1 接收、PB0/PWM6 发射 | GPIOB ISR 时间戳；TMOS NEC/RC5 解码；PWM6 约 38 kHz，TMR0 生成微秒级包络 |
+| I²C/SPI0 | PB21/PB20 I²C；PA12 CS、PA13 SCK、PA14 MOSI、PA15 MISO | 单笔异步硬件事务；CDC/NUS 控制帧 `A5 5A 10...` / `A5 5A 11...` 触发，结果以 `B5` 响应流返回 |
 | USB Host HID | USB2 Host（首版 PCB 为 PB13/PB12，VBUS 由 PB6/HOST_EN 控制；开发板可覆盖宏） | 非阻塞总线复位、EP0 控制传输、配置/HID/Report Descriptor 解析；最多 2 个 HID 中断 IN 接口，单包上限 64 B |
 
 USB Host M4 的控制传输不调用 WCH 示例中的阻塞式高层 helper，而是由 `src/usb_host_hid.c` 逐阶段推进 SETUP、DATA、STATUS。设备描述符先取 8 B 再按 `bMaxPacketSize0` 取完整描述符；随后读取配置描述符、选择 HID interrupt IN endpoint、设置 configuration，并按 HID descriptor 中的 Report Descriptor 长度取固定缓存。Boot Keyboard/Mouse 发送 `SET_PROTOCOL(0)`/`SET_IDLE(0)`；通用 `protocol=0` HID 设备使用固定容量字段表解析，支持 Report ID、键盘数组/修饰键、鼠标按钮/X/Y/Wheel 和相对轴。
@@ -83,8 +90,11 @@ M1/M2/M3/M4/M5/M6 的主要静态分配如下，所有可变 Buffer 均使用 4 
 | BLE HOGP Report Map/属性/CCCD | Report Map 193 B；32 个静态属性；5 组 CCCD |
 | BLE NUS RX | `BleNusRxFrame[4]`，每帧最多 20 B |
 | PS/2 edge | `Ps2EdgeSample[64]` × 2 |
-| UART1 RX | `UartRxItem[128]`，每项含字节与线路状态 |
-| UART1 分帧工作区 | 20 B |
+| UART1/UART3 RX | `UartRxItem[128]` × 2，每项含字节与线路状态 |
+| UART1/UART3 分帧工作区 | 20 B × 2 |
+| IrDA RX 与 SIR 工作区 | `IrdaRxItem[64]`、SIR 帧 `128 B` |
+| 遥控边沿工作区 | `IrRemoteEdge[128]`，每项 8 B；固定 NEC/RC5 解码状态 |
+| I²C/SPI 事务区 | I²C 写 `14 B`、读 `16 B`；SPI TX/RX 各 `16 B`；无动态分配 |
 | USB2 Host RX/TX DMA | 64 B × 2 |
 | USB Host 设备/配置描述符 | 18 B + 256 B |
 | USB Host HID Report Descriptor | 256 B × 2 |
@@ -93,7 +103,7 @@ M1/M2/M3/M4/M5/M6 的主要静态分配如下，所有可变 Buffer 均使用 4 
 | Event_Router 状态 | 388 B；源状态、合并快照、输出 pending 位和统计量 |
 | FirmwareDiagnostics 运行态与最近快照 | 228 B（44 B 运行态 + 184 B 快照）；服务计时、超时计数、Ring 高水位和汇总统计 |
 
-ISR 不解析 HID、不调用路由器，也不等待发送完成。PS/2 GPIOA ISR 只读取对应 DATA 电平并入 edge Ring，UART1 ISR 只排空 FIFO 并保存线路状态，EP2 OUT ISR 只完成有限长度复制和入队；GATT 写回调只复制 NUS RX 数据到静态 Ring。PS/2 鼠标发 `F4` 时，ISR 只推进数据位/ACK 的时序状态，协议解析、UART/PS/2 解码、CDC 回送、HOGP/NUS 通知和输出端点提交都在 TMOS 上下文中执行。Ring 为 SPSC，满时返回资源错误或增加对应计数，不能把 DMA 地址或局部变量指针交给异步消费者。
+ISR 不解析 HID、不调用路由器，也不等待发送完成。PS/2 GPIOA ISR 只读取对应 DATA 电平并入 edge Ring，UART0/UART1/UART3 ISR 只排空各自 FIFO 并保存线路状态，EP2 OUT ISR 只完成有限长度复制和入队；GATT 写回调只复制 NUS RX 数据到静态 Ring。PS/2 鼠标发 `F4` 时，ISR 只推进数据位/ACK 的时序状态，协议解析、IrDA SIR/ UART/PS2 解码、CDC 回送、HOGP/NUS 通知和输出端点提交都在 TMOS 上下文中执行。Ring 为 SPSC，满时返回资源错误或增加对应计数，不能把 DMA 地址或局部变量指针交给异步消费者。
 
 ## 在 MounRiver Studio 中使用
 
@@ -104,6 +114,6 @@ ISR 不解析 HID、不调用路由器，也不等待发送完成。PS/2 GPIOA I
 
 若要启用 M1 的台架按键注入，在工程 C 预处理宏中临时加入 `CH582M_M1_TEST_PATTERN=1` 后重新 Build；默认值为 0，不会自动向主机发送按键。CDC 验收可从主机向 CDC OUT 写入最多 64 字节，设备应在下一个 TMOS 周期通过 CDC IN 回送。
 
-本机 MRS 自带 RISC-V GCC 8.2.0 的 M6 交叉编译结果为：代码 Flash 使用 170,796 B / 448 KB，RAM 使用 24,868 B / 32 KB（含 WCH BLE 库、外设驱动和应用，最终仍以 MRS 生成的 map 为准）。若 MRS GUI 重新生成工程配置，应确认 `BLE/HAL/include`、`BLE/LIB`、`CH58xBLE`、UART1/GPIOA 中断入口、USB2 Host 源文件、`src/firmware_diagnostics.c` 和上述预处理宏没有丢失。
+本机 MRS 自带 RISC-V GCC 8.2.0 的 Rev B 交叉编译结果为：`BOARD_USB_MAX_POWER_MA=100` 时 Flash 174,088 B / 448 KB、RAM 28,736 B / 32 KB；500 mA 时 Flash 174,152 B、RAM 28,736 B。两种配置都保留约 3.9 KB RAM 余量，最终仍以 MRS 生成的 map 为准。若 MRS GUI 重新生成工程配置，应确认 `BLE/HAL/include`、`BLE/LIB`、`CH58xBLE`、UART0/1/3、GPIOA/GPIOB/TMR0/SPI0/I2C 中断入口、USB2 Host 源文件、`src/board_bus.c`、`src/firmware_diagnostics.c` 和上述预处理宏没有丢失。
 
 不同版本的 MounRiver Studio 可能使用不同的 SDK 安装路径；工程文件保留了芯片、编译器、链接脚本和下载目标配置，但不把本机 SDK 安装目录写入仓库。

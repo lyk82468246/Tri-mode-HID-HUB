@@ -115,7 +115,6 @@
                 <option id="ilg.gnumcueclipse.managedbuild.cross.riscv.option.c.compiler.nostdinc.1633344562" superClass="ilg.gnumcueclipse.managedbuild.cross.riscv.option.c.compiler.nostdinc" useByScannerDiscovery="true" value="false" valueType="boolean"/>
                 <option id="ilg.gnumcueclipse.managedbuild.cross.riscv.option.c.compiler.preprocessonly.208069239" superClass="ilg.gnumcueclipse.managedbuild.cross.riscv.option.c.compiler.preprocessonly" useByScannerDiscovery="false" value="false" valueType="boolean"/>
                 <option IS_BUILTIN_EMPTY="false" IS_VALUE_EMPTY="false" id="ilg.gnumcueclipse.managedbuild.cross.riscv.option.c.compiler.defs.177116515" name="Defined symbols (-D)" superClass="ilg.gnumcueclipse.managedbuild.cross.riscv.option.c.compiler.defs" useByScannerDiscovery="true" valueType="definedSymbols">
-                  <listOptionValue builtIn="false" value="DEBUG=1"/>
                   <listOptionValue builtIn="false" value="BLE_SNV=0"/>
                   <listOptionValue builtIn="false" value="TEM_SAMPLE=0"/>
                   <listOptionValue builtIn="false" value="BLE_CALIBRATION_ENABLE=0"/>
@@ -288,7 +287,7 @@
             </toolChain>
           </folderInfo>
           <sourceEntries>
-            <entry excluding="StdPeriphDriver/CH58x_usbhostClass.c|StdPeriphDriver/CH58x_usbhostBase.c|StdPeriphDriver/CH58x_usbdev.c|StdPeriphDriver/CH58x_uart3.c|StdPeriphDriver/CH58x_uart2.c|StdPeriphDriver/CH58x_timer3.c|StdPeriphDriver/CH58x_timer2.c|StdPeriphDriver/CH58x_timer1.c|StdPeriphDriver/CH58x_timer0.c|StdPeriphDriver/CH58x_spi0.c|StdPeriphDriver/CH58x_pwm.c|StdPeriphDriver/CH58x_adc.c" flags="VALUE_WORKSPACE_PATH|RESOLVED" kind="sourcePath" name=""/>
+            <entry excluding="StdPeriphDriver/CH58x_usbhostClass.c|StdPeriphDriver/CH58x_usbhostBase.c|StdPeriphDriver/CH58x_usbdev.c|StdPeriphDriver/CH58x_uart2.c|StdPeriphDriver/CH58x_timer3.c|StdPeriphDriver/CH58x_timer2.c|StdPeriphDriver/CH58x_timer1.c|StdPeriphDriver/CH58x_adc.c" flags="VALUE_WORKSPACE_PATH|RESOLVED" kind="sourcePath" name=""/>
           </sourceEntries>
         </configuration>
       </storageModule>

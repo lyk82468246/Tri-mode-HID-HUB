@@ -9,6 +9,10 @@ typedef struct
     uint32_t line_error;
     uint32_t frame_flush;
     uint32_t frame_backpressure;
+    uint32_t uart3_rx_overrun;
+    uint32_t uart3_line_error;
+    uint32_t uart3_frame_flush;
+    uint32_t uart3_frame_backpressure;
 } UartInputStats;
 
 void UartInput_Init(void);

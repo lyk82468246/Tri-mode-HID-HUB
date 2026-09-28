@@ -7,6 +7,10 @@
 #include "ps2_input.h"
 #include "uart_input.h"
 #include "usb_host_hid.h"
+#include "board_power.h"
+#include "board_bus.h"
+#include "irda_link.h"
+#include "ir_remote.h"
 
 /* The watchdog remains opt-in until the development-board power and reset
  * paths have passed the M6 soak test. */
@@ -35,7 +39,11 @@ typedef struct
     RouterStats router;
     Ps2InputStats ps2;
     UartInputStats uart;
+    IrdaLinkStats irda;
+    IrRemoteStats ir_remote;
     UsbHostHidStats usb_host;
+    BoardPowerStatus power;
+    BoardBusStats bus;
 } FirmwareDiagnosticsSnapshot;
 
 void FirmwareDiagnostics_Init(void);

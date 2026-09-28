@@ -114,6 +114,6 @@ PB16 不支持 ADC。Rev A 的 USB-A 电压模拟采样不再占用 PA4：PA4/PA
 - VBAT_SENSE：PB16 → PA6/AIN10；PA7/AIN11 新增上行 VBUS 检测；PA4/PA5 改为 UART3 板边直角排母。
 - USER：PB8 → PB18；CHG#：PB19 → PB9；PB8/PB17 新增充电模式控制；PB16 改为输入电源有效状态。
 - U5 计划由 SY6280 改为 TPS2553，新增 PB5 FAULT#，需要新封装/参数，绝不是直接替换料号。
-- 新增 UART0 + IrDA、PWM6 + 红外收发、UART3/I2C/SPI 初始化及相应协议。当前固件未实现这些新增功能；本次未修改运行固件。
+- 新增 UART0 + IrDA、PWM6 + 红外收发、UART3/I2C/SPI 初始化及对应的非阻塞服务已进入运行固件；当前实现覆盖 SIR 字节校验、NEC/RC5、异步总线控制帧和诊断，但不宣称完整 IrLAP/IrLMP 或通过了光学/电气实测。电源标定、功率预算、OLED 型号和最终连接器仍待硬件收口。
 
 依据：[WCH CH583DS1 v1.9](https://github.com/openwch/ch583/blob/main/Datasheet/CH583DS1_zh.PDF) 第 3–7 页引脚说明、第 111 页封装图及相关外设章节，以及仓库 `StdPeriphDriver/inc/CH583SFR.h` 的复用定义。其余元件资料见 `pcb-design-study.md`。

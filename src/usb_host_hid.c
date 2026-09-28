@@ -2,6 +2,7 @@
 #include "CH58x_usbhost.h"
 
 #include "board_pins.h"
+#include "board_power.h"
 #include "event_router.h"
 #include "static_spsc_ring.h"
 #include "usb_host_hid.h"
@@ -2117,11 +2118,7 @@ static void UsbHostHid_DrainReports(void)
 
 void UsbHostHid_Init(void)
 {
-    /* The PCB uses PB6/HOST_EN for the USB-A load switch.  A development
-     * board may override the mask to 0 when its USB host VBUS is already
-     * powered externally. */
-    GPIOB_SetBits(BOARD_USB_HOST_ENABLE_PIN);
-    GPIOB_ModeCfg(BOARD_USB_HOST_ENABLE_PIN, GPIO_ModeOut_PP_5mA);
+    /* BoardPower owns HOST_EN and supply permission on Rev B. */
     pU2HOST_RX_RAM_Addr = g_usb_host_rx_dma;
     pU2HOST_TX_RAM_Addr = g_usb_host_tx_dma;
     USB2_HostInit();
@@ -2163,6 +2160,12 @@ void UsbHostHid_Process(void)
     if(R8_USB2_INT_FG & RB_UIF_DETECT)
     {
         R8_USB2_INT_FG = RB_UIF_DETECT;
+    }
+    if(!BoardPower_HostEnabled())
+    {
+        if(g_usb_host_attached) UsbHostHid_HandleDetach();
+        UsbHostHid_StopTransfer();
+        return;
     }
     if(!attached)
     {

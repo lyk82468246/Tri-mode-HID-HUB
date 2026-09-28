@@ -147,5 +147,9 @@ void FirmwareDiagnostics_GetSnapshot(FirmwareDiagnosticsSnapshot *snapshot)
     snapshot->router = router->stats;
     Ps2Input_GetStats(&snapshot->ps2);
     UartInput_GetStats(&snapshot->uart);
+    IrdaLink_GetStats(&snapshot->irda);
+    IrRemote_GetStats(&snapshot->ir_remote);
     UsbHostHid_GetStats(&snapshot->usb_host);
+    BoardPower_GetStatus(&snapshot->power);
+    BoardBus_GetStats(&snapshot->bus);
 }

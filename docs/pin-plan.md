@@ -1,6 +1,6 @@
 # CH582M 首版引脚规划
 
-> 版本：Rev A 历史记录，对应首版云端原理图设计意图，不是已验证的生产引脚表。下表 PB16 电池 ADC 分配已确认不可用；请参阅 [Rev B 引脚提案](hardware/pin-allocation-revb.md)及[硬件文档索引](hardware/README.md)。Rev B 尚未同步到云端原理图或运行固件。
+> 版本：Rev A 历史记录，对应首版云端原理图设计意图，不是已验证的生产引脚表。下表 PB16 电池 ADC 分配已确认不可用；请参阅 [Rev B 引脚提案](hardware/pin-allocation-revb.md)及[硬件文档索引](hardware/README.md)。Rev B 尚未同步到云端原理图；运行固件的 Rev B 映射以 `src/board_pins.h` 和 [迁移跟踪](revb-firmware-migration.md) 为准。
 
 ## MCU U1
 

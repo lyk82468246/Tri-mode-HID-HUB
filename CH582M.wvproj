@@ -47,14 +47,10 @@
 					"${project}/StdPeriphDriver/CH58x_usbhostClass.c",
 					"${project}/StdPeriphDriver/CH58x_usbhostBase.c",
 					"${project}/StdPeriphDriver/CH58x_usbdev.c",
-					"${project}/StdPeriphDriver/CH58x_uart3.c",
 					"${project}/StdPeriphDriver/CH58x_uart2.c",
 					"${project}/StdPeriphDriver/CH58x_timer3.c",
 					"${project}/StdPeriphDriver/CH58x_timer2.c",
 					"${project}/StdPeriphDriver/CH58x_timer1.c",
-					"${project}/StdPeriphDriver/CH58x_timer0.c",
-					"${project}/StdPeriphDriver/CH58x_spi0.c",
-					"${project}/StdPeriphDriver/CH58x_pwm.c",
 					"${project}/StdPeriphDriver/CH58x_adc.c"
 				],
 				"optimization": {
@@ -132,7 +128,6 @@
 						"do_not_search_system_directories": false,
 						"preprocess_only": false,
 						"defined_symbols": [
-							"DEBUG=1",
 							"BLE_SNV=0",
 							"TEM_SAMPLE=0",
 							"BLE_CALIBRATION_ENABLE=0",

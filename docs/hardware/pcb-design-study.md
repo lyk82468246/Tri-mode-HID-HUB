@@ -127,7 +127,7 @@ WCH 的封装图确认 CH582M QFN48 是 **5 × 5 mm，0.35 mm 间距，上/下�
 
 这证明的是**本次请求的布局示意和引脚分配提案自洽**。预留矩形不是精确 courtyard，尚无云端网表、精确 footprint 或 routed PCB，因此不宣称通过 ERC/DRC、圆角处焊盘边距、连接器插拔、USB 信号完整性、RF 匹配或热验证。下一阶段先把本表同步到原理图、锁定连接器和天线，再做真实封装布局与布线。
 
-当前运行固件没有改动。新增 UART0 IrDA、UART3 直角排母、PWM6、GPIOB 红外接收、I2C/SPI、充电模式控制及 VBUS 检测都需要实施；原有 Host 初始化直接开启 HOST_EN 的行为也要随新的电源策略调整。完整变更清单见引脚表。
+固件已经按本 Rev B 提案开始迁移：`Board_Init`、Host/充电电源策略、UART3、UART0/MCP2120/TFBS4711 SIR 物理层、NEC/RC5 红外、I2C/SPI 异步事务均已接入 TMOS 和静态诊断。当前仍不能把它们称为硬件验收完成：IrLAP/IrLMP 尚未实现，光学仲裁、ADC 分压/标定、功率预算、OLED 型号以及所有连接器和时序都必须在开发板和最终 PCB 上实测。完整变更清单见 [`docs/revb-firmware-migration.md`](../revb-firmware-migration.md) 和引脚表。
 
 ## 10. 在线依据
 

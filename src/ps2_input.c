@@ -1,6 +1,7 @@
 #include "CH58x_common.h"
 
 #include "board_pins.h"
+#include "board_power.h"
 #include "event_router.h"
 #include "ps2_input.h"
 #include "static_spsc_ring.h"
@@ -841,6 +842,9 @@ static void Ps2Input_ProcessMouseTx(void)
     }
 }
 
+static uint8_t g_ps2_powered;
+static uint8_t g_ps2_power_release_pending;
+
 void Ps2Input_Init(void)
 {
     uint32_t clock_pins = BOARD_PS2_KEYBOARD_CLK_PIN |
@@ -879,13 +883,55 @@ void Ps2Input_Init(void)
     g_ps2_mouse_tx.parity = 0u;
     g_ps2_mouse_tx.idle_ticks = 0u;
 
-    GPIOA_ModeCfg(clock_pins | data_pins, GPIO_ModeIN_PU);
-    GPIOA_ITModeCfg(clock_pins, GPIO_ITMode_FallEdge);
-    PFIC_EnableIRQ(GPIO_A_IRQn);
+    g_ps2_powered = 0u;
+    g_ps2_power_release_pending = 0u;
+    PFIC_DisableIRQ(GPIO_A_IRQn);
+    GPIOA_ModeCfg(clock_pins | data_pins, GPIO_ModeIN_Floating);
 }
 
 void Ps2Input_Process(void)
 {
+    uint8_t powered = BoardPower_HostEnabled();
+    uint32_t clocks = BOARD_PS2_KEYBOARD_CLK_PIN | BOARD_PS2_MOUSE_CLK_PIN;
+    uint32_t pins = clocks | BOARD_PS2_KEYBOARD_DATA_PIN |
+                            BOARD_PS2_MOUSE_DATA_PIN;
+    if(!powered && g_ps2_powered)
+    {
+        PFIC_DisableIRQ(GPIO_A_IRQn);
+        g_ps2_mouse_tx.state = PS2_TX_IDLE;
+        g_ps2_mouse_tx.result_pending = 0u;
+        GPIOA_ModeCfg(pins, GPIO_ModeIN_Floating);
+        StaticSpscRing_Clear(&g_ps2_keyboard_edge_ring);
+        StaticSpscRing_Clear(&g_ps2_mouse_edge_ring);
+        Ps2Keyboard_ResetState();
+        Ps2Mouse_ResetState();
+        g_ps2_power_release_pending = 3u;
+        g_ps2_powered = 0u;
+    }
+    /* Preserve release until accepted; new input cannot overtake it. */
+    if(g_ps2_power_release_pending & 1u)
+    {
+        if(EventRouter_InjectSourceEvent(ROUTER_SRC_PS2_KEYBOARD,
+                                        ROUTER_EVENT_SOURCE_DOWN, 0u))
+            g_ps2_power_release_pending &= (uint8_t)~1u;
+    }
+    if(g_ps2_power_release_pending & 2u)
+    {
+        if(EventRouter_InjectSourceEvent(ROUTER_SRC_PS2_MOUSE,
+                                        ROUTER_EVENT_SOURCE_DOWN, 0u))
+            g_ps2_power_release_pending &= (uint8_t)~2u;
+    }
+    if(!powered || g_ps2_power_release_pending) return;
+    if(!g_ps2_powered)
+    {
+        GPIOA_ClearITFlagBit(clocks);
+        GPIOA_ModeCfg(pins, GPIO_ModeIN_PU);
+        GPIOA_ITModeCfg(clocks, GPIO_ITMode_FallEdge);
+        g_ps2_mouse_init_done = 0u;
+        g_ps2_mouse_init_delay_ticks = PS2_MOUSE_INIT_DELAY_TICKS;
+        g_ps2_powered = 1u;
+        PFIC_EnableIRQ(GPIO_A_IRQn);
+    }
     Ps2Input_HandleOverrun();
     Ps2Input_ProcessKeyboardEdges();
     Ps2Input_ProcessMouseTx();
