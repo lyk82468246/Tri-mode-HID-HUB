@@ -49,7 +49,8 @@ static uint8_t g_irda_frame_escaped;
 static uint8_t g_irda_state;
 static uint8_t g_irda_retry;
 static uint8_t g_irda_expected_echo;
-static uint8_t g_irda_remote_paused;
+static volatile uint8_t g_irda_remote_paused;
+static volatile uint8_t g_irda_resume_pending;
 static uint32_t g_irda_deadline;
 static uint32_t g_irda_resume_deadline;
 static IrdaLinkStats g_irda_stats __attribute__((aligned(4)));
@@ -99,6 +100,16 @@ static void IrdaLink_ResetFrame(void)
     g_irda_frame_length = 0u;
     g_irda_frame_in_progress = 0u;
     g_irda_frame_escaped = 0u;
+}
+
+static void IrdaLink_ResetRxState(void)
+{
+    /* Configuration retries discard stale echo/data bytes.  UART0 is the
+     * producer, so quiesce its ISR before resetting the SPSC consumer state. */
+    PFIC_DisableIRQ(UART0_IRQn);
+    StaticSpscRing_Clear(&g_irda_rx_ring);
+    PFIC_EnableIRQ(UART0_IRQn);
+    IrdaLink_ResetFrame();
 }
 
 static void IrdaLink_ProcessFrameByte(uint8_t value)
@@ -168,13 +179,15 @@ static void IrdaLink_StartConfig(void)
 {
     GPIOB_ResetBits(BOARD_IRDA_SHUTDOWN_PIN);
     GPIOB_ResetBits(BOARD_IRDA_MODE_PIN);
+    g_irda_stats.ready = 0u;
+    g_irda_resume_pending = 0u;
     g_irda_state = IRDA_STATE_WAKE;
     g_irda_deadline = TMOS_GetSystemClock() + IRDA_WAKE_TICKS;
 }
 
 static uint8_t IrdaLink_SendConfigByte(uint8_t value)
 {
-    if(R8_UART0_TFC == UART_FIFO_SIZE)
+    if(R8_UART0_TFC >= UART_FIFO_SIZE)
     {
         return 0u;
     }
@@ -187,6 +200,7 @@ static uint8_t IrdaLink_SendConfigByte(uint8_t value)
 static void IrdaLink_ConfigFailure(void)
 {
     ++g_irda_stats.config_error;
+    IrdaLink_ResetRxState();
     if(g_irda_retry < IRDA_CONFIG_RETRIES)
     {
         ++g_irda_retry;
@@ -215,6 +229,7 @@ void IrdaLink_Init(void)
     g_irda_retry = 0u;
     g_irda_expected_echo = 0u;
     g_irda_remote_paused = 0u;
+    g_irda_resume_pending = 0u;
     g_irda_resume_deadline = 0u;
     GPIOB_ModeCfg(BOARD_UART0_RX_PIN, GPIO_ModeIN_PU);
     GPIOB_ModeCfg(BOARD_UART0_TX_PIN, GPIO_ModeOut_PP_5mA);
@@ -247,9 +262,9 @@ void IrdaLink_SetRemoteTxActive(uint8_t active)
     {
         g_irda_remote_paused = 0u;
         GPIOB_ResetBits(BOARD_IRDA_SHUTDOWN_PIN);
-        /* Vishay specifies a finite startup time after SD goes low. Keep
-         * the parser quiet for at least one 625 us TMOS tick. */
-        g_irda_resume_deadline = TMOS_GetSystemClock() + 1u;
+        /* The release path is called by the TMR0 ISR.  Defer the clock read
+         * and resume deadline calculation to IrdaLink_Process. */
+        g_irda_resume_pending = 1u;
     }
 }
 
@@ -258,6 +273,14 @@ void IrdaLink_Process(void)
     IrdaRxItem item;
     uint8_t processed = 0u;
     uint32_t now = TMOS_GetSystemClock();
+
+    if(g_irda_resume_pending != 0u)
+    {
+        /* Vishay specifies a finite startup time after SD goes low. Keep the
+         * parser quiet for at least one 625 us TMOS tick. */
+        g_irda_resume_deadline = now + 1u;
+        g_irda_resume_pending = 0u;
+    }
 
     if(g_irda_state == IRDA_STATE_DISABLED)
     {
@@ -318,6 +341,7 @@ void IrdaLink_Process(void)
         }
         if(g_irda_state == IRDA_STATE_DATA &&
            !g_irda_remote_paused &&
+           !g_irda_resume_pending &&
            IrdaLink_Due(TMOS_GetSystemClock(), g_irda_resume_deadline))
         {
             IrdaLink_ProcessFrameByte(item.byte);
@@ -330,8 +354,10 @@ void IrdaLink_Process(void)
 
     if(g_irda_state == IRDA_STATE_SEND_APPLY)
     {
-        (void)IrdaLink_SendConfigByte(IRDA_MCP_BAUD_APPLY);
-        g_irda_state = IRDA_STATE_WAIT_APPLY_ECHO;
+        if(IrdaLink_SendConfigByte(IRDA_MCP_BAUD_APPLY))
+        {
+            g_irda_state = IRDA_STATE_WAIT_APPLY_ECHO;
+        }
     }
 }
 

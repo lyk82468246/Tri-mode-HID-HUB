@@ -1,5 +1,7 @@
 #include "event_router.h"
 #include "board_bus.h"
+#include "board_power.h"
+#include "ir_remote.h"
 
 #define ROUTER_INPUT_CAPACITY       16u
 #define ROUTER_HID_TX_CAPACITY      4u
@@ -1138,6 +1140,53 @@ static uint8_t EventRouter_HandleControlFrame(const RouterEvent *event)
             else
             {
                 EventRouter_SetOutputMask(argument);
+            }
+            break;
+
+        case ROUTER_CONTROL_SET_HOST_POWER:
+            if((event->length != ROUTER_CONTROL_FRAME_LEN) ||
+               (argument > 1u))
+            {
+                g_event_router.stats.parser_error++;
+            }
+            else
+            {
+                /* The power task applies the request on its next TMOS turn;
+                 * this handler never toggles HOST_EN synchronously. */
+                BoardPower_RequestHost(argument);
+            }
+            break;
+
+        case ROUTER_CONTROL_CLEAR_HOST_FAULT:
+            if((event->length != ROUTER_CONTROL_FRAME_LEN) ||
+               (argument != 0u))
+            {
+                g_event_router.stats.parser_error++;
+            }
+            else
+            {
+                /* A valid command is allowed to be a no-op while FAULT# is
+                 * still asserted; diagnostics expose the resulting state. */
+                (void)BoardPower_ClearFault();
+            }
+            break;
+
+        case ROUTER_CONTROL_IR_SEND_NEC:
+            if((event->length != 5u) ||
+               !IrRemote_SendNec(event->payload.raw[3],
+                                 event->payload.raw[4]))
+            {
+                g_event_router.stats.parser_error++;
+            }
+            break;
+
+        case ROUTER_CONTROL_IR_SEND_RC5:
+            if((event->length != 6u) ||
+               !IrRemote_SendRc5(event->payload.raw[3],
+                                 event->payload.raw[4],
+                                 event->payload.raw[5]))
+            {
+                g_event_router.stats.parser_error++;
             }
             break;
 

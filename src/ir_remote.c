@@ -28,6 +28,7 @@ typedef enum
 {
     IR_NEC_IDLE = 0,
     IR_NEC_LEAD_SPACE,
+    IR_NEC_REPEAT_MARK,
     IR_NEC_BIT_MARK,
     IR_NEC_BIT_SPACE
 } IrNecState;
@@ -54,6 +55,9 @@ static uint8_t g_ir_last_level;
 static uint8_t g_nec_state;
 static uint8_t g_nec_bit_count;
 static uint32_t g_nec_data;
+static uint8_t g_nec_last_address;
+static uint8_t g_nec_last_command;
+static uint8_t g_nec_last_valid;
 static uint8_t g_rc5_half[32];
 static uint8_t g_rc5_half_count;
 
@@ -124,10 +128,32 @@ static void IrRemote_ProcessNec(uint32_t duration, uint8_t level)
                 g_nec_data = 0u;
                 g_nec_state = IR_NEC_BIT_MARK;
             }
+            else if(level && IrRemote_InRange(duration, 1800u, 2800u) &&
+                    g_nec_last_valid)
+            {
+                /* NEC repeat: 9 ms mark, 2.25 ms space, 560 us mark. */
+                g_nec_state = IR_NEC_REPEAT_MARK;
+            }
             else
             {
                 IrRemote_ResetNec();
             }
+            break;
+
+        case IR_NEC_REPEAT_MARK:
+            if(!level && IrRemote_InRange(duration, 350u, 800u))
+            {
+                ++g_ir_stats.nec_repeat_count;
+                IrRemote_PostCode(IR_REMOTE_NEC_PROTOCOL,
+                                  g_nec_last_address,
+                                  g_nec_last_command,
+                                  1u);
+            }
+            else
+            {
+                ++g_ir_stats.invalid_pulse;
+            }
+            IrRemote_ResetNec();
             break;
 
         case IR_NEC_BIT_MARK:
@@ -163,6 +189,9 @@ static void IrRemote_ProcessNec(uint32_t duration, uint8_t level)
                 if((((uint8_t)(g_nec_data >> 8)) == (uint8_t)~address) &&
                    (((uint8_t)(g_nec_data >> 24)) == (uint8_t)~command))
                 {
+                    g_nec_last_address = address;
+                    g_nec_last_command = command;
+                    g_nec_last_valid = 1u;
                     ++g_ir_stats.nec_frame_count;
                     IrRemote_PostCode(IR_REMOTE_NEC_PROTOCOL, address,
                                       command, 0u);
@@ -316,6 +345,9 @@ void IrRemote_Init(void)
     }
     g_ir_have_timestamp = 0u;
     g_ir_last_level = 1u;
+    g_nec_last_address = 0u;
+    g_nec_last_command = 0u;
+    g_nec_last_valid = 0u;
     IrRemote_ResetNec();
     IrRemote_ResetRc5();
     g_tx_state = IR_TX_IDLE;

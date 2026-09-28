@@ -9,6 +9,7 @@ typedef struct
     uint32_t edge_count;
     uint32_t invalid_pulse;
     uint32_t nec_frame_count;
+    uint32_t nec_repeat_count;
     uint32_t rc5_frame_count;
     uint32_t tx_frame_count;
     uint32_t tx_busy;

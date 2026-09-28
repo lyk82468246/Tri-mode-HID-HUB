@@ -74,8 +74,12 @@ typedef enum
 #define ROUTER_CONTROL_MAGIC_1          0x5Au
 #define ROUTER_CONTROL_SET_POLICY       0x01u
 #define ROUTER_CONTROL_SET_MASK         0x02u
+#define ROUTER_CONTROL_SET_HOST_POWER   0x03u
+#define ROUTER_CONTROL_CLEAR_HOST_FAULT 0x04u
 #define ROUTER_CONTROL_I2C_TRANSFER     0x10u
 #define ROUTER_CONTROL_SPI_TRANSFER     0x11u
+#define ROUTER_CONTROL_IR_SEND_NEC      0x20u
+#define ROUTER_CONTROL_IR_SEND_RC5      0x21u
 
 /* HID report availability uses one bit per logical report, independent of
  * the transport-level Report ID.  The bit assignments match BLE HOGP. */

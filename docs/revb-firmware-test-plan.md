@@ -27,8 +27,8 @@ git diff --check
 | Rev B 引脚 | `src/board_pins.h` 与 CSV 逐项一致；没有把 Rev A 的 PB8/PB16/PB19/PA4 旧含义带入运行代码 |
 | 工程源文件 | UART3、UART0、PWM、TMR0、SPI0、I2C 的 SDK 源文件没有被工程排除；UART2/SPI1 保持禁用 |
 | 实时模型 | TMOS 事件循环；ISR 只采样、入 Ring 或推进微型时序状态；应用代码没有直接 `malloc/free` |
-| 构建 100 mA | 链接成功，RAM 不超过 32 KB；当前基线为 Flash 174,088 B、RAM 28,736 B |
-| 构建 500 mA | 链接成功；当前基线为 Flash 174,152 B、RAM 28,736 B |
+| 构建 100 mA | 链接成功，RAM 不超过 32 KB；当前基线为 Flash 174,664 B、RAM 28,744 B |
+| 构建 500 mA | 链接成功；当前基线为 Flash 174,728 B、RAM 28,744 B |
 | 诊断 | map 文件存在，确认 `service_overrun`、各 Ring 高水位、Host fault、总线错误字段可观察 |
 
 若 RAM 余量低于 2 KB，停止增加缓存或协议状态机，先做容量削减和 map 分析。
@@ -123,6 +123,20 @@ Host 默认受电源策略关闭。只有 `500 mA` 配置、输入 PGOOD 有效�
 ## 8. I²C/SPI 外设总线控制帧
 
 总线事务均为单笔、静态缓冲、IRQ 驱动、带超时；当前不绑定具体 OLED 型号或地址。
+
+### 8.0 电源与红外控制帧
+
+CDC/NUS 也接受以下 TMOS 控制命令；命令只提交请求，实际 GPIO 操作由对应任务在下一轮执行：
+
+```text
+A5 5A 03 <0|1>       请求关闭/开启 Host 供电
+A5 5A 04 00          在 HOST_EN 已关闭且 FAULT# 已释放时清除故障锁存
+A5 5A 20 <address> <command>
+A5 5A 21 <address> <command> <toggle>
+```
+
+`0x20`/`0x21` 分别启动 NEC/RC5 发射；发射忙时请求被拒绝并计入红外/Router
+统计。`0x04` 在故障仍存在时安全地保持锁存，不会强行重新打开 Host VBUS。
 
 ### 8.1 I²C
 

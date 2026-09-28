@@ -38,7 +38,7 @@ M1/M2/M3/M4/M5 已把输入到多路输出的台架链路接入工程：`Main.c`
 
 M5 的 `Event_Router` 是规范化 HID 状态的唯一拥有者：每个输入源保存自己的键盘/鼠标/手柄状态，键盘按 Usage ID 去重并合并修饰键，鼠标按钮按源 OR 合并、位移按输出端分别累积，手柄采用最后更新的有效源快照。HID 队列满时不阻塞 TMOS，而是保留最新状态的 pending 位；USB/BLE 重新可用时清掉旧队列并发送当前完整键盘、鼠标、手柄快照。
 
-输出策略由 `EventRouter_SetOutputPolicy()` 选择：`USB_ONLY`、`BLE_ONLY`、`BOTH`、`USB_PREFERRED`、`BLE_PREFERRED` 和 `NONE`。默认是 `USB_PREFERRED`；USB HID/CDC 只有在 configured 且未 suspend 时可用，BLE HID 按每个 Report ID 的 HOGP CCCD、NUS 按 TX CCCD 分别计算可用性，因此只有 NUS 可用时不会把 HID 队列当作 NUS 数据发送；未订阅的 BLE HID Report 不会进入共用发送队列，避免队首阻塞。CDC/NUS 收到 `[0xA5, 0x5A, command, argument]` 四字节控制帧时，仅在来源为 CDC/NUS 且命令有效的情况下切换策略；普通数据仍按 `STREAM_DATA` 透传。
+输出策略由 `EventRouter_SetOutputPolicy()` 选择：`USB_ONLY`、`BLE_ONLY`、`BOTH`、`USB_PREFERRED`、`BLE_PREFERRED` 和 `NONE`。默认是 `USB_PREFERRED`；USB HID/CDC 只有在 configured 且未 suspend 时可用，BLE HID 按每个 Report ID 的 HOGP CCCD、NUS 按 TX CCCD 分别计算可用性，因此只有 NUS 可用时不会把 HID 队列当作 NUS 数据发送；未订阅的 BLE HID Report 不会进入共用发送队列，避免队首阻塞。CDC/NUS 收到以 `[0xA5, 0x5A]` 开头的控制帧时，可切换策略、请求 Host 电源/清除故障、发射 NEC/RC5，或提交 I²C/SPI 事务；普通数据仍按 `STREAM_DATA` 透传。
 
 ## Milestone 6 当前状态
 
@@ -60,7 +60,7 @@ M6 已加入 `FirmwareDiagnostics` 固定内存诊断模块：TMOS 每个 2 ms �
 | RS232/UART | UART1 PA8 RX / PA9 TX | MAX3232 后的 115200 8N1 RX；20 B 满帧或 6 ms 空闲分帧为 `STREAM_DATA` |
 | TTL/UART | UART3 PA4 RX / PA5 TX | 独立 3.3 V TTL RX；与 UART1 使用独立静态 Ring，默认 115200 8N1，按同一规则分帧 |
 | IrDA | UART0 PB4 RX / PB7 TX；PB3/PB2/PB19 控制 MCP2120/TFBS4711 | 非阻塞 9600 软件波特率配置、SIR 字节去转义/FCS 校验；IrLAP/IrLMP 尚未实现 |
-| 红外遥控 | PB1 接收、PB0/PWM6 发射 | GPIOB ISR 时间戳；TMOS NEC/RC5 解码；PWM6 约 38 kHz，TMR0 生成微秒级包络 |
+| 红外遥控 | PB1 接收、PB0/PWM6 发射 | GPIOB ISR 时间戳；TMOS NEC/NEC repeat/RC5 解码；PWM6 约 38 kHz，TMR0 生成微秒级包络；CDC/NUS `A5 5A 20/21` 可请求发射 |
 | I²C/SPI0 | PB21/PB20 I²C；PA12 CS、PA13 SCK、PA14 MOSI、PA15 MISO | 单笔异步硬件事务；CDC/NUS 控制帧 `A5 5A 10...` / `A5 5A 11...` 触发，结果以 `B5` 响应流返回 |
 | USB Host HID | USB2 Host（首版 PCB 为 PB13/PB12，VBUS 由 PB6/HOST_EN 控制；开发板可覆盖宏） | 非阻塞总线复位、EP0 控制传输、配置/HID/Report Descriptor 解析；最多 2 个 HID 中断 IN 接口，单包上限 64 B |
 
@@ -114,6 +114,6 @@ ISR 不解析 HID、不调用路由器，也不等待发送完成。PS/2 GPIOA I
 
 若要启用 M1 的台架按键注入，在工程 C 预处理宏中临时加入 `CH582M_M1_TEST_PATTERN=1` 后重新 Build；默认值为 0，不会自动向主机发送按键。CDC 验收可从主机向 CDC OUT 写入最多 64 字节，设备应在下一个 TMOS 周期通过 CDC IN 回送。
 
-本机 MRS 自带 RISC-V GCC 8.2.0 的 Rev B 交叉编译结果为：`BOARD_USB_MAX_POWER_MA=100` 时 Flash 174,088 B / 448 KB、RAM 28,736 B / 32 KB；500 mA 时 Flash 174,152 B、RAM 28,736 B。两种配置都保留约 3.9 KB RAM 余量，最终仍以 MRS 生成的 map 为准。若 MRS GUI 重新生成工程配置，应确认 `BLE/HAL/include`、`BLE/LIB`、`CH58xBLE`、UART0/1/3、GPIOA/GPIOB/TMR0/SPI0/I2C 中断入口、USB2 Host 源文件、`src/board_bus.c`、`src/firmware_diagnostics.c` 和上述预处理宏没有丢失。
+本机 MRS 自带 RISC-V GCC 8.2.0 的 Rev B 交叉编译结果为：`BOARD_USB_MAX_POWER_MA=100` 时 Flash 174,664 B / 448 KB、RAM 28,744 B / 32 KB；500 mA 时 Flash 174,728 B、RAM 28,744 B。两种配置都保留约 3.9 KB RAM 余量，最终仍以 MRS 生成的 map 为准。若 MRS GUI 重新生成工程配置，应确认 `BLE/HAL/include`、`BLE/LIB`、`CH58xBLE`、UART0/1/3、GPIOA/GPIOB/TMR0/SPI0/I2C 中断入口、USB2 Host 源文件、`src/board_bus.c`、`src/firmware_diagnostics.c` 和上述预处理宏没有丢失。
 
 不同版本的 MounRiver Studio 可能使用不同的 SDK 安装路径；工程文件保留了芯片、编译器、链接脚本和下载目标配置，但不把本机 SDK 安装目录写入仓库。

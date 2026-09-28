@@ -15,10 +15,11 @@ void Board_Init(void)
     R8_TMR0_CTRL_MOD = RB_TMR_ALL_CLEAR;
     R8_SPI1_CTRL_MOD = 0u;
     R8_PWM_OUT_EN = 0u;
-    R16_PIN_ALTERNATE = (R16_PIN_ALTERNATE &
-        (uint16_t)~(RB_PIN_UART0 | RB_PIN_UART1 | RB_PIN_UART2 |
-                    RB_PIN_UART3 | RB_PIN_SPI0 | RB_PIN_PWMX |
-                    RB_PIN_MODEM | RB_PIN_U0_INV)) | RB_PIN_I2C;
+    /* Start from a known mux state.  Rev B uses the default locations for
+     * UART0/1/3, SPI0, PWM6 and USB; only I2C is remapped to PB21/PB20.
+     * Clearing the complete register also prevents a debugger/bootloader
+     * left-over TMR or RF-antenna remap from stealing PB10/PB11/PB19. */
+    R16_PIN_ALTERNATE = RB_PIN_I2C;
 
     /* Preload output latches before switching direction: USB100, external
      * 5V off, codec disabled, optical transceiver asleep, IR LED off. */

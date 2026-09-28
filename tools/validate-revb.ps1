@@ -40,6 +40,12 @@ try {
     Assert-Text $pins 'BOARD_UART3_RX_PIN.*1u << 4'
     Assert-Text $pins 'BOARD_UART0_RX_PIN.*1u << 4'
     Assert-Text $pins 'BOARD_I2C_SCL_PIN.*1u << 21'
+    Assert-Text 'src/board.c' 'R16_PIN_ALTERNATE = RB_PIN_I2C'
+    Assert-Text 'src/board_power.c' 'host_fault_latched'
+    Assert-Text 'src/event_router_types.h' 'ROUTER_CONTROL_CLEAR_HOST_FAULT'
+    Assert-Text 'src/event_router.c' 'BoardPower_ClearFault'
+    Assert-Text 'src/ir_remote.c' 'IR_REMOTE_EDGE_CAPACITY       128u'
+    Assert-Text 'src/ir_remote.c' 'IR_NEC_REPEAT_MARK'
 
     $projectFiles = @('.cproject', 'CH582M.wvproj')
     foreach($projectFile in $projectFiles) {
