@@ -80,8 +80,8 @@ USB Device 无外设冒烟还可以直接生成周期性 `a` 键按下/释放版
 | Rev B 引脚 | `src/board_pins.h` 与 CSV 逐项一致；没有把 Rev A 的 PB8/PB16/PB19/PA4 旧含义带入运行代码 |
 | 工程源文件 | UART3、UART0、PWM、TMR0、SPI0、I2C 的 SDK 源文件没有被工程排除；UART2/SPI1 保持禁用 |
 | 实时模型 | TMOS 事件循环；ISR 只采样、入 Ring 或推进微型时序状态；应用代码没有直接 `malloc/free` |
-| 构建 100 mA | 链接成功，RAM 不超过 32 KB；当前基线为 Flash 174,792 B、RAM 28,752 B |
-| 构建 500 mA | 链接成功；当前基线为 Flash 174,856 B、RAM 28,752 B |
+| 构建 100 mA | 链接成功，RAM 不超过 32 KB；当前基线为 Flash 174,804 B、RAM 28,752 B |
+| 构建 500 mA | 链接成功；当前基线为 Flash 174,868 B、RAM 28,752 B |
 | 诊断 | map 文件存在；通过 WCH-Link Watch 观察 `g_firmware_diagnostics_snapshot` 的 `service_overrun`、各 Ring 高水位、Host fault 和总线错误字段 |
 
 若 RAM 余量低于 2 KB，停止增加缓存或协议状态机，先做容量削减和 map 分析。
@@ -178,7 +178,7 @@ Host 默认受电源策略关闭。只有 `500 mA` 配置、输入 PGOOD 有效�
 
 1. 用频率计确认 MCP2120 外部时钟为 7.3728 MHz；BAUD2/1/0 为软件配置模式。
 2. 观察上电状态机：PB19 SD 先低、PB2 MODE 低、UART0 先 9600；配置字节 `0x87`、回显、`0x11` 应在 TMOS 中非阻塞推进。
-3. 配置成功后 MODE 应进入高电平数据态，Irda 统计的 `ready=1`；失败必须有限重试并进入 fault，不得无限重试。
+3. 配置成功后 MODE 应进入高电平数据态，IrDA 统计的 `ready=1`；失败必须有限重试并进入 fault，不得无限重试。最终 fault 的安全态必须是 MCP2120 `EN=0`、TFBS4711 `SD=1`、`MODE=1`，UART0 中断关闭；不能只检查 `fault=1`。
 4. 用 IrDA 物理层对端或光电转换器发送 BOF `0xC0`、转义数据、FCS、EOF `0xC1`，验证好帧进入 `ROUTER_SRC_IRDA`，坏 FCS 只增加 `fcs_error`。
 5. 启动遥控发射时确认 PB19 立即拉高，TFBS4711 关闭；遥控结束后 PB19 拉低，并留出至少一个 TMOS tick 的 TFBS 启动时间。检查 `remote_pause_count` 和 `remote_blocked_bytes`。
 

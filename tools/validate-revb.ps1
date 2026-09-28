@@ -122,6 +122,8 @@ try {
     Assert-Text 'src/ir_remote.c' 'StaticSpscRing_Clear\(&g_ir_edge_ring\)'
     Assert-Text 'src/board_bus.c' 'BoardBus_ConfigureSpi'
     Assert-Text 'src/board_bus.c' 'SPI0_MasterDefInit'
+    Assert-Text 'src/irda_link.c' 'GPIOB_ResetBits\(BOARD_IRDA_ENABLE_PIN\)'
+    Assert-Text 'src/irda_link.c' 'BOARD_IRDA_SHUTDOWN_PIN \| BOARD_IRDA_MODE_PIN'
     Assert-Text 'docs/hardware/pin-allocation-revb.md' '固件已按本表迁移'
     Assert-Text 'CH582M.wvproj' '"mcu": "CH582M"'
     Assert-Text 'src/tmos_app.c' 'FIRMWARE_SERVICE_PERIOD_MS  2u'
@@ -179,6 +181,16 @@ try {
         & "$PSScriptRoot/build-firmware.ps1" -UsbPowerMa 100
         & "$PSScriptRoot/build-firmware.ps1" -UsbPowerMa 500
         if($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+        foreach($artifact in @('obj/revb-100/CH582M.elf',
+                              'obj/revb-100/CH582M.hex',
+                              'obj/revb-100/CH582M.map',
+                              'obj/revb-500/CH582M.elf',
+                              'obj/revb-500/CH582M.hex',
+                              'obj/revb-500/CH582M.map')) {
+            if(!(Test-Path -LiteralPath $artifact)) {
+                throw "missing build artifact: $artifact"
+            }
+        }
     }
 }
 finally {

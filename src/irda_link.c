@@ -211,8 +211,11 @@ static void IrdaLink_ConfigFailure(void)
     {
         g_irda_state = IRDA_STATE_DISABLED;
         g_irda_stats.fault = 1u;
-        GPIOB_SetBits(BOARD_IRDA_ENABLE_PIN | BOARD_IRDA_SHUTDOWN_PIN |
-                      BOARD_IRDA_MODE_PIN);
+        /* Leave both optical devices in a known-low-power state.  EN is
+         * active high for MCP2120; keeping it high after a failed command
+         * exchange would leave a half-configured codec enabled. */
+        GPIOB_ResetBits(BOARD_IRDA_ENABLE_PIN);
+        GPIOB_SetBits(BOARD_IRDA_SHUTDOWN_PIN | BOARD_IRDA_MODE_PIN);
         UART0_INTCfg(DISABLE, RB_IER_RECV_RDY | RB_IER_LINE_STAT);
         PFIC_DisableIRQ(UART0_IRQn);
     }

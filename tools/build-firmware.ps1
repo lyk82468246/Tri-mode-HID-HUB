@@ -8,7 +8,9 @@ $projectRoot = Split-Path $PSScriptRoot -Parent
 Push-Location $projectRoot
 try {
     $compiler = Join-Path $ToolchainBin 'riscv-none-embed-gcc.exe'
+    $objcopy = Join-Path $ToolchainBin 'riscv-none-embed-objcopy.exe'
     if(!(Test-Path -LiteralPath $compiler)) { throw "Compiler not found: $compiler" }
+    if(!(Test-Path -LiteralPath $objcopy)) { throw "Objcopy not found: $objcopy" }
     $project = Get-Content -Raw CH582M.wvproj | ConvertFrom-Json
     $config = $project.buildConfig.configurations[0]
     $testPatternValue = if($TestPattern) { 1 } else { 0 }
@@ -39,6 +41,9 @@ try {
         -T Ld/Link.ld -LStdPeriphDriver -LBLE/LIB @objects -lISP583 -lCH58xBLE `
         '-Wl,--gc-sections' "-Wl,-Map=$outDir/CH582M.map" '-Wl,--print-memory-usage' -o $elf
     if($LASTEXITCODE -ne 0) { throw 'Link failed' }
+    $hex = Join-Path $outDir 'CH582M.hex'
+    & $objcopy -O ihex $elf $hex
+    if($LASTEXITCODE -ne 0) { throw 'HEX conversion failed' }
     & (Join-Path $ToolchainBin 'riscv-none-embed-size.exe') $elf
     if($LASTEXITCODE -ne 0) { throw 'Size failed' }
 } finally { Pop-Location }

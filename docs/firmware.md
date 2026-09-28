@@ -114,6 +114,6 @@ ISR 不解析 HID、不调用路由器，也不等待发送完成。PS/2 GPIOA I
 
 若要启用 M1 的台架按键注入，在工程 C 预处理宏中临时加入 `CH582M_M1_TEST_PATTERN=1` 后重新 Build；默认值为 0，不会自动向主机发送按键。CDC 验收可从主机向 CDC OUT 写入最多 64 字节，设备应在下一个 TMOS 周期通过 CDC IN 回送。
 
-本机 MRS 自带 RISC-V GCC 8.2.0 的 Rev B 交叉编译结果为：`BOARD_USB_MAX_POWER_MA=100` 时 Flash 174,792 B / 448 KB、RAM 28,752 B / 32 KB；500 mA 时 Flash 174,856 B、RAM 28,752 B。两种配置都保留约 3.9 KB RAM 余量，最终仍以 MRS 生成的 map 为准。若 MRS GUI 重新生成工程配置，应确认 `BLE/HAL/include`、`BLE/LIB`、`CH58xBLE`、UART0/1/3、GPIOA/GPIOB/TMR0/SPI0/I2C 中断入口、USB2 Host 源文件、`src/board_bus.c`、`src/firmware_diagnostics.c` 和上述预处理宏没有丢失。
+本机 MRS 自带 RISC-V GCC 8.2.0 的 Rev B 交叉编译结果为：`BOARD_USB_MAX_POWER_MA=100` 时 Flash 174,804 B / 448 KB、RAM 28,752 B / 32 KB；500 mA 时 Flash 174,868 B、RAM 28,752 B。两种配置都保留约 3.9 KB RAM 余量，最终仍以 MRS 生成的 map 为准。仓库中的 `tools/build-firmware.ps1` 会同时生成同目录的 `CH582M.elf`、`CH582M.hex` 和 `CH582M.map`，烧录前应核对三者来自同一配置目录。若 MRS GUI 重新生成工程配置，应确认 `BLE/HAL/include`、`BLE/LIB`、`CH58xBLE`、UART0/1/3、GPIOA/GPIOB/TMR0/SPI0/I2C 中断入口、USB2 Host 源文件、`src/board_bus.c`、`src/firmware_diagnostics.c` 和上述预处理宏没有丢失。
 
 不同版本的 MounRiver Studio 可能使用不同的 SDK 安装路径；工程文件保留了芯片、编译器、链接脚本和下载目标配置，但不把本机 SDK 安装目录写入仓库。
