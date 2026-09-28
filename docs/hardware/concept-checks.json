@@ -84,14 +84,9 @@
           "straight_distance_mm": 5.39
         },
         {
-          "group": "IrDA",
-          "angle_deg": 18.39,
+          "group": "IR TX/RX",
+          "angle_deg": 14.99,
           "straight_distance_mm": 19.5
-        },
-        {
-          "group": "38 kHz",
-          "angle_deg": 23.04,
-          "straight_distance_mm": 34.23
         },
         {
           "group": "I2C",
@@ -102,7 +97,7 @@
     },
     {
       "rotation_cw_deg": 45,
-      "mean_departure_angle_deg": 48.38,
+      "mean_departure_angle_deg": 45.79,
       "backward_groups": 0,
       "groups": [
         {
@@ -146,14 +141,9 @@
           "straight_distance_mm": 5.74
         },
         {
-          "group": "IrDA",
-          "angle_deg": 67.9,
-          "straight_distance_mm": 20.61
-        },
-        {
-          "group": "38 kHz",
-          "angle_deg": 72.17,
-          "straight_distance_mm": 34.56
+          "group": "IR TX/RX",
+          "angle_deg": 65.8,
+          "straight_distance_mm": 19.72
         },
         {
           "group": "I2C",
@@ -164,7 +154,7 @@
     },
     {
       "rotation_cw_deg": -45,
-      "mean_departure_angle_deg": 53.63,
+      "mean_departure_angle_deg": 56.7,
       "backward_groups": 2,
       "groups": [
         {
@@ -208,14 +198,9 @@
           "straight_distance_mm": 6.86
         },
         {
-          "group": "IrDA",
-          "angle_deg": 32.03,
-          "straight_distance_mm": 19.99
-        },
-        {
-          "group": "38 kHz",
-          "angle_deg": 25.04,
-          "straight_distance_mm": 35.87
+          "group": "IR TX/RX",
+          "angle_deg": 34.13,
+          "straight_distance_mm": 20.87
         },
         {
           "group": "I2C",
@@ -226,8 +211,8 @@
     },
     {
       "rotation_cw_deg": 90,
-      "mean_departure_angle_deg": 95.82,
-      "backward_groups": 7,
+      "mean_departure_angle_deg": 93.49,
+      "backward_groups": 6,
       "groups": [
         {
           "group": "RF",
@@ -270,14 +255,9 @@
           "straight_distance_mm": 7.52
         },
         {
-          "group": "IrDA",
-          "angle_deg": 113.55,
-          "straight_distance_mm": 22.53
-        },
-        {
-          "group": "38 kHz",
-          "angle_deg": 119.43,
-          "straight_distance_mm": 36.63
+          "group": "IR TX/RX",
+          "angle_deg": 113.92,
+          "straight_distance_mm": 21.38
         },
         {
           "group": "I2C",
@@ -288,8 +268,8 @@
     },
     {
       "rotation_cw_deg": 180,
-      "mean_departure_angle_deg": 156.17,
-      "backward_groups": 11,
+      "mean_departure_angle_deg": 156.09,
+      "backward_groups": 10,
       "groups": [
         {
           "group": "RF",
@@ -332,14 +312,9 @@
           "straight_distance_mm": 10.2
         },
         {
-          "group": "IrDA",
-          "angle_deg": 163.75,
-          "straight_distance_mm": 24.48
-        },
-        {
-          "group": "38 kHz",
-          "angle_deg": 154.26,
-          "straight_distance_mm": 40.52
+          "group": "IR TX/RX",
+          "angle_deg": 161.04,
+          "straight_distance_mm": 24.5
         },
         {
           "group": "I2C",
@@ -350,7 +325,7 @@
     },
     {
       "rotation_cw_deg": 270,
-      "mean_departure_angle_deg": 99.37,
+      "mean_departure_angle_deg": 102.26,
       "backward_groups": 6,
       "groups": [
         {
@@ -394,14 +369,9 @@
           "straight_distance_mm": 8.75
         },
         {
-          "group": "IrDA",
-          "angle_deg": 79.39,
-          "straight_distance_mm": 21.72
-        },
-        {
-          "group": "38 kHz",
-          "angle_deg": 70.2,
-          "straight_distance_mm": 38.37
+          "group": "IR TX/RX",
+          "angle_deg": 79.08,
+          "straight_distance_mm": 22.87
         },
         {
           "group": "I2C",

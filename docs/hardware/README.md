@@ -1,11 +1,11 @@
 # 硬件设计文档索引
 
-当前状态：云端原理图为待复核的 Rev A；本目录为 **Rev B 电气提案 + Rev B-M 机械层叠提案**。尚未创建已布线的 PCB 工程；运行固件已按 Rev B 引脚和外设策略迁移，但尚未完成开发板/最终 PCB 的电气实测。
+当前状态：云端原理图为待复核的 Rev A；本目录为 **Rev B 电气提案 + Rev B-M 机械层叠提案 + Rev B-IR 单光电收发修订**。尚未创建已布线的 PCB 工程。Rev B-IR 以带 IRED 阴极引出的 TFBS4650 级单光头、Q_IR 电流汇和 R_IR 限流为基线；运行固件当前仍按 MCP2120/TSOP/独立 LED 的分立原型，单模块方案需要后续迁移和电气实测，不能把文档提案当作已验收网表。
 
 ## 阅读顺序
 
 1. [设计说明与资料来源](pcb-design-study.md)：接口方位、0°/±45° 比较、机械预算、电源与 RF 约束。
-2. [顶层布局 SVG](pcb-concept-revb.svg)：85.60 × 53.98 mm 顶视图，只含顶层器件、侧插排母和四角安装孔；[PNG 预览](pcb-concept-revb.png)便于浏览。
+2. [顶层布局 SVG](pcb-concept-revb.svg)：85.60 × 53.98 mm 顶视图，只含顶层器件、单个共用红外收发头、Q_IR/R_IR、可选 MCP2120/TX 模式选择器、侧插排母和四角安装孔；[PNG 预览](pcb-concept-revb.png)便于浏览。
 3. [底层用户界面 SVG](pcb-bottom-revb.svg) / [PNG 预览](pcb-bottom-revb.png)：OLED、三块触摸电极、FPC、孔环和电池投影单独绘制。
 4. [物理层叠剖面](pcb-stack-revb.svg) / [PNG 预览](pcb-stack-revb.png)：CH582M 面朝盆地、底层屏幕/触摸面朝用户、3D 打印底板与四面墙的非比例剖面。
 5. [完整引脚表](pin-allocation-revb.md)：48 个引脚、EP、接插件脚序、复用约束和 Rev A 迁移清单。
@@ -30,7 +30,7 @@
 
 ## 修改与重新生成
 
-引脚和位置数据以 `generate_concept.py` 中的 `PINS`、`PLACEMENTS`、`GROUPS` 为生成源。修改这些数据后，在仓库根目录运行：
+引脚和位置数据以 `generate_concept.py` 中的 `PINS`、`PLACEMENTS`、`GROUPS` 为生成源。红外的单模块拓扑说明和联网资料在 `pcb-design-study.md` 第 7 节；修改这些数据后，在仓库根目录运行：
 
 ```sh
 python docs/hardware/generate_concept.py

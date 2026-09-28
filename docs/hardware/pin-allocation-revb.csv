@@ -15,19 +15,19 @@
 14,PB12/U2D-,东,USB_HOST_DN_MCU,usb,USB2 Host；禁止 I2C 默认映射占用
 15,PB11/UD+,东,USB_DEV_DP_MCU,usb,USB Device，固定数据引脚
 16,PB10/UD-,东,USB_DEV_DN_MCU,usb,USB Device，固定数据引脚
-17,PB7/TXD0,东,IRDA_UART_TX,ir,到 MCP2120 pin12 TX；UART0 默认映射
+17,PB7/TXD0,东,IRDA_UART_TX,ir,UART0 TX；经可选 MCP2120 或旁路送到共用光模块 TXD
 18,PB6,东,HOST_EN,power,TPS2553 EN，高有效；外部下拉，上电关断
 19,PB5,东,HOST_FAULT_N,power,TPS2553 FAULT#；外部上拉到 3V3；不是电压合格指示
-20,PB4/RXD0,东,IRDA_UART_RX,ir,来自 MCP2120 pin11 RX；UART0 默认映射
-21,PB3,东,IRDA_CODEC_EN,ir,MCP2120 pin13 EN，高有效；外部下拉
-22,PB2,东,IRDA_MODE,ir,MCP2120 pin7 MODE；高为数据，低为配置
-23,PB1,东,IR_REMOTE_RX,ir,TSOP38438 OUT；GPIOB 边沿中断，软件切换极性并记时间戳
-24,PB0/PWM6,东,IR_REMOTE_TX,ir,PWM6 约 38 kHz，经 MOSFET 驱动独立 940 nm LED
+20,PB4/RXD0,东,IRDA_UART_RX,ir,UART0 RX；来自可选 MCP2120 或共用光模块 RXD 旁路
+21,PB3,东,IR_TX_SEL_CODEC_EN,ir,高=标准 IrDA/U12-A 且 Q_IR 关闭；低=遥控/U12-B 驱动 Q_IR 且编码器禁用；外部下拉
+22,PB2,东,IRDA_MODE,ir,可选 MCP2120 MODE；标准模式内配置/数据切换，MCU-only 时预留
+23,PB1,东,IR_RX_CAPTURE,ir,共用光模块 RXD 原始脉冲；遥控学习或 MCU IrDA 输入捕获
+24,PB0/PWM6,东,IR_TX_CARRIER,ir,遥控时经 U12-B/Q_IR 驱动同一光头 IRED 阴极，输出约 38 kHz 载波包络
 25,PB23/RST#,北,RESET_N,debug,低有效复位；底层 RST 触摸电极与调试口共用，不重映射 UART2
 26,PB22,北,BOOT_N,debug,底层 BOOT 触摸电极；保留 ISP 配置
 27,PB21/SCL_,北,I2C_SCL,i2c,I2C 必须重映射 RB_PIN_I2C=1
 28,PB20/SDA_,北,I2C_SDA,i2c,板边直角 J7 I2C/OLED 排母，外部上拉到 3V3
-29,PB19,北,IRDA_SD,ir,TFBS4711 pin4 SD，高关断；外部上拉
+29,PB19,北,IRDA_SD,ir,共用光模块 pin4 SD，高关断；外部上拉
 30,PB18,北,USER_N,debug,底层 USER 触摸电极；外部上拉，触摸判定为有效低
 31,X32MO,北,X32MO,rf,32 MHz 晶振；负载由晶体 CL 与寄生计算
 32,X32MI,北,X32MI,rf,32 MHz 晶振；最短回路，与 RF 馈线分开
