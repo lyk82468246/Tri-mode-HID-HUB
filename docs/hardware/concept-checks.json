@@ -1,8 +1,12 @@
 {
   "pin_rows": 49,
   "unique_gpio": 40,
-  "planning_envelopes": 30,
+  "planning_envelopes": 24,
   "envelope_overlaps": [],
+  "side_headers": 4,
+  "bottom_user_zones": 4,
+  "mounting_holes": 4,
+  "mounting_hole_keepout_conflicts": [],
   "antenna_envelope_conflicts": 0,
   "board_mm": [
     85.6,
@@ -12,6 +16,20 @@
     43.0,
     24.5
   ],
+  "mechanical_overlay": {
+    "basin_mm": [
+      18,
+      11.5,
+      52,
+      36.5
+    ],
+    "battery_pocket_mm": [
+      25,
+      15.5,
+      38,
+      24
+    ]
+  },
   "verified_scope": "Automated: pin uniqueness, envelope bounds/non-overlap, SVG XML. Peripheral mapping reviewed manually against WCH datasheet and SDK. Not ERC, DRC, SI, RF or assembly sign-off.",
   "comparisons": [
     {

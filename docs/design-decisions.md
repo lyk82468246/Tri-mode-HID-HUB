@@ -5,6 +5,8 @@
 
 > 本文保留 Rev A 历史设计取舍。2026-09-21 新增的布局、红外接口及引脚调整见 [Rev B 设计说明](hardware/pcb-design-study.md)。其中 BQ24074 的 TMR/ITERM 悬空代表使用内部默认参数，不代表禁用相应功能；实际电池和充电参数仍需复核。
 
+> 2026-09-28 的 Rev B-M 机械层叠（板边直角排母、底层屏幕/触摸、中央电池盆地、四角螺丝和 3D 打印底板/四面墙）记录在 [Rev B 设计说明](hardware/pcb-design-study.md) 与 [剖面图](hardware/pcb-stack-revb.svg)，不改写本文的 Rev A 历史网表。
+
 ## 1. 主控与 USB 分工
 
 原理图按 CH582M 的两个 USB 数据对分别建模：

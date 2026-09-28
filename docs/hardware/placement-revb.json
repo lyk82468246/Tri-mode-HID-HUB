@@ -68,65 +68,10 @@
       "facing": "south"
     },
     {
-      "ref": "J6",
-      "label": "1S BAT",
-      "detail": "带保护电池",
-      "x_mm": 78,
-      "y_mm": 43.5,
-      "w_mm": 7.6,
-      "h_mm": 8,
-      "group": "power",
-      "facing": "east"
-    },
-    {
-      "ref": "J7",
-      "label": "I²C / OLED",
-      "detail": "1×4 · 3V3",
-      "x_mm": 50,
-      "y_mm": 11.5,
-      "w_mm": 11,
-      "h_mm": 4,
-      "group": "i2c",
-      "facing": "up"
-    },
-    {
-      "ref": "J8",
-      "label": "SPI0",
-      "detail": "2×4 · 3V3",
-      "x_mm": 5,
-      "y_mm": 46.5,
-      "w_mm": 11,
-      "h_mm": 5.5,
-      "group": "spi",
-      "facing": "up"
-    },
-    {
-      "ref": "J9",
-      "label": "WCH-Link",
-      "detail": "2×3 · VTref",
-      "x_mm": 53,
-      "y_mm": 34,
-      "w_mm": 8,
-      "h_mm": 5.5,
-      "group": "debug",
-      "facing": "up"
-    },
-    {
-      "ref": "J10",
-      "label": "UART3 TTL",
-      "detail": "1×4 · 3V3",
-      "x_mm": 20,
-      "y_mm": 2,
-      "w_mm": 11,
-      "h_mm": 4,
-      "group": "uart",
-      "facing": "up"
-    },
-    {
       "ref": "U9",
       "label": "IrDA SIR",
       "detail": "TFBS4711",
-      "x_mm": 61,
+      "x_mm": 60.5,
       "y_mm": 0,
       "w_mm": 6.5,
       "h_mm": 3.5,
@@ -137,7 +82,7 @@
       "ref": "U11",
       "label": "38 kHz RX",
       "detail": "TSOP38438",
-      "x_mm": 70,
+      "x_mm": 67.5,
       "y_mm": 0,
       "w_mm": 5.5,
       "h_mm": 5.5,
@@ -148,9 +93,9 @@
       "ref": "D_IR",
       "label": "940 nm TX",
       "detail": "独立 LED",
-      "x_mm": 77,
+      "x_mm": 73.5,
       "y_mm": 0,
-      "w_mm": 5,
+      "w_mm": 4.5,
       "h_mm": 7,
       "group": "ir",
       "facing": "north"
@@ -321,17 +266,6 @@
       "facing": "zone"
     },
     {
-      "ref": "KEYS",
-      "label": "USER / RST / BOOT",
-      "detail": "3 个顶部按键",
-      "x_mm": 52,
-      "y_mm": 19,
-      "w_mm": 11,
-      "h_mm": 3.5,
-      "group": "debug",
-      "facing": "zone"
-    },
-    {
       "ref": "U1",
       "label": "CH582M",
       "detail": "5×5 mm",
@@ -342,5 +276,134 @@
       "group": "debug",
       "facing": "chip"
     }
-  ]
+  ],
+  "side_headers": [
+    {
+      "ref": "J10",
+      "label": "UART3 TTL",
+      "detail": "1×4 · 3V3",
+      "x_mm": 20,
+      "y_mm": 0,
+      "w_mm": 11,
+      "h_mm": 3,
+      "group": "uart",
+      "facing": "north"
+    },
+    {
+      "ref": "J7",
+      "label": "I²C / OLED",
+      "detail": "1×4 · 3V3",
+      "x_mm": 17,
+      "y_mm": 47.0,
+      "w_mm": 9,
+      "h_mm": 6.98,
+      "group": "i2c",
+      "facing": "south"
+    },
+    {
+      "ref": "J8",
+      "label": "SPI0",
+      "detail": "2×4 · 3V3",
+      "x_mm": 8,
+      "y_mm": 47.0,
+      "w_mm": 8,
+      "h_mm": 6.98,
+      "group": "spi",
+      "facing": "south"
+    },
+    {
+      "ref": "J9",
+      "label": "WCH-Link",
+      "detail": "2×3 · VTref",
+      "x_mm": 61,
+      "y_mm": 47.0,
+      "w_mm": 9,
+      "h_mm": 6.98,
+      "group": "debug",
+      "facing": "south"
+    }
+  ],
+  "bottom_zones": [
+    {
+      "ref": "OLED",
+      "label": "OLED / 显示屏",
+      "detail": "底层 · 可视面朝上",
+      "x_mm": 23,
+      "y_mm": 14,
+      "w_mm": 39,
+      "h_mm": 24,
+      "group": "display"
+    },
+    {
+      "ref": "TOUCH-L",
+      "label": "USER / RST / BOOT",
+      "detail": "底层触摸电极",
+      "x_mm": 20,
+      "y_mm": 40.5,
+      "w_mm": 10,
+      "h_mm": 6.0,
+      "group": "touch"
+    },
+    {
+      "ref": "TOUCH-M",
+      "label": "触摸电极 2",
+      "detail": "底层触摸电极",
+      "x_mm": 37,
+      "y_mm": 40.5,
+      "w_mm": 10,
+      "h_mm": 6.0,
+      "group": "touch"
+    },
+    {
+      "ref": "TOUCH-R",
+      "label": "触摸电极 3",
+      "detail": "底层触摸电极",
+      "x_mm": 54,
+      "y_mm": 40.5,
+      "w_mm": 10,
+      "h_mm": 6.0,
+      "group": "touch"
+    }
+  ],
+  "mounting_holes": [
+    {
+      "ref": "H1",
+      "x_mm": 4.5,
+      "y_mm": 4.5,
+      "initial_radius_mm": 1.6
+    },
+    {
+      "ref": "H2",
+      "x_mm": 81.1,
+      "y_mm": 4.5,
+      "initial_radius_mm": 1.6
+    },
+    {
+      "ref": "H3",
+      "x_mm": 4.5,
+      "y_mm": 49.48,
+      "initial_radius_mm": 1.6
+    },
+    {
+      "ref": "H4",
+      "x_mm": 81.1,
+      "y_mm": 49.48,
+      "initial_radius_mm": 1.6
+    }
+  ],
+  "mechanical_overlay": {
+    "basin_mm": {
+      "x": 18,
+      "y": 11.5,
+      "w": 52,
+      "h": 36.5
+    },
+    "battery_pocket_mm": {
+      "x": 25,
+      "y": 15.5,
+      "w": 38,
+      "h": 24
+    },
+    "stack_svg": "pcb-stack-revb.svg"
+  }
 }

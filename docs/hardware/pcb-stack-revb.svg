@@ -1,0 +1,60 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1500" height="900" viewBox="0 0 1500 900" role="img"><title>CH582M Rev B-M PCB 与 3D 打印底板剖面概念</title>
+<defs><pattern id="hatch" width="10" height="10" patternUnits="userSpaceOnUse" patternTransform="rotate(45)"><line x1="0" y1="0" x2="0" y2="10" stroke="#e6c778" stroke-width="2"/></pattern><marker id="arrow" markerWidth="8" markerHeight="8" refX="6" refY="4" orient="auto"><path d="M0 0 L8 4 L0 8" fill="none" stroke="#60748b"/></marker></defs>
+<g font-family="Microsoft YaHei, Noto Sans CJK SC, Segoe UI, Arial, sans-serif">
+<rect x="0.00" y="0.00" width="1500.00" height="900.00" rx="0" fill="#f7f9fc" stroke="none" />
+<text x="55.00" y="52.00" font-size="30" fill="#243447" text-anchor="start" font-weight="700" >CH582M · PCB / 电池盆地 / 3D 打印结构剖面</text>
+<text x="55.00" y="83.00" font-size="16" fill="#627186" text-anchor="start" font-weight="400" >Rev B-M / 2026-09-28   ·   非比例机械示意   ·   需用最终封装、螺丝和电池实物收口</text>
+<text x="55.00" y="112.00" font-size="15" fill="#627186" text-anchor="start" font-weight="400" >阅读方向：上方是用户可见面；PCB 顶层器件朝下进入盆地，底层显示屏与触摸电极朝上。</text>
+<rect x="240.00" y="150.00" width="1020.00" height="70.00" rx="10" fill="#e5f4fb" stroke="#2d7c9f" stroke-width="2"/>
+<text x="750.00" y="177.00" font-size="20" fill="#24627f" text-anchor="middle" font-weight="700" >用户侧 / PCB 底层：OLED 显示屏 + 触摸电极（脸朝上）</text>
+<text x="750.00" y="201.00" font-size="13" fill="#24627f" text-anchor="middle" font-weight="400" >显示窗、FPC 弯折和触摸走线需要在底板开口与装配后再次核对</text>
+<rect x="260.00" y="255.00" width="980.00" height="38.00" rx="4" fill="#d6ad63" stroke="#8b6524" stroke-width="2"/>
+<text x="750.00" y="279.00" font-size="17" fill="#6b4b18" text-anchor="middle" font-weight="700" >FR-4 PCB 基材 / 4 层板（示意）</text>
+<polyline points="260.00,250.00 1240.00,250.00" fill="none" stroke="#b06e28" stroke-width="3" stroke-linejoin="round" stroke-linecap="round" stroke-dasharray="" />
+<text x="750.00" y="244.00" font-size="12" fill="#89531e" text-anchor="middle" font-weight="400" >底层铜 / 顶层铜边界</text>
+<text x="750.00" y="385.00" font-size="14" fill="#485e68" text-anchor="middle" font-weight="700" >顶层器件身体向下；高件沿板边围合盆地</text>
+<rect x="275.00" y="303.00" width="100.00" height="145.00" rx="6" fill="#dff2ec" stroke="#637783" stroke-width="1.8"/>
+<text x="325.00" y="330.00" font-size="14" fill="#536772" text-anchor="middle" font-weight="700" >PS/2 / 侧插座</text>
+<text x="325.00" y="350.00" font-size="11" fill="#687984" text-anchor="middle" font-weight="400" >板边开口方向 →</text>
+<rect x="430.00" y="303.00" width="78.00" height="105.00" rx="6" fill="#edf0f5" stroke="#637783" stroke-width="1.8"/>
+<text x="469.00" y="330.00" font-size="14" fill="#536772" text-anchor="middle" font-weight="700" >弯插排母</text>
+<text x="469.00" y="350.00" font-size="11" fill="#687984" text-anchor="middle" font-weight="400" >板边开口方向 →</text>
+<rect x="1000.00" y="303.00" width="96.00" height="165.00" rx="6" fill="#e4efff" stroke="#637783" stroke-width="1.8"/>
+<text x="1048.00" y="330.00" font-size="14" fill="#536772" text-anchor="middle" font-weight="700" >USB / DB9 / 光学头</text>
+<text x="1048.00" y="350.00" font-size="11" fill="#687984" text-anchor="middle" font-weight="400" >板边开口方向 →</text>
+<rect x="1140.00" y="303.00" width="78.00" height="120.00" rx="6" fill="#f3eadd" stroke="#637783" stroke-width="1.8"/>
+<text x="1179.00" y="330.00" font-size="14" fill="#536772" text-anchor="middle" font-weight="700" >电源 / 高件</text>
+<text x="1179.00" y="350.00" font-size="11" fill="#687984" text-anchor="middle" font-weight="400" >板边开口方向 →</text>
+<rect x="690.00" y="303.00" width="120.00" height="74.00" rx="8" fill="#263b45" stroke="#172d36" stroke-width="2"/>
+<text x="750.00" y="331.00" font-size="17" fill="#ffffff" text-anchor="middle" font-weight="700" >U1 CH582M</text>
+<text x="750.00" y="352.00" font-size="11" fill="#c8e1da" text-anchor="middle" font-weight="400" >面朝盆地 / QFN 焊点在 PCB 侧</text>
+<rect x="660.00" y="386.00" width="180.00" height="36.00" rx="7" fill="#fff2cf" stroke="#bd8e27" stroke-width="1.6" stroke-dasharray="6 4"/>
+<text x="750.00" y="409.00" font-size="12" fill="#8a620f" text-anchor="middle" font-weight="700" >电池与 U1 的禁压/绝缘缓冲区</text>
+<polyline points="840.00,404.00 930.00,450.00" fill="none" stroke="#9b731e" stroke-width="1.6" stroke-linejoin="round" stroke-linecap="round" stroke-dasharray="" marker-end="url(#arrow)"/>
+<rect x="520.00" y="450.00" width="460.00" height="92.00" rx="12" fill="#fffdf5" stroke="#c99842" stroke-width="2"/>
+<text x="750.00" y="482.00" font-size="22" fill="#946b1e" text-anchor="middle" font-weight="700" >1S Li-ion 电池（中央盆地）</text>
+<text x="750.00" y="508.00" font-size="13" fill="#946b1e" text-anchor="middle" font-weight="400" >带保护板；泡棉/托盘；电芯不得接触焊点或金属螺丝</text>
+<text x="750.00" y="529.00" font-size="11" fill="#946b1e" text-anchor="middle" font-weight="400" >当前仅定义空间，不代表已锁定电芯尺寸和连接器</text>
+<polyline points="520.00,496.00 452.00,415.00" fill="none" stroke="#9b731e" stroke-width="1.6" stroke-linejoin="round" stroke-linecap="round" stroke-dasharray="" marker-end="url(#arrow)"/>
+<text x="440.00" y="402.00" font-size="12" fill="#8a620f" text-anchor="end" font-weight="400" >留出实际器件高度 + 绝缘余量</text>
+<rect x="185.00" y="635.00" width="1130.00" height="42.00" rx="5" fill="#e0d2c4" stroke="#806c5a" stroke-width="2"/>
+<text x="750.00" y="662.00" font-size="18" fill="#665545" text-anchor="middle" font-weight="700" >3D 打印地板：电池托盘、屏幕窗口和排线避让</text>
+<rect x="185.00" y="420.00" width="44.00" height="215.00" rx="4" fill="#e0d2c4" stroke="#806c5a" stroke-width="2"/>
+<rect x="1271.00" y="420.00" width="44.00" height="215.00" rx="4" fill="#e0d2c4" stroke="#806c5a" stroke-width="2"/>
+<polyline points="250.00,420.00 250.00,610.00 1250.00,610.00 1250.00,420.00" fill="none" stroke="#9a8a79" stroke-width="2" stroke-linejoin="round" stroke-linecap="round" stroke-dasharray="7 5" />
+<polyline points="300.00,250.00 300.00,635.00" fill="none" stroke="#566873" stroke-width="2" stroke-linejoin="round" stroke-linecap="round" stroke-dasharray="4 3" />
+<circle cx="300" cy="268" r="13" fill="#d9e1e6" stroke="#344955" stroke-width="2"/>
+<circle cx="300" cy="635" r="13" fill="#d9e1e6" stroke="#344955" stroke-width="2"/>
+<text x="300.00" y="235.00" font-size="12" fill="#465b67" text-anchor="middle" font-weight="700" >H1/H3</text>
+<text x="300.00" y="704.00" font-size="11" fill="#465b67" text-anchor="middle" font-weight="400" >螺丝 + 支柱 / 螺母座</text>
+<polyline points="1200.00,250.00 1200.00,635.00" fill="none" stroke="#566873" stroke-width="2" stroke-linejoin="round" stroke-linecap="round" stroke-dasharray="4 3" />
+<circle cx="1200" cy="268" r="13" fill="#d9e1e6" stroke="#344955" stroke-width="2"/>
+<circle cx="1200" cy="635" r="13" fill="#d9e1e6" stroke="#344955" stroke-width="2"/>
+<text x="1200.00" y="235.00" font-size="12" fill="#465b67" text-anchor="middle" font-weight="700" >H2/H4</text>
+<text x="1200.00" y="704.00" font-size="11" fill="#465b67" text-anchor="middle" font-weight="400" >螺丝 + 支柱 / 螺母座</text>
+<rect x="55.00" y="735.00" width="1390.00" height="112.00" rx="14" fill="#ffffff" stroke="#dce3ed" />
+<text x="80.00" y="767.00" font-size="18" fill="#243447" text-anchor="start" font-weight="700" >机械收口条件</text>
+<text x="80.00" y="793.00" font-size="13" fill="#536575" text-anchor="start" font-weight="400" >1. H1–H4 贯穿 PCB 与底板；先选 M2.5/M3、垫片、支柱和热熔螺母，再反推孔径、环形焊盘和 keep-out。</text>
+<text x="80.00" y="816.00" font-size="13" fill="#536575" text-anchor="start" font-weight="400" >2. 3D 打印墙体使用非导电材料；天线边缘、IrDA/遥控光窗、USB/DB9/PS2 插头和弯插排母都要有独立开口。</text>
+<text x="80.00" y="839.00" font-size="13" fill="#536575" text-anchor="start" font-weight="400" >3. 电池可位于中央盆地，但不得压在 CH582M、晶振、DC/DC 电感或焊点上；用真实电芯、泡棉和温升测试验证 z 向余量。</text>
+</g></svg>

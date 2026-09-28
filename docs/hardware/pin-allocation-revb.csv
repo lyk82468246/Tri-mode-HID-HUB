@@ -23,19 +23,19 @@
 22,PB2,东,IRDA_MODE,ir,MCP2120 pin7 MODE；高为数据，低为配置
 23,PB1,东,IR_REMOTE_RX,ir,TSOP38438 OUT；GPIOB 边沿中断，软件切换极性并记时间戳
 24,PB0/PWM6,东,IR_REMOTE_TX,ir,PWM6 约 38 kHz，经 MOSFET 驱动独立 940 nm LED
-25,PB23/RST#,北,RESET_N,debug,低有效复位；按键与调试口共用，不重映射 UART2
-26,PB22,北,BOOT_N,debug,低有效下载按键；保留 ISP 配置
+25,PB23/RST#,北,RESET_N,debug,低有效复位；底层 RST 触摸电极与调试口共用，不重映射 UART2
+26,PB22,北,BOOT_N,debug,底层 BOOT 触摸电极；保留 ISP 配置
 27,PB21/SCL_,北,I2C_SCL,i2c,I2C 必须重映射 RB_PIN_I2C=1
-28,PB20/SDA_,北,I2C_SDA,i2c,裸 I2C/OLED 共用 J7，外部上拉到 3V3
+28,PB20/SDA_,北,I2C_SDA,i2c,板边直角 J7 I2C/OLED 排母，外部上拉到 3V3
 29,PB19,北,IRDA_SD,ir,TFBS4711 pin4 SD，高关断；外部上拉
-30,PB18,北,USER_N,debug,用户键迁至此；外部上拉，按下接地
+30,PB18,北,USER_N,debug,底层 USER 触摸电极；外部上拉，触摸判定为有效低
 31,X32MO,北,X32MO,rf,32 MHz 晶振；负载由晶体 CL 与寄生计算
 32,X32MI,北,X32MI,rf,32 MHz 晶振；最短回路，与 RF 馈线分开
 33,VINTA,北,CH_VINTA,power,内部模拟节点；只按手册去耦，不作为外部负载电源
 34,ANT,北,RF_ANT,rf,向北，50 ohm 馈线；可选调谐焊盘贴近馈点
 35,VDCIA,西,CH_VDCI,power,按 WCH 参考与 VDCID 相连并本地去耦
-36,PA4/RXD3,西,UART_TTL_RX,uart,新增 J10 裸串口；UART3 默认映射
-37,PA5/TXD3,西,UART_TTL_TX,uart,新增 J10 裸串口；MCU 视角命名，3.3 V
+36,PA4/RXD3,西,UART_TTL_RX,uart,新增 J10 直角排母；UART3 默认映射
+37,PA5/TXD3,西,UART_TTL_TX,uart,新增 J10 直角排母；MCU 视角命名，3.3 V
 38,PA6/AIN10,西,VBAT_SENSE,power,BAT 分压/RC；从不支持 ADC 的 PB16 迁入
 39,PA0,西,KBD_CLK_MCU,ps2,保留；GPIOA 中断，经 BSS138 开漏电平转换
 40,PA1,西,KBD_DATA_MCU,ps2,保留；仅拉低/释放，经 BSS138
