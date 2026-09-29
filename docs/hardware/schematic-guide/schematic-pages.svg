@@ -1,0 +1,84 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="650" viewBox="0 0 1200 650">
+  <title>Rev B-IR 原理图分页与绘制顺序</title>
+  <desc>把原理图拆成 P00 到 P11 十二个功能页，电源和接口到 MCU，再到测试与 ERC。</desc>
+  <defs>
+    <style>
+      .bg{fill:#f7f9fc}.title{font:700 25px "Microsoft YaHei",sans-serif;fill:#172033}.sub{font:14px "Microsoft YaHei",sans-serif;fill:#526071}
+      .page{fill:#fff;stroke:#91a0b5;stroke-width:1.5}.page-title{font:700 16px "Microsoft YaHei",sans-serif;fill:#172033}.page-text{font:12px "Microsoft YaHei",sans-serif;fill:#526071}
+      .num{font:700 13px "Segoe UI",sans-serif;fill:#fff}.num-bg{fill:#4b6ea8}.arrow{fill:none;stroke:#8797ad;stroke-width:2;marker-end:url(#arrow)}
+      .power{fill:#fff4df;stroke:#d99438}.io{fill:#eaf4ff;stroke:#5790c7}.core{fill:#edf8ef;stroke:#5a9d72}.ir{fill:#fff0f1;stroke:#c56f79}.check{fill:#f1edff;stroke:#8370c4}
+      .legend{font:12px "Microsoft YaHei",sans-serif;fill:#526071}
+    </style>
+    <marker id="arrow" markerWidth="8" markerHeight="8" refX="7" refY="4" orient="auto"><path d="M0,0 L8,4 L0,8 Z" fill="#8797ad"/></marker>
+  </defs>
+  <rect class="bg" width="1200" height="650"/>
+  <text class="title" x="40" y="43">Rev B-IR 原理图分页与绘制顺序</text>
+  <text class="sub" x="40" y="70">每页只表达一个功能边界；箭头表示先建立电源/接口，再连接 U1，最后做测试与 ERC。</text>
+
+  <!-- row 1 -->
+  <g transform="translate(40,105)">
+    <rect class="page power" width="255" height="115" rx="10"/><circle class="num-bg" cx="25" cy="25" r="15"/><text class="num" x="25" y="30" text-anchor="middle">P00</text>
+    <text class="page-title" x="52" y="30">电源树与测试点</text><text class="page-text" x="20" y="58">VBUS_RAW / BAT / SYS</text><text class="page-text" x="20" y="79">3V3 / 5V_HOST / VBUS_HOST</text><text class="page-text" x="20" y="100">TP、电源旗标、测量回路</text>
+  </g>
+  <path class="arrow" d="M295 162 H325"/>
+  <g transform="translate(325,105)">
+    <rect class="page io" width="255" height="115" rx="10"/><circle class="num-bg" cx="25" cy="25" r="15"/><text class="num" x="25" y="30" text-anchor="middle">P01</text>
+    <text class="page-title" x="52" y="30">USB-C 设备口</text><text class="page-text" x="20" y="58">VBUS / CC1 / CC2 / SBU NC</text><text class="page-text" x="20" y="79">USB_DEV_DP/DN + ESD</text><text class="page-text" x="20" y="100">PA7 VBUS 分压</text>
+  </g>
+  <path class="arrow" d="M580 162 H610"/>
+  <g transform="translate(610,105)">
+    <rect class="page power" width="255" height="115" rx="10"/><circle class="num-bg" cx="25" cy="25" r="15"/><text class="num" x="25" y="30" text-anchor="middle">P02</text>
+    <text class="page-title" x="52" y="30">充电与电池</text><text class="page-text" x="20" y="58">BQ24074 / TS / CE</text><text class="page-text" x="20" y="79">ISET / ILIM / ITERM / TMR</text><text class="page-text" x="20" y="100">BAT、SYS、CHG#、PGOOD</text>
+  </g>
+  <path class="arrow" d="M865 162 H895"/>
+  <g transform="translate(895,105)">
+    <rect class="page power" width="255" height="115" rx="10"/><circle class="num-bg" cx="25" cy="25" r="15"/><text class="num" x="25" y="30" text-anchor="middle">P03</text>
+    <text class="page-title" x="52" y="30">3V3 / 5V 主机电源</text><text class="page-text" x="20" y="58">TPS63031 / TPS61023</text><text class="page-text" x="20" y="79">TPS2553 / HOST_EN</text><text class="page-text" x="20" y="100">FAULT#、限流和热预算</text>
+  </g>
+
+  <!-- row 2 -->
+  <path class="arrow" d="M1022 220 V270"/>
+  <g transform="translate(40,285)">
+    <rect class="page core" width="255" height="115" rx="10"/><circle class="num-bg" cx="25" cy="25" r="15"/><text class="num" x="25" y="30" text-anchor="middle">P04</text>
+    <text class="page-title" x="52" y="30">CH582M 核心与 RF</text><text class="page-text" x="20" y="58">电源脚 / EP / 32 MHz</text><text class="page-text" x="20" y="79">ANT / RESET_N / BOOT_N</text><text class="page-text" x="20" y="100">WCH-Link、GPIO 逐脚核对</text>
+  </g>
+  <path class="arrow" d="M295 342 H325"/>
+  <g transform="translate(325,285)">
+    <rect class="page io" width="255" height="115" rx="10"/><circle class="num-bg" cx="25" cy="25" r="15"/><text class="num" x="25" y="30" text-anchor="middle">P05</text>
+    <text class="page-title" x="52" y="30">USB 主从数据</text><text class="page-text" x="20" y="58">PB10/PB11 设备口</text><text class="page-text" x="20" y="79">PB12/PB13 主机口</text><text class="page-text" x="20" y="100">ESD、差分阻抗、22 Ω 预留</text>
+  </g>
+  <path class="arrow" d="M580 342 H610"/>
+  <g transform="translate(610,285)">
+    <rect class="page io" width="255" height="115" rx="10"/><circle class="num-bg" cx="25" cy="25" r="15"/><text class="num" x="25" y="30" text-anchor="middle">P06</text>
+    <text class="page-title" x="52" y="30">两路 PS/2</text><text class="page-text" x="20" y="58">J3/J4、5V_HOST 分支</text><text class="page-text" x="20" y="79">BSS138 ×4、5V/3V3 上拉</text><text class="page-text" x="20" y="100">开漏拉低 / 释放</text>
+  </g>
+  <path class="arrow" d="M865 342 H895"/>
+  <g transform="translate(895,285)">
+    <rect class="page io" width="255" height="115" rx="10"/><circle class="num-bg" cx="25" cy="25" r="15"/><text class="num" x="25" y="30" text-anchor="middle">P07</text>
+    <text class="page-title" x="52" y="30">RS232</text><text class="page-text" x="20" y="58">MAX3232E charge pump</text><text class="page-text" x="20" y="79">DB9 pin 2/3/5</text><text class="page-text" x="20" y="100">PA8/PA9 TTL 侧</text>
+  </g>
+
+  <!-- row 3 -->
+  <path class="arrow" d="M1022 400 V450"/>
+  <g transform="translate(40,465)">
+    <rect class="page ir" width="255" height="115" rx="10"/><circle class="num-bg" cx="25" cy="25" r="15"/><text class="num" x="25" y="30" text-anchor="middle">P08</text>
+    <text class="page-title" x="52" y="30">共用红外光头</text><text class="page-text" x="20" y="58">TFBS4650 / U12 / Q_IR</text><text class="page-text" x="20" y="79">R_IR、IR_RX_RAW、SD</text><text class="page-text" x="20" y="100">MCP2120 仅可选 DNP</text>
+  </g>
+  <path class="arrow" d="M295 522 H325"/>
+  <g transform="translate(325,465)">
+    <rect class="page io" width="255" height="115" rx="10"/><circle class="num-bg" cx="25" cy="25" r="15"/><text class="num" x="25" y="30" text-anchor="middle">P09</text>
+    <text class="page-title" x="52" y="30">扩展排针</text><text class="page-text" x="20" y="58">I²C / SPI / UART3</text><text class="page-text" x="20" y="79">WCH-Link、VTref、GND</text><text class="page-text" x="20" y="100">上拉、CS 默认状态</text>
+  </g>
+  <path class="arrow" d="M580 522 H610"/>
+  <g transform="translate(610,465)">
+    <rect class="page core" width="255" height="115" rx="10"/><circle class="num-bg" cx="25" cy="25" r="15"/><text class="num" x="25" y="30" text-anchor="middle">P10</text>
+    <text class="page-title" x="52" y="30">OLED 与触摸</text><text class="page-text" x="20" y="58">底层 OLED / I²C</text><text class="page-text" x="20" y="79">PB18 USER 触摸</text><text class="page-text" x="20" y="100">PB22/PB23 复位/BOOT 待确认</text>
+  </g>
+  <path class="arrow" d="M865 522 H895"/>
+  <g transform="translate(895,465)">
+    <rect class="page check" width="255" height="115" rx="10"/><circle class="num-bg" cx="25" cy="25" r="15"/><text class="num" x="25" y="30" text-anchor="middle">P11</text>
+    <text class="page-title" x="52" y="30">测试与 ERC/DRC</text><text class="page-text" x="20" y="58">TP 电源 / 数据 / 红外</text><text class="page-text" x="20" y="79">NC、PWR_FLAG、开漏上拉</text><text class="page-text" x="20" y="100">封装、脚序、机械包络</text>
+  </g>
+
+  <g transform="translate(40,615)"><rect class="power" width="18" height="12" rx="3"/><text class="legend" x="28" y="11">电源</text><rect class="io" x="85" width="18" height="12" rx="3"/><text class="legend" x="113" y="11">接口</text><rect class="core" x="170" width="18" height="12" rx="3"/><text class="legend" x="198" y="11">核心/用户</text><rect class="ir" x="285" width="18" height="12" rx="3"/><text class="legend" x="313" y="11">红外</text><rect class="check" x="380" width="18" height="12" rx="3"/><text class="legend" x="408" y="11">验收</text></g>
+</svg>

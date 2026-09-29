@@ -194,3 +194,8 @@ API 可以取得当前页 PNG 渲染用于复查；当前 Gateway 下 PDF 导出
 1. 新增 `docs/hardware/schematic-design-guide.md`，将 Rev B-IR 提案拆成 P00–P11 多页原理图绘制顺序，并为电源、USB-C/USB-A、两路 PS/2、RS232、共用红外光头、I²C/SPI/UART3/WCH-Link、OLED/触摸和测试点分别列出网络名、引脚连接、默认状态与待确认项。
 2. 指南明确 BQ24074、TPS63031、TPS61023、TPS2553、MAX3232E、BSS138、TFBS4650、SN74LVC2G157 和可选 MCP2120 不能只用方框替代，必须按最终料号数据手册补齐电容、限流、使能、开漏上拉、DNP 和安全状态。
 3. 更新硬件索引、根 README 和阅读顺序；固件源文件及此前尚未完成的 Rev B 原理图/PCB 工作保持不变。
+
+## 2026-09-29 原理图指南 SVG 示意图
+
+1. 在 `docs/hardware/schematic-guide/` 新增六张 SVG：P00–P11 分页、电源树、USB/RS232、PS/2 双向电平转换、共用红外光头、I²C/SPI/UART3/WCH-Link/触摸。
+2. 将六张图嵌入原理图绘制指南对应章节，并通过 SVG XML 解析和本地 PNG 渲染复核文字、模块边界、箭头和网络标签；修正了红外控制线、PS/2 5 V 上拉和扩展排针图中的重叠。

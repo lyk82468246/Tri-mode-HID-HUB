@@ -1,0 +1,45 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1300" height="760" viewBox="0 0 1300 760">
+  <title>I2C、SPI、UART3、WCH-Link 与底层 OLED/触摸扩展示意</title>
+  <desc>显示 CH582M 扩展信号到板边直角排母、OLED 和触摸电极的原理图分组。</desc>
+  <defs>
+    <style>
+      .bg{fill:#f8fafc}.title{font:700 25px "Microsoft YaHei",sans-serif;fill:#172033}.sub{font:14px "Microsoft YaHei",sans-serif;fill:#526071}
+      .mcu{fill:#edf8ef;stroke:#5a9d72;stroke-width:2}.headr{fill:#eaf4ff;stroke:#5790c7;stroke-width:2}.user{fill:#fff4df;stroke:#d99438;stroke-width:2}.touch{fill:#fff0f1;stroke:#c56f79;stroke-width:2}.note{fill:#fff;stroke:#c8d1dc;stroke-width:1.4;stroke-dasharray:5 4}
+      .head{font:700 17px "Microsoft YaHei",sans-serif;fill:#172033}.text{font:13px "Microsoft YaHei",sans-serif;fill:#526071}.net{font:700 13px "Consolas",monospace;fill:#2e638f}.wire{fill:none;stroke:#3e78aa;stroke-width:3;marker-end:url(#arrow)}.ctrl{fill:none;stroke:#9c5b8e;stroke-width:2.4;stroke-dasharray:6 5;marker-end:url(#arrow-ctrl)}.pin{font:12px "Consolas",monospace;fill:#526071}
+    </style>
+    <marker id="arrow" markerWidth="9" markerHeight="9" refX="8" refY="4.5" orient="auto"><path d="M0,0 L9,4.5 L0,9 Z" fill="#3e78aa"/></marker>
+    <marker id="arrow-ctrl" markerWidth="9" markerHeight="9" refX="8" refY="4.5" orient="auto"><path d="M0,0 L9,4.5 L0,9 Z" fill="#9c5b8e"/></marker>
+  </defs>
+  <rect class="bg" width="1300" height="760"/>
+  <text class="title" x="40" y="43">P09 / P10 扩展、OLED 与触摸：把物理接口和复用约束画出来</text>
+  <text class="sub" x="40" y="70">板边排针用明确脚序；OLED 与触摸的物理位置写在装配备注，不把机械翻面误画成电气反相。</text>
+
+  <g transform="translate(40,125)">
+    <rect class="mcu" width="300" height="500" rx="14"/><text class="head" x="150" y="31" text-anchor="middle">U1 CH582M</text>
+    <text class="text" x="20" y="70">PB20：I2C_SDA（RB_PIN_I2C=1）</text><text class="text" x="20" y="96">PB21：I2C_SCL</text>
+    <text class="text" x="20" y="176">PA12：SPI_CS_N</text><text class="text" x="20" y="202">PA13：SPI_SCK</text><text class="text" x="20" y="228">PA14：SPI_MOSI</text><text class="text" x="20" y="254">PA15：SPI_MISO</text>
+    <text class="text" x="20" y="350">PA5：UART_TTL_TX</text><text class="text" x="20" y="376">PA4：UART_TTL_RX</text>
+    <text class="text" x="20" y="428">PB15：WCH_TCK</text><text class="text" x="20" y="454">PB14：WCH_TIO</text>
+    <text class="text" x="20" y="480">PB18：USER_N 触摸</text>
+  </g>
+
+  <g transform="translate(470,105)"><rect class="headr" width="300" height="130" rx="12"/><text class="head" x="150" y="30" text-anchor="middle">J7 I²C / OLED 1×4</text><text class="text" x="18" y="60">1 GND；2 3V3；3 SCL；4 SDA</text><text class="text" x="18" y="84">SCL/SDA：2.2–4.7 kΩ → 3V3</text><text class="text" x="18" y="108">OLED RESET/INT 待确认脚位</text></g>
+  <path class="wire" d="M340 195 H470"/><path class="wire" d="M340 221 H450 V205 H470"/><text class="net" x="355" y="180">I2C</text>
+  <g transform="translate(850,105)"><rect class="user" width="380" height="130" rx="12"/><text class="head" x="190" y="30" text-anchor="middle">底层 OLED</text><text class="text" x="20" y="60">与 J7 共用 I²C 总线</text><text class="text" x="20" y="84">电压/背光/RESET 以最终模块手册为准</text><text class="text" x="20" y="108">FPC、屏幕 z 高度和电池禁压区另做机械检查</text></g>
+  <path class="wire" d="M770 170 H850"/>
+
+  <g transform="translate(470,275)"><rect class="headr" width="300" height="150" rx="12"/><text class="head" x="150" y="30" text-anchor="middle">J8 SPI0 2×4</text><text class="text" x="18" y="59">1 3V3；2 GND；3 SCK；4 GND</text><text class="text" x="18" y="83">5 MOSI；6 MISO；7 CS#；8 GND</text><text class="text" x="18" y="107">CS#：10 kΩ 上拉到 3V3</text><text class="text" x="18" y="131">当前基线 SPI Mode 0</text></g>
+  <path class="wire" d="M340 301 H470"/><path class="wire" d="M340 327 H450 V327 H470"/><path class="wire" d="M340 353 H440 V353 H470"/><path class="wire" d="M340 379 H430 V379 H470"/><text class="net" x="355" y="410">SPI0</text>
+  <g transform="translate(850,275)"><rect class="note" width="380" height="150" rx="12"/><text class="head" x="18" y="30">SPI 画图提醒</text><text class="text" x="18" y="60">J8 的 1/3/5/7 与 2/4/6/8 列顺序</text><text class="text" x="18" y="84">必须与最终排母 PCB-side 脚号一致</text><text class="text" x="18" y="108">不用的外设 CS 拉高，禁止上电误选</text><text class="text" x="18" y="132">不要把 SPI1 复用到 PS/2 PA0–PA2</text></g>
+
+  <g transform="translate(470,465)"><rect class="headr" width="300" height="115" rx="12"/><text class="head" x="150" y="30" text-anchor="middle">J10 UART3 1×4</text><text class="text" x="18" y="59">1 GND；2 3V3；3 TX；4 RX</text><text class="text" x="18" y="83">PA5/PA4，3.3 V TTL，不是 RS232</text></g>
+  <path class="wire" d="M340 475 H470"/><path class="wire" d="M340 501 H450 V535 H470"/><text class="net" x="355" y="458">UART3</text>
+
+  <g transform="translate(850,465)"><rect class="headr" width="380" height="115" rx="12"/><text class="head" x="190" y="30" text-anchor="middle">J9 WCH-Link 2×3</text><text class="text" x="18" y="59">1 VTref；2 GND；3 TCK；4 TIO</text><text class="text" x="18" y="83">5 RESET_N；6 GND</text></g>
+  <path class="wire" d="M340 553 H390 V440 H820 V510 H850"/><path class="wire" d="M340 579 H405 V450 H810 V530 H850"/><text class="net" x="560" y="432">WCH_TCK / WCH_TIO</text>
+
+  <g transform="translate(850,625)"><rect class="touch" width="380" height="80" rx="12"/><text class="head" x="190" y="29" text-anchor="middle">底层触摸电极</text><text class="text" x="18" y="55">PB18 USER 已确认</text><text class="text" x="18" y="75">PB22 BOOT / PB23 RESET：先确认 WCH 触摸复用</text></g>
+  <path class="ctrl" d="M340 615 H800 V665 H850"/><text class="pin" x="420" y="607">USER_N：远离电池、SW、晶振和天线</text>
+
+  <g transform="translate(40,640)"><rect class="note" width="740" height="80" rx="10"/><text class="head" x="18" y="29">电气规则</text><text class="text" x="18" y="55">I²C 是开漏总线，两根线各自上拉；UART3/J10 仅为 3.3 V TTL；WCH-Link VTref 只作参考，不让调试器 5 V 反灌。</text></g>
+</svg>

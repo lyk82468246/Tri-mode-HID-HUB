@@ -1,0 +1,58 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1300" height="700" viewBox="0 0 1300 700">
+  <title>Rev B-IR 电源树原理图示意</title>
+  <desc>USB-C VBUS_RAW 经过 BQ24074 形成 SYS 和 BAT，再由 TPS63031、TPS61023、TPS2553 产生 3V3、5V_HOST 和 VBUS_HOST。</desc>
+  <defs>
+    <style>
+      .bg{fill:#f8fafc}.title{font:700 25px "Microsoft YaHei",sans-serif;fill:#172033}.sub{font:14px "Microsoft YaHei",sans-serif;fill:#526071}
+      .blk{fill:#fff;stroke:#66758c;stroke-width:2}.power{fill:#fff3df;stroke:#d58b2d;stroke-width:2}.mcu{fill:#edf8ef;stroke:#5a9d72;stroke-width:2}.port{fill:#eaf4ff;stroke:#5790c7;stroke-width:2}.note{fill:#fff;stroke:#c8d1dc;stroke-width:1.4;stroke-dasharray:5 4}
+      .head{font:700 17px "Microsoft YaHei",sans-serif;fill:#172033}.text{font:13px "Microsoft YaHei",sans-serif;fill:#526071}.net{font:700 13px "Consolas",monospace;fill:#9a4e16}.pin{font:12px "Consolas",monospace;fill:#526071}.wire{fill:none;stroke:#c06d19;stroke-width:3;marker-end:url(#arrow)}.wire2{fill:none;stroke:#2b7c5a;stroke-width:3;marker-end:url(#arrow)}.branch{fill:none;stroke:#c06d19;stroke-width:3}.gnd{stroke:#3e4b60;stroke-width:2}.tp{fill:#fff;border:1px solid #ad5b1f;stroke:#ad5b1f;stroke-width:1.5}
+    </style>
+    <marker id="arrow" markerWidth="9" markerHeight="9" refX="8" refY="4.5" orient="auto"><path d="M0,0 L9,4.5 L0,9 Z" fill="#c06d19"/></marker>
+  </defs>
+  <rect class="bg" width="1300" height="700"/>
+  <text class="title" x="42" y="42">P00–P03 电源树：先画电源，再接外设</text>
+  <text class="sub" x="42" y="69">橙色为电源路径；绿色为 3V3 逻辑域。每个电源转换器旁边都应放最终料号要求的输入/输出电容和测试点。</text>
+
+  <!-- input -->
+  <g transform="translate(45,170)">
+    <rect class="port" width="155" height="130" rx="10"/><text class="head" x="78" y="30" text-anchor="middle">J1 USB-C</text><text class="text" x="18" y="58">VBUS A4/A9/B4/B9</text><text class="text" x="18" y="79">CC1/CC2：5.1 kΩ Rd</text><text class="text" x="18" y="100">D+/D−、ESD、SBU NC</text>
+  </g>
+  <path class="wire" d="M200 235 H250"/><text class="net" x="205" y="220">VBUS_RAW</text>
+  <rect class="tp" x="214" y="245" width="28" height="18" rx="4"/><text class="pin" x="228" y="258" text-anchor="middle">TP</text>
+
+  <!-- charger -->
+  <g transform="translate(250,125)">
+    <rect class="power" width="255" height="220" rx="12"/><text class="head" x="127" y="30" text-anchor="middle">U2 BQ24074</text><text class="text" x="20" y="62">IN ← VBUS_RAW</text><text class="text" x="20" y="84">OUT → SYS（4.7–47 µF）</text><text class="text" x="20" y="106">BAT → J6（4.7–47 µF）</text><text class="text" x="20" y="128">TS / CE / EN1 / EN2</text><text class="text" x="20" y="150">CHG# / PGOOD 开漏</text><text class="text" x="20" y="172">ISET / ILIM / ITERM / TMR</text><text class="pin" x="20" y="200">R 值按数据手册公式计算</text>
+  </g>
+  <path class="wire" d="M505 210 H570"/><text class="net" x="515" y="195">SYS</text>
+  <path class="wire" d="M378 345 V415"/><text class="net" x="394" y="390">BAT</text>
+  <g transform="translate(285,425)"><rect class="port" width="185" height="95" rx="10"/><text class="head" x="92" y="29" text-anchor="middle">J6 1S 电池</text><text class="text" x="20" y="56">BAT+ / GND</text><text class="text" x="20" y="77">NTC 独立引出</text></g>
+  <path class="gnd" d="M378 520 v35 m-18 0 h36 m-12 8 h24 m-12 8 h12"/>
+
+  <!-- SYS bus -->
+  <path class="branch" d="M570 210 V485"/><circle cx="570" cy="210" r="5" fill="#c06d19"/><circle cx="570" cy="320" r="5" fill="#c06d19"/><circle cx="570" cy="485" r="5" fill="#c06d19"/>
+  <text class="net" x="542" y="270" transform="rotate(-90 542 270)">SYS</text>
+
+  <!-- 3v3 -->
+  <g transform="translate(620,105)">
+    <rect class="power" width="240" height="150" rx="12"/><text class="head" x="120" y="31" text-anchor="middle">U3 TPS63031</text><text class="text" x="18" y="62">VIN/VINA ← SYS</text><text class="text" x="18" y="84">L1/L2：按参考布局</text><text class="text" x="18" y="106">EN、PS/SYNC 有默认电平</text><text class="text" x="18" y="128">VOUT → 3V3</text></g>
+  <path class="wire" d="M570 180 H620"/><path class="wire2" d="M860 180 H930"/><text class="net" x="870" y="164">3V3</text>
+  <g transform="translate(930,105)"><rect class="mcu" width="285" height="150" rx="12"/><text class="head" x="142" y="31" text-anchor="middle">U1 CH582M 3.3 V 域</text><text class="text" x="20" y="62">VIO33 / USB / GPIO / RF</text><text class="text" x="20" y="84">去耦：100 nF + 局部储能</text><text class="text" x="20" y="106">TP_3V3：靠近负载和 DCDC</text><text class="pin" x="20" y="130">不要把 CH_VDCI/VINTA 当外部电源</text></g>
+  <rect class="tp" x="870" y="188" width="28" height="18" rx="4"/><text class="pin" x="884" y="201" text-anchor="middle">TP</text>
+
+  <!-- 5v host -->
+  <g transform="translate(620,360)">
+    <rect class="power" width="240" height="160" rx="12"/><text class="head" x="120" y="31" text-anchor="middle">U4 TPS61023</text><text class="text" x="18" y="62">VIN ← SYS</text><text class="text" x="18" y="84">SW ↔ L / VOUT</text><text class="text" x="18" y="106">FB 分压或固定 5 V 后缀</text><text class="text" x="18" y="128">EN 有上电默认状态</text></g>
+  <path class="wire" d="M570 320 H600 V420 H620"/>
+  <path class="wire" d="M860 420 H930"/><text class="net" x="865" y="405">5V_HOST</text>
+  <g transform="translate(930,340)"><rect class="power" width="245" height="200" rx="12"/><text class="head" x="122" y="31" text-anchor="middle">U5 TPS2553</text><text class="text" x="18" y="62">IN ← 5V_HOST</text><text class="text" x="18" y="84">OUT → VBUS_HOST</text><text class="text" x="18" y="106">EN ← HOST_EN/PB6</text><text class="text" x="18" y="128">FAULT# → PB5 + 上拉</text><text class="text" x="18" y="150">ILIM → R_ILIM</text><text class="text" x="18" y="172">输入/输出去耦与热区</text></g>
+  <path class="wire" d="M1175 440 H1230"/><text class="net" x="1100" y="425">VBUS_HOST</text>
+  <g transform="translate(1228,395)"><rect class="port" width="55" height="90" rx="8"/><text class="head" x="27" y="31" text-anchor="middle" font-size="13">J2</text><text class="text" x="27" y="53" text-anchor="middle" font-size="11">USB-A</text><text class="text" x="27" y="71" text-anchor="middle" font-size="11">pin 1</text></g>
+  <rect class="tp" x="1180" y="450" width="28" height="18" rx="4"/><text class="pin" x="1194" y="463" text-anchor="middle">TP</text>
+
+  <!-- branches -->
+  <path class="wire" d="M860 500 H900 V595 H900"/><text class="net" x="760" y="585">5V_PS2_K/M</text><text class="text" x="920" y="600">由 5V_HOST 分支；需要逐口关断时再加负载开关</text>
+  <path class="gnd" d="M85 560 v25 m-18 0 h36 m-12 8 h24 m-12 8 h12"/><text class="text" x="50" y="625">所有模块回到 GND；DCDC 大电流回路不要通过细长信号线。</text>
+
+  <g transform="translate(45,630)"><rect class="note" width="1170" height="40" rx="8"/><text class="text" x="18" y="25">关键检查：BAT 只进 BQ24074 BAT；SYS 才驱动 3V3/5V 升压；VBUS_HOST 只到 USB-A；PB16 是 PGOOD 数字输入，不是 ADC。</text></g>
+</svg>

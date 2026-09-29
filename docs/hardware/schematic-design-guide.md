@@ -39,6 +39,10 @@
 
 推荐每页从左到右按“连接器/电源入口 → 保护/转换 → MCU 侧”排布；电源从上到下，地符号统一朝下。不要用文字重叠来代替网络连接，也不要把一个网络的多个功能塞进同一个隐藏端口。
 
+![P00–P11 原理图分页与绘制顺序](schematic-guide/schematic-pages.svg)
+
+图 1：先按功能页建立边界，再在每页内完成“入口 → 保护/转换 → MCU”的连接。图中的页号与本指南后续章节一致。
+
 ## 2. 网络命名和全局规则
 
 建议直接使用以下网络名。名称一旦进入原理图和 PCB，不要在不同页面改写大小写或后缀。
@@ -102,6 +106,10 @@
 J1 所有 VBUS 引脚并到 `VBUS_RAW`，所有 GND 引脚和屏蔽层按最终 ESD 方案处理。CC1、CC2 各放 5.1 kΩ Rd 到 GND，SBU 保持 NC。VBUS 入口依次放保险丝/限流件（若最终方案需要）、TVS 和输入电容，再进入 U2 BQ24074 的 IN。USB-C 的 5 V 不能直接接 U1 或 3V3。
 
 `USB_C_VBUS_ADC` 由 `VBUS_RAW` 分压得到，分压上端电阻必须按 PA7 的 ADC 最大输入和功耗计算，下端接 GND，分压中点放 1–10 nF RC；在 MCU 采样前关闭不需要的数字上拉。
+
+![Rev B-IR 电源树](schematic-guide/power-tree.svg)
+
+图 2：电源树的原理图级连接关系。`SYS` 是 power-path 系统电源，`BAT` 是电芯端，`5V_HOST` 同时服务 PS/2 和 USB-A 限流开关。
 
 ### 4.2 U2 BQ24074 充电和 power-path
 
@@ -174,6 +182,10 @@ U5 TPS2553 是 USB-A VBUS 的受控限流开关：
 - `HOST_EN` 默认低，先开 TPS2553，再允许 USB Host 控制器枚举；`HOST_FAULT_N` 进入 PB5。
 - USB-A 5 V 电流预算必须同时满足 TPS61023、TPS2553 热、USB 负载和电池 power-path；在 P03 放“最大连续电流/峰值电流”备注。
 
+![USB 设备、USB 主机和 RS232 信号链](schematic-guide/usb-rs232.svg)
+
+图 3：USB-C 设备口、USB-A 主机口和 DB9/RS232 三条独立链路。USB 差分线经过低电容 ESD；DB9 只连接 MAX3232E 的 RS232 侧。
+
 ## 6. 两路 PS/2
 
 每个 Mini-DIN-6 都使用同一拓扑，不能只复制连接器而漏掉独立供电和电平转换：
@@ -190,6 +202,10 @@ U5 TPS2553 是 USB-A VBUS 的受控限流开关：
 每路信号使用两颗 BSS138：MCU 侧接 3V3，上拉 2.2–4.7 kΩ；PS/2 侧接 5 V，上拉 2.2–4.7 kΩ。MOS 栅极接 3V3，源漏按双向开漏电平转换参考拓扑连接。MCU PA0/PA1 为键盘 CLK/DATA，PA2/PA3 为鼠标 CLK/DATA。
 
 PS/2 信号只能“拉低或释放”，禁止 CH582M GPIO 推挽输出高电平。每根线可预留 33–100 Ω 串联电阻和连接器侧 ESD；不要在 5 V 总线掉电时让外部上拉通过 BSS138 反向给 3V3 供电。正式画图时用两个独立的 `5V_PS2_*` 电源标签，方便后续分别限流或关断。
+
+![PS/2 双向电平转换](schematic-guide/ps2-level-shifter.svg)
+
+图 4：键盘口的一条完整 DATA/CLK 电平转换示意；鼠标口复制相同拓扑并替换网络名和 MCU 引脚。
 
 ## 7. RS232：MAX3232E 和 DB9
 
@@ -227,6 +243,10 @@ DB9 侧可放低电容 RS232 TVS，器件尽量靠近连接器。DB9 引脚绝�
 | 7 | GND | `GND`，就近回流 |
 
 TFBS4650 内部已有 IRED、PIN 光电二极管和接收 ASIC。U9 RXD 是共用接收原始脉冲节点，不是 TSOP 那种已解调的 38 kHz 包络；因此遥控学习必须在 MCU 中记录脉宽/边沿，再恢复协议。
+
+![共用红外光头与模式选择](schematic-guide/shared-ir.svg)
+
+图 5：U9 的 TXD/RXD/SD、U12 模式选择、Q_IR 低侧电流汇、R_IR 和可选 MCP2120 的连接关系。标准 IrDA 与遥控发射共用一个光窗，但同一时刻只允许一个 TX 驱动源。
 
 ### 8.2 遥控电流支路
 
@@ -283,6 +303,10 @@ PA5=`UART_TTL_TX`、PA4=`UART_TTL_RX`，J10 1×4：1 GND、2 3V3、3 TX、4 RX�
 ### 9.4 WCH-Link（J9）
 
 J9 2×3：1 `3V3_VTref`、2 GND、3 `WCH_TCK`、4 `WCH_TIO`、5 `RESET_N`、6 GND。VTref 只作电平参考；原理图备注“目标板自行供电，禁止调试器 5 V 反灌”。J9 放在板边，丝印明确 pin 1 和插拔方向。
+
+![I²C、SPI、UART3、WCH-Link 与触摸](schematic-guide/expansion-touch.svg)
+
+图 6：扩展排针和底层用户界面的信号分组。PB22/PB23 在触摸复用确认前仍保持 BOOT/RESET 专用功能。
 
 ## 10. OLED、底层触摸和机械相关电气规则
 

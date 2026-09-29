@@ -23,6 +23,7 @@
 | 文件 | 用途 |
 |---|---|
 | [schematic-design-guide.md](schematic-design-guide.md) | 原理图逐页绘制指南；包含电源、USB、PS/2、RS232、红外、扩展口、触摸和 ERC/DRC 清单 |
+| [schematic-guide/*.svg](schematic-guide/) | 与指南逐节对应的分页、电源、USB/RS232、PS/2、共用红外、扩展/触摸示意图 |
 | [pin-allocation-revb.csv](pin-allocation-revb.csv) | 可导入表格工具的引脚分配，UTF-8 BOM |
 | [placement-revb.json](placement-revb.json) | 顶层电气预留区、侧插排母、底层用户区、四孔和机械盆地坐标；毫米，原点左上，x 向右、y 向下 |
 | [concept-checks.json](concept-checks.json) | 引脚完整性、预留区边界/重叠、四孔/机械图形 XML 和扇出方向比较结果 |
