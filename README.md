@@ -7,7 +7,7 @@
 | 内容 | 入口 | 状态 |
 |---|---|---|
 | 硬件设计资料 | [硬件文档索引](docs/hardware/README.md) | 区分 Rev A 实际记录、Rev B 电气提案、Rev B-M 机械层叠与 Rev B-IR 单光电收发修订 |
-| 信用卡尺寸 PCB 规划 | [Rev B/M/IR 设计说明](docs/hardware/pcb-design-study.md)、[顶层布局](docs/hardware/pcb-concept-revb.svg)、[底层界面](docs/hardware/pcb-bottom-revb.svg)、[物理剖面](docs/hardware/pcb-stack-revb.svg)、[引脚表](docs/hardware/pin-allocation-revb.md) | 2026-09-28 提案；云端原理图待同步，单模块红外仍待固件迁移和实测 |
+| 信用卡尺寸 PCB 规划 | [原理图绘制指南](docs/hardware/schematic-design-guide.md)、[Rev B/M/IR 设计说明](docs/hardware/pcb-design-study.md)、[顶层布局](docs/hardware/pcb-concept-revb.svg)、[底层界面](docs/hardware/pcb-bottom-revb.svg)、[物理剖面](docs/hardware/pcb-stack-revb.svg)、[引脚表](docs/hardware/pin-allocation-revb.md) | 2026-09-29 提案；云端原理图待同步，单模块红外仍待固件迁移和实测 |
 | 首版原理图记录 | [Rev A 引脚规划](docs/pin-plan.md)、[设计取舍](docs/design-decisions.md) | 历史记录，包含待整改项目 |
 | 固件实现与架构 | [固件说明](docs/firmware.md)、[架构与里程碑](docs/firmware-architecture.md) | M1–M6 代码已落地 |
 | 实测验收 | [M6 验证清单](docs/m6-validation.md)、[Rev B 固件测试行动指南](docs/revb-firmware-test-plan.md) | 开发板及 PCB 物理验收待完成 |
@@ -74,7 +74,7 @@ J6 按“自带保护板的 1S 锂电池”建模。充电电流、终止电流�
 
 ## 下一步
 
-1. 在嘉立创 EDA 内重新打开当前 Rev A，做 ERC、封装/引脚号、库型号和数据手册逐项复核。
+1. 按 [`docs/hardware/schematic-design-guide.md`](docs/hardware/schematic-design-guide.md) 在嘉立创 EDA 内重画/整理 Rev B 原理图，做 ERC、封装/引脚号、库型号和数据手册逐项复核。
 2. 确认 USB 主从控制器映射、CH582M 官方参考布局、电源开关与天线 keep-out。
 3. 确认 PS/2 插座实际针脚定义、RS232 DB9 的 DTE/DCE 角色和 OLED 接插件方向。
 4. 依据确认后的电流预算与电池型号修订充电/升压参数，再开始 PCB placement/routing。

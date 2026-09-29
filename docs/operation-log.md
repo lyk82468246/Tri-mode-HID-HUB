@@ -188,3 +188,9 @@ API 可以取得当前页 PNG 渲染用于复查；当前 Gateway 下 PDF 导出
 2. 将红外硬件提案从“TFBS4711 + MCP2120 + TSOP38438 + 独立 940 nm LED”改为“带 IRED 阴极的 TFBS4650 级单个共用光模块 + Q_IR/R_IR 遥控电流汇 + 可选 DNP MCP2120 + U12 模式选择器”。PB0/PWM6 负责遥控载波，PB1 捕获共用 RXD 原始脉冲，PB7/PB4 保留 MCU-only IrDA 旁路。
 3. 同步更新 `docs/hardware/` 的引脚表、坐标 JSON、顶层布局图、生成脚本和设计说明；明确 TFBS4650 内置 IRED 峰值约 870–910 nm，不能把它误标成 940 nm，若需要 940 nm 必须在 IREDC 支路另选经验证的外部发光器并重新做限流、热、光窗和眼安全评估。TFBS4711 仅保留为 IrDA-only 紧凑备选。
 4. 当前运行固件仍是旧的 MCP2120/TSOP/独立 LED 原型；单模块硬件需要后续迁移 RXD 原始脉冲学习、U12/Q_IR 模式仲裁和 MCU-only IrDA 状态机后再做开发板实测。
+
+## 2026-09-29 Rev B 原理图绘制指南
+
+1. 新增 `docs/hardware/schematic-design-guide.md`，将 Rev B-IR 提案拆成 P00–P11 多页原理图绘制顺序，并为电源、USB-C/USB-A、两路 PS/2、RS232、共用红外光头、I²C/SPI/UART3/WCH-Link、OLED/触摸和测试点分别列出网络名、引脚连接、默认状态与待确认项。
+2. 指南明确 BQ24074、TPS63031、TPS61023、TPS2553、MAX3232E、BSS138、TFBS4650、SN74LVC2G157 和可选 MCP2120 不能只用方框替代，必须按最终料号数据手册补齐电容、限流、使能、开漏上拉、DNP 和安全状态。
+3. 更新硬件索引、根 README 和阅读顺序；固件源文件及此前尚未完成的 Rev B 原理图/PCB 工作保持不变。

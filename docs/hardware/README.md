@@ -4,12 +4,13 @@
 
 ## 阅读顺序
 
-1. [设计说明与资料来源](pcb-design-study.md)：接口方位、0°/±45° 比较、机械预算、电源与 RF 约束。
-2. [顶层布局 SVG](pcb-concept-revb.svg)：85.60 × 53.98 mm 顶视图，只含顶层器件、单个共用红外收发头、Q_IR/R_IR、可选 MCP2120/TX 模式选择器、侧插排母和四角安装孔；[PNG 预览](pcb-concept-revb.png)便于浏览。
-3. [底层用户界面 SVG](pcb-bottom-revb.svg) / [PNG 预览](pcb-bottom-revb.png)：OLED、三块触摸电极、FPC、孔环和电池投影单独绘制。
-4. [物理层叠剖面](pcb-stack-revb.svg) / [PNG 预览](pcb-stack-revb.png)：CH582M 面朝盆地、底层屏幕/触摸面朝用户、3D 打印底板与四面墙的非比例剖面。
-5. [完整引脚表](pin-allocation-revb.md)：48 个引脚、EP、接插件脚序、复用约束和 Rev A 迁移清单。
-6. [引脚方向 SVG](pinout-revb.svg) / [PNG](pinout-revb.png)：按照 CH582M 实际的上/下 10 脚、左/右 14 脚封装绘制。
+1. [原理图绘制指南](schematic-design-guide.md)：按页面、模块、网络、引脚、默认状态和 ERC/DRC 检查逐项绘制，作为进入 EDA 的主工作指令。
+2. [设计说明与资料来源](pcb-design-study.md)：接口方位、0°/±45° 比较、机械预算、电源与 RF 约束。
+3. [顶层布局 SVG](pcb-concept-revb.svg)：85.60 × 53.98 mm 顶视图，只含顶层器件、单个共用红外收发头、Q_IR/R_IR、可选 MCP2120/TX 模式选择器、侧插排母和四角安装孔；[PNG 预览](pcb-concept-revb.png)便于浏览。
+4. [底层用户界面 SVG](pcb-bottom-revb.svg) / [PNG 预览](pcb-bottom-revb.png)：OLED、三块触摸电极、FPC、孔环和电池投影单独绘制。
+5. [物理层叠剖面](pcb-stack-revb.svg) / [PNG 预览](pcb-stack-revb.png)：CH582M 面朝盆地、底层屏幕/触摸面朝用户、3D 打印底板与四面墙的非比例剖面。
+6. [完整引脚表](pin-allocation-revb.md)：48 个引脚、EP、接插件脚序、复用约束和 Rev A 迁移清单。
+7. [引脚方向 SVG](pinout-revb.svg) / [PNG](pinout-revb.png)：按照 CH582M 实际的上/下 10 脚、左/右 14 脚封装绘制。
 
 ![Rev B PCB 概念布局](pcb-concept-revb.png)
 
@@ -21,6 +22,7 @@
 
 | 文件 | 用途 |
 |---|---|
+| [schematic-design-guide.md](schematic-design-guide.md) | 原理图逐页绘制指南；包含电源、USB、PS/2、RS232、红外、扩展口、触摸和 ERC/DRC 清单 |
 | [pin-allocation-revb.csv](pin-allocation-revb.csv) | 可导入表格工具的引脚分配，UTF-8 BOM |
 | [placement-revb.json](placement-revb.json) | 顶层电气预留区、侧插排母、底层用户区、四孔和机械盆地坐标；毫米，原点左上，x 向右、y 向下 |
 | [concept-checks.json](concept-checks.json) | 引脚完整性、预留区边界/重叠、四孔/机械图形 XML 和扇出方向比较结果 |
@@ -52,4 +54,4 @@ node -e "const sharp=require('sharp'); Promise.all(['pcb-concept-revb','pcb-bott
 - [Rev A 设计取舍](../design-decisions.md)：历史原理图、电源及接口设计记录。
 - [操作日志](../operation-log.md)：设计、整改和固件里程碑时间线。
 
-进入实际 PCB 前：将 Rev B 提案逐项同步到原理图，锁定连接器/天线/电池及板厂层叠，复核电源预算与封装，然后运行 ERC 并建立真实 PCB 布局布线工程。
+进入实际 PCB 前：先按[原理图绘制指南](schematic-design-guide.md)将 Rev B 提案逐项同步到原理图，锁定连接器/天线/电池及板厂层叠，复核电源预算与封装，然后运行 ERC 并建立真实 PCB 布局布线工程。
