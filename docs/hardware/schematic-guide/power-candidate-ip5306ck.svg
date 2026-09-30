@@ -1,0 +1,91 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1400" height="780" viewBox="0 0 1400 780">
+  <title>IP5306-CK 与 AMS1117 条件性候选电源示意</title>
+  <desc>USB-C 输入、1S 电池和 IP5306-CK 组成 5V 总线，再由 TPS2553 给 USB-A 限流、由 AMS1117 候选产生 3V3。CK 常开功能和最终料号必须用厂家资料及样品确认。</desc>
+  <defs>
+    <style>
+      .bg{fill:#f8fafc}.title{font:700 26px "Microsoft YaHei",sans-serif;fill:#172033}.sub{font:14px "Microsoft YaHei",sans-serif;fill:#526071}
+      .power{fill:#fff3df;stroke:#d58b2d;stroke-width:2}.logic{fill:#edf8ef;stroke:#5a9d72;stroke-width:2}.port{fill:#eaf4ff;stroke:#5790c7;stroke-width:2}.warn{fill:#fff0f0;stroke:#cc4b4b;stroke-width:2}.note{fill:#fff;stroke:#c8d1dc;stroke-width:1.4;stroke-dasharray:6 4}
+      .head{font:700 18px "Microsoft YaHei",sans-serif;fill:#172033}.text{font:13px "Microsoft YaHei",sans-serif;fill:#526071}.small{font:12px "Microsoft YaHei",sans-serif;fill:#526071}.net{font:700 13px "Consolas",monospace;fill:#9a4e16}.wire{fill:none;stroke:#c06d19;stroke-width:4;marker-end:url(#arrow)}.wire2{fill:none;stroke:#2b7c5a;stroke-width:4;marker-end:url(#arrow)}.warnline{fill:none;stroke:#cc4b4b;stroke-width:2.5;stroke-dasharray:7 5;marker-end:url(#warnarrow)}
+    </style>
+    <marker id="arrow" markerWidth="10" markerHeight="10" refX="9" refY="5" orient="auto"><path d="M0,0 L10,5 L0,10 Z" fill="#c06d19"/></marker>
+    <marker id="warnarrow" markerWidth="10" markerHeight="10" refX="9" refY="5" orient="auto"><path d="M0,0 L10,5 L0,10 Z" fill="#cc4b4b"/></marker>
+  </defs>
+  <rect class="bg" width="1400" height="780"/>
+  <text class="title" x="42" y="43">条件性候选：IP5306-CK + 3V3 LDO（不等于正式电源树）</text>
+  <text class="sub" x="42" y="70">橙色是 5 V 电源路径，绿色是 3V3 逻辑域；CK“常开”必须以厂家资料和样品测试确认。</text>
+
+  <g transform="translate(45,165)">
+    <rect class="port" width="190" height="135" rx="12"/>
+    <text class="head" x="95" y="31" text-anchor="middle">J1 USB-C</text>
+    <text class="text" x="18" y="61">VBUS → IP53_VIN</text>
+    <text class="text" x="18" y="83">CC1/CC2：5.1 kΩ Rd</text>
+    <text class="text" x="18" y="105">入口保护 / CIN</text>
+  </g>
+  <path class="wire" d="M235 232 H300"/><text class="net" x="238" y="216">IP53_VIN</text>
+
+  <g transform="translate(300,120)">
+    <rect class="power" width="350" height="230" rx="12"/>
+    <text class="head" x="175" y="31" text-anchor="middle">U2 IP5306-CK ESOP8</text>
+    <text class="text" x="20" y="66">VIN ← IP53_VIN</text>
+    <text class="text" x="20" y="88">BAT ↔ 1S 受保护电池（4.2 V）</text>
+    <text class="text" x="20" y="110">SW ↔ 按最终资料选定的电感</text>
+    <text class="text" x="20" y="132">VOUT → 5V_IP53</text>
+    <text class="text" x="20" y="154">LED / KEY / VSET 按 CK 资料处理</text>
+    <text class="small" x="20" y="181">标准 IP5306：约 2.1 A 充电、2.4 A 级升压</text>
+    <text class="small" x="20" y="204">CK 常开、引脚和配置：待厂家确认</text>
+  </g>
+  <path class="wire" d="M475 350 V425"/><text class="net" x="490" y="396">BAT</text>
+  <g transform="translate(370,425)">
+    <rect class="port" width="210" height="92" rx="12"/>
+    <text class="head" x="105" y="30" text-anchor="middle">J6 1S 电池</text>
+    <text class="text" x="20" y="58">BAT+ / GND / 保护 / NTC</text>
+  </g>
+
+  <path class="wire" d="M650 235 H710"/><text class="net" x="662" y="219">5V_IP53</text>
+  <g transform="translate(710,155)">
+    <rect class="power" width="245" height="160" rx="12"/>
+    <text class="head" x="122" y="31" text-anchor="middle">U3 AMS1117-3.3</text>
+    <text class="text" x="18" y="65">VIN ← 5V_IP53</text>
+    <text class="text" x="18" y="87">CIN/COUT 靠近引脚</text>
+    <text class="text" x="18" y="109">VOUT → 3V3</text>
+    <text class="small" x="18" y="137">P=(5−3.3)×I3V3；需算温升</text>
+  </g>
+  <path class="wire2" d="M955 235 H1020"/><text class="net" x="965" y="219">3V3</text>
+  <g transform="translate(1020,155)">
+    <rect class="logic" width="315" height="160" rx="12"/>
+    <text class="head" x="157" y="31" text-anchor="middle">CH582M / 3.3 V 外设</text>
+    <text class="text" x="20" y="65">MCU、BLE、OLED、触摸</text>
+    <text class="text" x="20" y="87">MAX3232、I²C/SPI 上拉</text>
+    <text class="text" x="20" y="109">记录最大 I3V3 和 LDO 壳温</text>
+  </g>
+
+  <path class="wire" d="M650 285 H680 V510 H710"/><text class="net" x="660" y="500">5V_IP53</text>
+  <g transform="translate(710,440)">
+    <rect class="power" width="245" height="155" rx="12"/>
+    <text class="head" x="122" y="31" text-anchor="middle">U5 TPS2553</text>
+    <text class="text" x="18" y="65">IN ← 5V_IP53</text>
+    <text class="text" x="18" y="87">EN ← HOST_EN</text>
+    <text class="text" x="18" y="109">FAULT# → MCU</text>
+    <text class="text" x="18" y="131">OUT → VBUS_HOST</text>
+  </g>
+  <path class="wire" d="M955 518 H1020"/><text class="net" x="962" y="502">VBUS_HOST</text>
+  <g transform="translate(1020,440)">
+    <rect class="port" width="315" height="155" rx="12"/>
+    <text class="head" x="157" y="31" text-anchor="middle">USB-A / 两路 PS/2</text>
+    <text class="text" x="20" y="65">USB-A：TPS2553 限 0.5 A</text>
+    <text class="text" x="20" y="87">PS/2：按每路最大电流分支</text>
+    <text class="text" x="20" y="109">共用 5 V 总预算 I5V_CONT</text>
+    <text class="small" x="20" y="133">IP5306 全局保护不替代逐口开关</text>
+  </g>
+
+  <g transform="translate(45,635)">
+    <rect class="warn" width="1290" height="92" rx="12"/>
+    <text class="head" x="20" y="29" fill="#a52b2b">放行条件</text>
+    <text class="text" x="120" y="29">供应商需确认 -CK 专用资料；样板需证明 0–100 mA 低负载连续不关机。</text>
+    <text class="text" x="120" y="53">I5V_CONT = IUSB_A + IPS2_K + IPS2_M + I3V3 + IIR_PEAK_AVG + IOTHER；电池与热设计按最坏值核对。</text>
+    <text class="text" x="120" y="77">IP53_VIN、BAT、5V_IP53、3V3、VBUS_HOST 各放测试点；未通过前不得把 5V_IP53 改名为 SYS。</text>
+  </g>
+  <path class="warnline" d="M475 350 C650 375 840 365 1040 440"/>
+  <path class="warnline" d="M650 238 C690 215 690 105 670 84"/>
+  <text class="small" x="662" y="105" fill="#a52b2b">CK 常开不是标准 IP5306 默认功能</text>
+</svg>

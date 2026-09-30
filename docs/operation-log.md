@@ -213,3 +213,10 @@ API 可以取得当前页 PNG 渲染用于复查；当前 Gateway 下 PDF 导出
 2. 评估发现 IP5305T 在 VOUT 负载持续低于约 45 mA 时约 32 s 后轻载关机，ESOP8 没有 CHG#/PGOOD/EN1/EN2/TS，且 USB-A/PS/2 共用一条 1 A 5 V 总线；AMS1117 从 5 V 降到 3.3 V 还要承担压差和热耗散。
 3. 新增 `docs/hardware/power-management-evaluation.md` 和 `schematic-guide/power-candidate-ip5305t.svg`，把候选接法、总电流/电池电流公式、原型测试和晋级条件写清楚；正式 Rev B 电源树不改，仍为 BQ24074/TPS63031/TPS61023/TPS2553。
 4. 同步更新原理图绘制指南、硬件索引和 README，明确 `5V_IP5` 不得冒充 `SYS`，候选方案若要继续只能另开 `Rev B-P` 并保留 USB-A 独立限流开关。
+
+## 2026-09-30 IP5306-CK / AMS1117 再评估
+
+1. 根据标准 IP5306 资料核对 2.1 A 充电、2.4 A 级 5 V 升压、集成 power-path 和低于约 45 mA 持续约 32 s 的轻载检测；用户提出的 1 A 限流在 USB-A 限 0.5 A、两路 PS/2 各 0.1 A、3V3 约 0.1 A 的约 0.8 A 连续预算下不再作为主要否决点。
+2. 检索发现 `IP5306-CK` 的“常开/5V 常开 2A”主要出现在供应商型号页，未找到英集芯公开的 `-CK` 独立数据表；因此把它定为条件性小样候选，要求厂家资料、完整料号/批次和 0/10/50/100 mA 低负载实测通过后才可替换电源树。
+3. 明确 3V3 不必强制使用 Buck：`5V_IP53 → AMS1117-3.3` 在 `I3V3≤100–150 mA`、铺铜和温升合格时可以成立；200–300 mA 或封闭电池盆地时改低 IQ LDO/Buck，且 AMS1117 不能从 BAT 直接产生稳定 3V3。
+4. 新增 `schematic-guide/power-candidate-ip5306ck.svg`，并同步更新电源评估、原理图绘制指南、PCB 设计说明、硬件索引和 README；正式基线仍为 BQ24074/TPS63031/TPS61023/TPS2553，候选网络使用 `IP53_VIN`、`5V_IP53`，不复用 `SYS`。

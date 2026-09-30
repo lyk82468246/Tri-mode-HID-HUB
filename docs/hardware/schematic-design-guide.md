@@ -6,7 +6,7 @@
 
 **2026-09-30 修订重点**：上一版把 U12 外部逻辑多路器误写成 IrDA/遥控的必需器件，也把 PB18 触摸写成普通上拉输入。本版撤销这两个结论：PB7/TXD0/PWM9 直接接 U9 TXD，由 CH582M 内部复用和固件在 UART0 与 PWM/定时器之间切换；触摸只走 WCH 触摸通道，和红外没有硬件复用关系。U12 不进入基线 BOM。
 
-**2026-09-30 电源评估结论**：IP5305T + AMS1117 可以组成充电宝式的 5 V/3.3 V 原型，但不满足本板正式电源树的低负载常供电、USB-A 逐口限流和 BQ24074 状态脚需求。本指南的正式基线仍是 `BQ24074 → SYS → TPS63031/TPS61023 → TPS2553`；候选方案的计算、原型接法和晋级条件见 [IP5305T + AMS1117 电源方案评估](power-management-evaluation.md)。不要把候选图中的 `5V_IP5` 直接改名为 `SYS`。
+**2026-09-30 电源评估结论**：IP5305T + AMS1117 仍只作为历史原型记录；IP5306-CK + AMS1117 可以进入小样验证，但 `CK` 的常开行为没有公开的厂家独立数据表，尚不能直接替换制造基线。本指南的正式基线仍是 `BQ24074 → SYS → TPS63031/TPS61023 → TPS2553`；候选方案的计算、原理图接法、5 V 预算和放行条件见 [IP5306-CK / AMS1117 电源方案再评估](power-management-evaluation.md)。不要把候选图中的 `5V_IP53` 直接改名为 `SYS`。
 
 ## 0. 先冻结哪些设计决定
 
@@ -18,7 +18,7 @@
 | 红外 | 一个带 IREDC 引出的 TFBS4650 级共用光头 | U9 同时负责 IrDA 和遥控收发；不再并列放 TSOP 或独立 IrDA LED |
 | 遥控发射 | **U9 TXD 直接由 PB7/TXD0/PWM9 驱动** | 同一根线在软件中输出 UART/SIR 或 38 kHz 载波+包络；IREDC/Q_IR/R_IR 只保留为实测不足时的 DNP 增强支路 |
 | IrDA 编码 | MCU 软件 UART/定时器为主 | MCP2120 仅作为 DNP 可选物理层编码器，不能把它当协议栈；不放运行时外部 TX 多路器 |
-| 电源架构 | `VBUS_RAW → BQ24074 → SYS → TPS63031/TPS61023 → TPS2553` | IP5305T + AMS1117 仅为未批准的原型分支；正式原理图不要删除 power-path、5 V 升压或 USB-A 限流开关 |
+| 电源架构 | `VBUS_RAW → BQ24074 → SYS → TPS63031/TPS61023 → TPS2553` | IP5306-CK + LDO 仅为待验证原型分支；正式原理图不要删除 power-path、5 V 升压或 USB-A 限流开关 |
 | 电池 | 1S 受保护锂电池，中央盆地 | J6 只定义 BAT+/GND；NTC 独立焊盘或随电池连接器引出，极性必须在丝印和原理图同时标明 |
 | 机械 | CH582M 顶层面向盆地，OLED/触摸在底层面向用户 | 原理图不表达上下翻转；在装配备注中写明顶层器件高度、光窗、天线和电池禁压区 |
 | 接口 | USB-C 设备、USB-A 主机、DB9 公座、两路 Mini-DIN-6 PS/2、板边直角排母 | 连接器的 mating-face/PCB-side 脚序必须用最终 3D 模型复核 |
@@ -192,6 +192,32 @@ IP5305T 的 ESOP8 只有 `VIN`、`LED1/VSET`、`LED2/VTHS`、`LED3`、`KEY`、`B
 IP5305T 数据表还规定：VOUT 负载持续低于约 45 mA 时会在约 32 s 后进入轻载关机。BLE/OLED/触摸待机若低于此阈值，5 V 和 AMS1117 的 3V3 会被切断；靠约 100 Ω 保持负载会长期浪费约 50 mA。当前产品需要电池状态下持续待机，所以该候选不通过正式设计评审。
 
 在正式原理图中，P00–P03 仍保留 `VBUS_RAW`、`BAT`、`SYS`、`3V3`、`5V_HOST`、`VBUS_HOST` 和 `CHG_N/INPUT_PGOOD_N` 的现有定义；只有当候选方案完成低负载、输入插拔、满载、温升和电源状态机测试后，才另开 `Rev B-P` 重新编号和审查。
+
+### 4.6 IP5306-CK + AMS1117 条件性候选方案
+
+IP5306-CK 可以作为比 IP5305T 更合适的单芯片 1S 充电/5 V 候选，但本节不是把它宣布为已批准替换。公开的标准 IP5306 资料约为 2.1 A 充电、2.4 A 级升压，且标准品仍有低于约 45 mA 持续约 32 s 的轻载关机；`-CK` 的“常开”来自供应商变体信息，必须用厂家资料和样品确认。候选页见 [power-candidate-ip5306ck.svg](schematic-guide/power-candidate-ip5306ck.svg)，总评估见 [IP5306-CK / AMS1117 电源方案再评估](power-management-evaluation.md)。
+
+候选页按以下网络名绘制，**不要使用 `SYS`**：
+
+| 候选网络 | 连接 | 原理图要求 |
+|---|---|---|
+| `IP53_VIN` | USB-C VBUS 经入口保护后到 IP5306-CK VIN | CC1/CC2 各 5.1 kΩ Rd；输入电容靠近 VIN；不宣称 USB PD |
+| `BAT` | IP5306-CK BAT 到 1S 受保护电池 | 4.2 V 截止电压、保护板、NTC 和极性必须按最终料号确认 |
+| `5V_IP53` | IP5306-CK VOUT | SW 电感、输入/输出储能按 `-CK` 资料；先放测试点；标注“CK 常开待确认” |
+| `3V3` | `5V_IP53 → AMS1117-3.3` | `P=(5−3.3)×I3V3`；`I3V3≤100–150 mA` 才考虑 AMS1117，必须有散热铜区 |
+| `VBUS_HOST` | `5V_IP53 → TPS2553 → USB-A` | 保留 `HOST_EN`、`HOST_FAULT_N` 和 0.5 A 目标限流；不能直连 VOUT |
+| `5V_PS2_K/M` | 从 `5V_IP53` 分支 | 两路、USB-A、3V3 和红外共同计入 `I5V_CONT`；需要时加独立负载开关 |
+
+不要把 IP5306 的全局过流保护当作 USB-A 逐口限流，也不要把“2.4 A”当作电池或连接器可以长期承受的电流。用下面的式子写进 P00/P03 备注，并在测试点上实测：
+
+```text
+I5V_CONT = IUSB_A(max) + IPS2_K + IPS2_M + I3V3 + IIR_PEAK_AVG + IOTHER
+IBAT ≈ (5 V × I5V_CONT) / (ηBOOST × VBAT_MIN)
+```
+
+标准 IP5306 的 ESOP8 没有旧 BQ24074 的 `CHG_N`、`INPUT_PGOOD_N`、`CHG_EN1`、`CHG_EN2` 和 `TS`。除非采购明确的 `IP5306-I2C` 或 `-CK` 资料，否则不要把 LED/KEY 脚接进旧的状态机；若固件需要充电状态，另加分压/监测器。原理图至少放 `TP_IP53_VIN`、`TP_BAT`、`TP_5V_IP53`、`TP_3V3`、`TP_VBUS_HOST`，并用 0/10/50/100 mA 低负载测试确认“常开”。
+
+在 `IP5306-CK` 的厂家资料、样品和热/电流测试全部通过前，P00–P03 仍按 BQ24074/TPS63031/TPS61023/TPS2553 正式基线绘制；候选网络不能改名为 `SYS`、`5V_HOST` 或旧充电状态网络。
 
 ## 5. USB 设备和主机
 
@@ -387,7 +413,9 @@ J9 2×3：1 `3V3_VTref`、2 GND、3 `WCH_TCK`、4 `WCH_TIO`、5 `RESET_N`、6 GN
 - [Microchip MCP2120 数据手册](https://ww1.microchip.com/downloads/en/devicedoc/21618b.pdf)：可选编码器的 pinout、MODE/EN/BAUD 和晶振要求。
 - [TI BQ24074 数据手册](https://www.ti.com/lit/ds/symlink/bq24074.pdf)：充电、power-path、TS、ISET、ILIM、ITERM、TMR 和输入/输出电容。
 - [TI TPS63031 数据手册](https://www.ti.com/lit/ds/symlink/tps63031.pdf)、[TPS61023 数据手册](https://www.ti.com/lit/ds/symlink/tps61023.pdf)、[TPS2553 数据手册](https://www.ti.com/lit/ds/symlink/tps2553.pdf)：3V3 buck-boost、5 V boost 和 USB 限流开关的最终参数。
-- [Injoinic IP5305T 原厂数据表](https://www.injoinic.com/api/static/uploads/20250529/20250529092838_6837b846e7f6c.pdf)：候选 1S 充电/5 V 升压方案；其 1 A 总输出、轻载自动关机和 ESOP8 引脚限制决定它不进入当前基线。
-- [AMS1117-3.3 数据表](https://datasheet.lcsc.com/lcsc/1810231814_Advanced-Monolithic-Systems-AMS1117-3-3_C6186.pdf)：候选 5 V→3.3 V 线性稳压器的输入裕量、压差和热设计依据。
+- [Injoinic IP5305T 原厂数据表](https://www.injoinic.com/api/static/uploads/20250529/20250529092838_6837b846e7f6c.pdf)：历史候选 1S 充电/5 V 升压方案；其 1 A 总输出和轻载自动关机决定它不进入当前基线。
+- [Injoinic IP5306 数据表](https://datasheet.lcsc.com/lcsc/INJOINIC-IP5306_C181692.pdf)：IP5306 标准型号的充放电、电流和轻载检测依据；`-CK` 后缀仍需厂家资料确认。
+- [IP5306 I²C 寄存器文档](https://m5stack.oss-cn-shenzhen.aliyuncs.com/resource/docs/datasheet/core/IIC_IP5306_REG_V1.4_cn.pdf)：标准品默认不支持 I²C，BOOST 常开和轻载计时属于可配置/变体功能。
+- [AMS1117-3.3 数据表](https://datasheet.lcsc.com/lcsc/1811142212_Advanced-Monolithic-Systems-AMS1117-3-3_C6186.pdf)：候选 5 V→3.3 V 线性稳压器的输入裕量、压差、静态电流和热设计依据。
 
 当前固件仍对应旧的 UART0/MCP2120/TFBS4711、PB1/TSOP 和 PB0/独立 LED 分立原型；完成本指南后的原理图还需要按 `docs/revb-firmware-migration.md` 迁移到 PB7 直连 TXD、PB4 直连 RXD、可选 PB1 原始捕获和 MCU 内部 UART/PWM 模式状态机，再进行开发板实测。

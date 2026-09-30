@@ -1,12 +1,12 @@
 # 硬件设计文档索引
 
-当前状态：云端原理图为待复核的 Rev A；本目录为 **Rev B 电气提案 + Rev B-M 机械层叠提案 + Rev B-IR 单光电收发修订**。尚未创建已布线的 PCB 工程。Rev B-IR 以带 IRED 阴极引出的 TFBS4650 级单光头、PB7/TXD0/PWM9 直连为基线；Q_IR/R_IR 和 MCP2120 仅为可选 DNP 增强支路，不再放外部 TX 多路器。运行固件当前仍按 MCP2120/TSOP/独立 LED 的分立原型，单模块方案需要后续迁移和电气实测，不能把文档提案当作已验收网表。IP5305T + AMS1117 已完成评估，但因轻载自动关机、1 A 总 5 V 输出、缺少充电状态脚和 AMS1117 热/压差裕量问题，暂不替换正式电源树；详见 [电源方案评估](power-management-evaluation.md)。
+当前状态：云端原理图为待复核的 Rev A；本目录为 **Rev B 电气提案 + Rev B-M 机械层叠提案 + Rev B-IR 单光电收发修订**。尚未创建已布线的 PCB 工程。Rev B-IR 以带 IRED 阴极引出的 TFBS4650 级单光头、PB7/TXD0/PWM9 直连为基线；Q_IR/R_IR 和 MCP2120 仅为可选 DNP 增强支路，不再放外部 TX 多路器。运行固件当前仍按 MCP2120/TSOP/独立 LED 的分立原型，单模块方案需要后续迁移和电气实测，不能把文档提案当作已验收网表。IP5305T + AMS1117 保留为历史候选；IP5306-CK + AMS1117 进入条件性小样验证，但 CK 常开后缀尚缺公开厂家独立数据表，暂不替换正式电源树；详见 [电源方案评估](power-management-evaluation.md)。
 
 ## 阅读顺序
 
 1. [原理图绘制指南](schematic-design-guide.md)：按页面、模块、网络、引脚、默认状态和 ERC/DRC 检查逐项绘制，作为进入 EDA 的主工作指令。
 2. [设计说明与资料来源](pcb-design-study.md)：接口方位、0°/±45° 比较、机械预算、电源与 RF 约束。
-3. [电源方案评估](power-management-evaluation.md)：IP5305T + AMS1117 的数据表核对、拒绝理由、原型接法和晋级条件；[候选电源 SVG](schematic-guide/power-candidate-ip5305t.svg)只用于评估，不是制造网表。
+3. [电源方案评估](power-management-evaluation.md)：IP5306-CK / AMS1117 的条件性评估、5 V 总电流预算、LDO 热设计、样品测试和原型接法；历史 IP5305T 记录也保留。候选图为 [IP5306-CK SVG](schematic-guide/power-candidate-ip5306ck.svg) 和 [IP5305T 历史 SVG](schematic-guide/power-candidate-ip5305t.svg)，都不是制造网表。
 4. [顶层布局 SVG](pcb-concept-revb.svg)：85.60 × 53.98 mm 顶视图，只含顶层器件、单个共用红外收发头、可选 DNP Q_IR/R_IR/MCP2120、侧插排母和四角安装孔；[PNG 预览](pcb-concept-revb.png)便于浏览。
 5. [底层用户界面 SVG](pcb-bottom-revb.svg) / [PNG 预览](pcb-bottom-revb.png)：OLED、三块触摸电极、FPC、孔环和电池投影单独绘制。
 6. [物理层叠剖面](pcb-stack-revb.svg) / [PNG 预览](pcb-stack-revb.png)：CH582M 面朝盆地、底层屏幕/触摸面朝用户、3D 打印底板与四面墙的非比例剖面。
@@ -24,7 +24,7 @@
 | 文件 | 用途 |
 |---|---|
 | [schematic-design-guide.md](schematic-design-guide.md) | 原理图逐页绘制指南；包含电源、USB、PS/2、RS232、红外、扩展口、触摸和 ERC/DRC 清单 |
-| [power-management-evaluation.md](power-management-evaluation.md) | IP5305T + AMS1117 的候选电源评估、计算和原型验收条件 |
+| [power-management-evaluation.md](power-management-evaluation.md) | IP5306-CK / AMS1117 条件性评估、5 V 电流预算、LDO 热设计和样品验收条件；含 IP5305T 历史记录 |
 | [schematic-guide/*.svg](schematic-guide/) | 与指南逐节对应的分页、电源、USB/RS232、PS/2、共用红外、扩展/触摸和候选电源示意图 |
 | [pin-allocation-revb.csv](pin-allocation-revb.csv) | 可导入表格工具的引脚分配，UTF-8 BOM |
 | [placement-revb.json](placement-revb.json) | 顶层电气预留区、侧插排母、底层用户区、四孔和机械盆地坐标；毫米，原点左上，x 向右、y 向下 |

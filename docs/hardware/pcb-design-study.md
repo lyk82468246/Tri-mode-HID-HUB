@@ -143,7 +143,7 @@ PB7 的 UART0/PWM9 是 CH582M 内部功能复用，固件在两个模式之间�
 - **晶振/芯片电源**：32 MHz 晶体紧靠 31/32 脚，负载由 CL 和寄生计算，不直接沿用两颗 12 pF。VINTA33、VDCIA35、VDCID1 按 WCH 电路去耦，EP 接地过孔提供短回流。可选 32.768 kHz 在左下局部区域，未装时固件继续用已选的 LSI 时基。[S1][S2]
 - **USB**：两组各自按 90 Ω 差分设计；ESD 靠连接器且接地短，串阻靠 MCU。Type-C 的两个方向 D+/D− 在座子旁汇合，避免长支线；CC1/CC2 分别独立 Rd。不要为了绝对等长而增加不必要的蛇形线。高频回流不跨地平面开槽。[S12]
 - **电源树**：统一为 USB-C → BQ24074 OUT/SYS → TPS63031 和 TPS61023；BAT 只接电池支路，不能让升压负载绕过 power-path 直接挂 BAT。EN1/EN2 由 PB8/PB17 控制，上电外部下拉为 USB100；取得供电能力后再放开外设供电，并与 USB 描述符/挂起策略同步。[S13]
-- **IP5305T + AMS1117 候选**：本轮评估不通过当前基线。IP5305T 的 VOUT 是 1 A 总 5 V 输出，低于约 45 mA 持续约 32 s 会轻载关机，ESOP8 也没有 CHG#/PGOOD/EN1/EN2/TS；AMS1117 从 5 V 线性降压还要承担热损耗和 4.75 V 输入下限。它只能按独立原型电源 `IP5_VIN → IP5305T → 5V_IP5 → AMS1117 → 3V3` 评估，并且仍需 TPS2553 给 USB-A 做逐口限流。详细计算和测试条件见 [`power-management-evaluation.md`](power-management-evaluation.md)。[S18][S19]
+- **IP5306-CK + AMS1117 候选**：允许进入条件性小样验证，但不改当前基线。标准 IP5306 约为 2.1 A 充电、2.4 A 级升压，`-CK` 的常开行为仍缺公开厂家独立数据表；因此候选电源使用独立网络 `IP53_VIN → IP5306-CK → 5V_IP53 → AMS1117 → 3V3`，保留 TPS2553 给 USB-A 做逐口限流，按 `I5V_CONT` 和 LDO 温升测试。IP5305T 仅作历史对照。详细计算和测试条件见 [`power-management-evaluation.md`](power-management-evaluation.md)。[S18][S19][S20]
 - **外设保护**：U5 改为 TPS2553 后需重新画封装及限流电阻。两只 PS/2 的独立限流器可纳入各自 9 × 9 mm 前级区域；其使能可与 HOST_EN 共用，使启动阶段不开外设电源。BSS138 的 3V3 侧上拉在 5 V 关闭时可能通过体二极管造成反供，需同步控制上拉电源或改用有掉电隔离的转换器；不能只关 5 V 就宣称接口完全断电。[S10]
 - **功率/温升**：本图只分配功率器件及周围电感、电容空间。USB-A、两路 PS/2、U9 IRED 脉冲、可选 Q_IR/R_IR、OLED 与充电的电流上限必须联合预算；TPS61023 的开关电流参数不是输出 5 V 电流额定值。
 - **共用红外光路**：U9 只保留一个朝外光窗，TXD/RXD/IREDC 走线短且不穿过天线和 DC/DC 开关节点；U9 的 VCC2/IRED 峰值电流回路按厂商建议放置本地储能和去耦。PB7→TXD、RXD→PB4/PB1 要短直；若装可选 Q_IR/R_IR 或 MCP2120，必须用 DNP/0 Ω 装配选择，禁止两个推挽源并联。
@@ -179,5 +179,6 @@ PB7 的 UART0/PWM9 是 CH582M 内部功能复用，固件在两个模式之间�
 - S11：[Vishay VSMB2948SL](https://www.vishay.com/docs/83498/vsmb2948sl.pdf)，侧视 940 nm LED。
 - S12：[TI High-Speed Interface Layout Guidelines](https://www.ti.com/lit/an/spraar7j/spraar7j.pdf)，USB 差分、参考地与布局规则；具体线宽仍依层叠。
 - S13：[TI BQ24074](https://www.ti.com/document-viewer/BQ24074/datasheet)，power-path 和 EN1/EN2 模式。
-- S18：[Injoinic IP5305T 原厂数据表](https://www.injoinic.com/api/static/uploads/20250529/20250529092838_6837b846e7f6c.pdf)，1.2 A 充电、1.0 A 5 V 升压、轻载检测和 ESOP8 引脚。
-- S19：[Advanced Monolithic Systems AMS1117-3.3 数据表](https://datasheet.lcsc.com/lcsc/1810231814_Advanced-Monolithic-Systems-AMS1117-3-3_C6186.pdf)，输入下限、压差和 SOT-223 热设计。
+- S18：[Injoinic IP5305T 原厂数据表](https://www.injoinic.com/api/static/uploads/20250529/20250529092838_6837b846e7f6c.pdf)，历史候选的 1.2 A 充电、1.0 A 5 V 升压、轻载检测和 ESOP8 引脚。
+- S19：[Advanced Monolithic Systems AMS1117-3.3 数据表](https://datasheet.lcsc.com/lcsc/1811142212_Advanced-Monolithic-Systems-AMS1117-3-3_C6186.pdf)，输入下限、压差、静态电流和 SOT-223 热设计。
+- S20：[Injoinic IP5306 数据表](https://datasheet.lcsc.com/lcsc/INJOINIC-IP5306_C181692.pdf) 与 [IP5306 I²C 寄存器文档](https://m5stack.oss-cn-shenzhen.aliyuncs.com/resource/docs/datasheet/core/IIC_IP5306_REG_V1.4_cn.pdf)，标准型号的 2.1 A/2.4 A 级能力、轻载检测和常开/I²C 配置边界；`-CK` 后缀需厂家资料确认。
