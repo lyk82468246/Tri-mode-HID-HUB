@@ -25,15 +25,18 @@ IP5306-CK VOUT → 5V_IP53
 PWR_KEY → IP5306-CK KEY（冷启动按键，不能由断电时的触摸电极代替）
 ```
 
-总开关和 USB-A Host 的具体开关拓扑见 [原理图绘制指南 4.7](schematic-design-guide.md#47-总电源开关key-和-5v-host-开关) 及 [总电源/Host 控制 SVG](schematic-guide/power-switch-control.svg)：总电源使用 DPST 同时隔离 `P+` 和 USB VBUS；Host 只控制 TPS2553 的 `EN`，不让机械开关承载 USB 大电流。
+电池拔插、`PWR_KEY` 和 USB-A Host 的具体拓扑见 [原理图绘制指南 4.7](schematic-design-guide.md#47-电池拔插key-和-5v-host-开关) 及 [电源/Host 控制 SVG](schematic-guide/power-switch-control.svg)：电池包通过 XH2.54 拔出实现电池侧硬断电，不再在电池正端串总开关；Host 只控制 TPS2553 的 `EN`，不让机械开关承载 USB 大电流。
 
 IP5306-CK 的 5 V 是全板共享总线，芯片的 2.4 A 级峰值不能直接当作电池、连接器或每个端口都能长期得到的电流。USB-A 仍应保留 TPS2553 或同类逐口限流开关；IP5306 的全局过流保护不能替代 `HOST_EN` 和 `HOST_FAULT_N`。标准 IP5306 的 ESOP8 版本也没有 BQ24074 的 `CHG#`、`PGOOD`、`EN1/EN2`、`TS`；若要由 MCU 读取充电状态，应增加外部监测，或采购明确的 `IP5306-I2C` 定制版本。英集芯的寄存器文档明确说明标准品默认不支持 I²C，并把“BOOST 输出常开”列为可配置位，因此不能把标准 `IP5306` 的寄存器功能自动套到 `IP5306-CK` 上。[IP5306 I²C 寄存器文档](https://m5stack.oss-cn-shenzhen.aliyuncs.com/resource/docs/datasheet/core/IIC_IP5306_REG_V1.4_cn.pdf)
 
 ### 冷启动、静态功耗和电池负端
 
 - `KEY` 应画成独立的 `PWR_KEY`，按最终资料接到 GND 的瞬时按键或等效开漏脉冲。MCU 由 `5V_IP53` 供电时，不能指望 MCU 自己在完全掉电后产生第一个 KEY 脉冲；底层触摸电极也不能在无 3V3 时完成唤醒。若产品必须取消实体按键，就要另加始终接在电池侧的超低功耗唤醒电路，并单独验证功耗。
+- 这里控制的是 IP5306-CK 的升压输出：关闭升压会同时切断 `5V_IP53`、AMS1117 和 CH582M 的 3V3，不能把它理解成“MCU 仍运行但只关掉一条电源”。USB-C 插入时，充电/边充边用仍由 IP5306 的 power-path 行为决定。
 - 社区 CK 模块把持续工作时的待机电流记为约 3 mA；AMS1117-3.3 典型静态电流约 5 mA。两者叠加后，低负载常供电的续航可能比标准 IP5306 的微安级待机差两个数量级。若需要数天级待机，优先使用低 IQ LDO/Buck，并把 `I_BAT_IDLE` 写进产品指标；不能只看 LDO 热耗散。
+- OLED 的正常工作熄屏先用控制器的 Display OFF/Sleep 命令，不在基线中增加独立电源开关；裸 SSD1306/SH1106 的睡眠电流是微安级，但成品模块的稳压器、电平转换和指示灯会改变结果。把 `I_OLED_OFF` 作为样板测量项，只有实测不达标时才装配预留的 `OLED_EN` 负载开关，并处理 SDA/SCL 反向供电。
 - 开源模块的 10 针接口把 `BAT-`、系统 `GND` 和保护芯片的电池负端分开。若本板使用已带保护板的电池包，应按电池包的 `P−/GND` 定义连接；若本板集成保护芯片，则必须保留 `B−` 与 `P−/GND` 的区别，不能为了方便把电池负端直接短接到错误的地节点。
+- 参考网页中的 `VCC`、`BAT+` 和 `5VOUT` 是该 10 针模块的板级接口，不是裸 IP5306-CK ESOP8 的通用引脚。若本板直接放 U2 裸芯片，必须按最终 `-CK` 封装资料画 `VIN/BAT/SW/VOUT/KEY/EPAD`，不能把模块的“VCC 串开关”照搬到芯片符号上。
 - IP5306 的 EPAD 必须按最终封装资料焊接到 GND，并布置足够的热/回流过孔；不能只连接 8 个外露引脚。标准应用通常以约 1.0 µH 电感为起点，`-CK` 仍需以厂家资料确认饱和电流和热额定值。
 
 ### 1 A 预算如何判断

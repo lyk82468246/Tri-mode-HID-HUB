@@ -227,3 +227,10 @@ API 可以取得当前页 PNG 渲染用于复查；当前 Gateway 下 PDF 导出
 1. 将维持型总开关与 IP5306-CK `KEY` 分离：推荐 DPST `SW_PWR` 同时切断受保护电池 `P+` 和 USB-C VBUS，确保 OFF 是真正断电；`PWR_KEY` 只使用板边瞬时按键负责冷启动/软关断。
 2. USB-A Host 继续由 TPS2553 供电和限流；新增 `SW_HOST` 只控制 `HOST_EN`，MCU 通过开漏 `HOST_KILL` 下拉实现软件禁止，机械开关不承载 USB 大电流。两路 PS/2 如需同步关闭，必须另加受控 5 V 分支。
 3. 新增 `schematic-guide/power-switch-control.svg` 并将上述网络、测试点和反向供电注意事项写入原理图绘制指南 4.7。
+
+## 2026-09-30 电源开关拓扑按电池拔插方案修订
+
+1. 用户确认电池与系统通过带保护的 XH2.54 连接，不用时直接拔出；因此撤销 DPST `SW_PWR` 作为当前基线，电池侧硬断电由 `J_BAT` 拔插实现。
+2. USB-C 输入不再被总开关切断；电池拔出时若 USB-C 仍连接，允许 IP5306-CK 按其 power-path 行为供电/充电，图纸必须把它标成独立的 USB 供电状态。
+3. `PWR_KEY` 保留为板边瞬时按键，负责 IP5306-CK 冷启动和按键事件；不把维持型拨动/船型开关长期接到 `KEY`，也不让底层触摸承担断电后的第一次启动。
+4. USB-A Host 的 `SW_HOST`/`HOST_KILL` 拓扑不变，只控制 TPS2553 `EN`；OLED 的正常工作熄屏改为软件 Display OFF，独立电源开关只保留为可选 DNP 测试位。

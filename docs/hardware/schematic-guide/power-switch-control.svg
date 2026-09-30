@@ -1,6 +1,6 @@
 <svg xmlns="http://www.w3.org/2000/svg" width="1500" height="860" viewBox="0 0 1500 860">
-  <title>IP5306-CK 总电源开关、KEY 与 USB Host 控制示意</title>
-  <desc>DPST 总开关同时隔离受保护电池正端和 USB-C 输入，瞬时 PWR_KEY 负责 IP5306-CK 冷启动，TPS2553 EN 节点由实体 Host 开关和 MCU 开漏下拉共同控制。</desc>
+  <title>IP5306-CK 电池拔插、KEY 与 USB Host 控制示意</title>
+  <desc>受保护电池通过 XH2.54 拔插实现电池侧硬断电，USB-C 输入保持独立，瞬时 PWR_KEY 负责 IP5306-CK 冷启动/按键事件，TPS2553 EN 节点由实体 Host 开关和 MCU 开漏下拉共同控制。</desc>
   <defs>
     <style>
       .bg{fill:#f8fafc}.title{font:700 26px "Microsoft YaHei",sans-serif;fill:#172033}.sub{font:14px "Microsoft YaHei",sans-serif;fill:#526071}
@@ -11,8 +11,8 @@
     <marker id="ctlArrow" markerWidth="10" markerHeight="10" refX="9" refY="5" orient="auto"><path d="M0,0 L10,5 L0,10 Z" fill="#6b4ba5"/></marker>
   </defs>
   <rect class="bg" width="1500" height="860"/>
-  <text class="title" x="42" y="43">IP5306-CK：总电源、PWR_KEY 与 5V Host 控制</text>
-  <text class="sub" x="42" y="70">紫色是控制信号，橙色是电源路径；总开关与 KEY 分工，Host 用 TPS2553 EN 控制。</text>
+  <text class="title" x="42" y="43">IP5306-CK：电池拔插、PWR_KEY 与 5V Host 控制</text>
+  <text class="sub" x="42" y="70">紫色是控制信号，橙色是电源路径；XH2.54 负责电池拔插，KEY 用瞬时按键，Host 用 TPS2553 EN 控制。</text>
 
   <g transform="translate(45,130)">
     <rect class="port" width="205" height="118" rx="12"/>
@@ -22,11 +22,11 @@
   </g>
   <g transform="translate(295,112)">
     <rect class="switch" width="220" height="155" rx="12"/>
-    <text class="head" x="110" y="31" text-anchor="middle">SW_PWR DPST</text>
-    <text class="text" x="18" y="66">Pole A：P+ → BAT_IP53</text>
-    <text class="text" x="18" y="90">Pole B：VBUS → IP53_VIN</text>
-    <text class="text" x="18" y="114">OFF = 真正总断电</text>
-    <text class="small" x="18" y="138">电池触点按 ≥5 A DC 选型</text>
+    <text class="head" x="110" y="31" text-anchor="middle">J_BAT XH2.54</text>
+    <text class="text" x="18" y="66">P+ → BAT_IP53</text>
+    <text class="text" x="18" y="90">P− → GND</text>
+    <text class="text" x="18" y="114">拔出 = 电池侧硬断电</text>
+    <text class="small" x="18" y="138">仅接保护板 P+/P−</text>
   </g>
   <path class="wire" d="M250 189 H295"/><text class="net" x="252" y="173">P+</text>
 
@@ -50,7 +50,7 @@
     <text class="text" x="18" y="63">VBUS → VBUS_RAW</text>
     <text class="text" x="18" y="86">CC1/CC2：5.1 kΩ Rd</text>
   </g>
-  <path class="wire" d="M250 337 H270 V220 H295"/><text class="net" x="253" y="323">VBUS_RAW</text>
+  <path class="wire" d="M250 337 H570 V330 H590 V193 H610"/><text class="net" x="253" y="323">VBUS_RAW</text>
 
   <g transform="translate(1020,115)">
     <rect class="power" width="230" height="125" rx="12"/>
@@ -64,10 +64,10 @@
     <rect class="switch" width="220" height="112" rx="12"/>
     <text class="head" x="110" y="31" text-anchor="middle">SW_KEY 瞬时按键</text>
     <text class="text" x="18" y="64">PWR_KEY：KEY → GND</text>
-    <text class="text" x="18" y="88">冷启动 / 软关断</text>
+    <text class="text" x="18" y="88">冷启动 / 关断手势</text>
   </g>
-  <path class="ctl" d="M265 511 H430 V237 H610"/><text class="net" x="302" y="494">PWR_KEY</text>
-  <text class="small" x="298" y="530">SW_PWR-B 断开 VIN</text>
+  <path class="ctl" d="M265 511 H430 V335 H570 V237 H610"/><text class="net" x="302" y="494">PWR_KEY</text>
+  <text class="small" x="298" y="530">USB-C 仍可独立供电/充电</text>
 
   <g transform="translate(610,365)">
     <rect class="logic" width="250" height="185" rx="12"/>
@@ -116,8 +116,8 @@
   <g transform="translate(45,690)">
     <rect class="warn" width="1405" height="112" rx="12"/>
     <text class="head" x="20" y="30" fill="#a52b2b">设计决定</text>
-    <text class="text" x="130" y="30">1. DPST 同时切 P+ 与 USB VBUS，才是 IP5306-CK 的真正总断电；单切 VOUT 会留下 CK 待机耗电。</text>
-    <text class="text" x="130" y="55">2. PWR_KEY 用瞬时按键，不能用维持型拨动开关，也不能让底层触摸承担冷启动。</text>
-    <text class="text" x="130" y="80">3. SW_HOST 只控制 TPS2553 EN；MCU 通过 HOST_KILL 开漏下拉实现软件禁止，USB 大电流不经过开关。</text>
+    <text class="text" x="130" y="30">1. J_BAT 拔出受保护电池即实现电池侧硬断电；不在 BAT+ 串承载升压电流的总开关。</text>
+    <text class="text" x="130" y="55">2. PWR_KEY 用瞬时按键；短按负责冷启动，关断手势按最终 CK 资料和样品确定。</text>
+    <text class="text" x="130" y="80">3. USB-C 输入保持独立，SW_HOST 只控制 TPS2553 EN；MCU 通过 HOST_KILL 开漏下拉禁止 Host。</text>
   </g>
 </svg>

@@ -220,29 +220,28 @@ IBAT ≈ (5 V × I5V_CONT) / (ηBOOST × VBAT_MIN)
 
 在 `IP5306-CK` 的厂家资料、样品和热/电流测试全部通过前，P00–P03 仍按 BQ24074/TPS63031/TPS61023/TPS2553 正式基线绘制；候选网络不能改名为 `SYS`、`5V_HOST` 或旧充电状态网络。
 
-### 4.7 总电源开关、KEY 和 5V Host 开关
+### 4.7 电池拔插、KEY 和 5V Host 开关
 
-IP5306-CK 的 `KEY` 是按键输入，不是维持型电源开关输入。不要把拨动开关或船型开关直接长期接在 `KEY` 上；长时间拉低可能被识别为长按/关灯动作，不能提供可靠的“开/关”状态。把两个功能分开画：
+IP5306-CK 的 `KEY` 是按键事件输入，不是维持型电源开关输入。电池已经通过带保护的 XH2.54 插头拔出，所以本板不再放 `SW_PWR`，也不需要为了“关机继续充电”去切断 USB-C 输入。把电池侧硬断电和升压输出控制分开画：
 
-#### 真正的总电源：DPST ON/OFF
-
-推荐使用双极单掷 `SW_PWR`（DPST，或带中心断开的 DPDT 只使用两组触点）：
+#### 电池侧硬断电：XH2.54 拔插
 
 ```text
-受保护电池 P+ ── SW_PWR-A ── BAT_IP53 ── IP5306-CK BAT
-USB-C VBUS保护后 ── SW_PWR-B ── IP53_VIN ── IP5306-CK VIN
-受保护电池 P− / 系统 GND ─────────────────────────── GND
+1S 受保护电池 P+ ── J_BAT.XH2.54-1 ── BAT_IP53 ── IP5306-CK BAT
+1S 受保护电池 P− ── J_BAT.XH2.54-2 ── GND       ── IP5306-CK GND/EPAD
+USB-C VBUS保护后 ─────────────────────────────── IP53_VIN ── IP5306-CK VIN
 ```
 
-- `SW_PWR` 必须放在电池保护板的 `P+` 之后，不能切断裸电芯 `B+` 与保护板之间的连接。
-- `SW_PWR` 的电池触点按最坏电池电流选型：若允许接近 5 V/2.4 A 输出，按至少 5 A DC、低接触电阻和实际温升选开关；USB VBUS 触点按输入限流选型。小型信号拨动开关不能直接承载升压输入电流。
-- 两极同时断开时，电池和 USB 输入都与 IP5306 隔离，才是真正的总断电；单独把开关串在 `5V_IP53` 或 `VOUT` 上，CK 芯片仍可能从电池消耗常开待机电流。
-- 这种总断电模式默认也会禁止充电。若需要“关机但继续充电”，要另画 `CHARGE_ONLY` 状态和电源路径，不能把单个 SPST 当作两种模式的兼容方案。
-- 外部排针的 `3V3`、USB 数据线、RS232 等仍可能通过外部设备反向供电；在丝印和设计规则中禁止关机状态下从这些接口向本板注入电源，必要时增加掉电隔离/负载开关。
+- `J_BAT` 必须接在电池保护板的 `P+ / P−` 之后；不能把裸电芯 `B+ / B−` 引到板上，也不能把保护板的 `B−` 与系统 `GND` 混接。
+- 拔出 `J_BAT` 后，电池不再给 IP5306-CK 供电，这就是电池侧硬断电；不需要再串一个承载升压输入电流的拨动/船型开关。
+- 若 USB-C 仍插着，`IP53_VIN` 可能继续给 IP5306-CK 供电并允许边充边用。它属于 USB 供电状态，不应在图纸上标成“电池拔出后绝对无电”；是否允许这种状态由产品测试和使用说明决定。
+- 外部排针、USB 数据线和 RS232 仍可能在电池拔出时反向给 `3V3` 或 GPIO 供电。对外连接器保留掉电隔离规则，必要时给扩展电源加负载开关。
 
-#### IP5306-CK 冷启动按键：`PWR_KEY`
+#### IP5306-CK 升压控制：`PWR_KEY`
 
-在板边另放一个瞬时按键 `SW_KEY`：一端接 `IP5306_KEY`，另一端接 GND，网络名标为 `PWR_KEY`，并放 `TP_PWR_KEY`。它负责完全掉电后的第一次激活以及需要时的软关断。底层电容触摸按键不能代替它，因为触摸电路在 3V3 尚未建立时没有电源。若必须取消实体按键，必须另做电池侧超低功耗唤醒电路，并验证其静态电流。
+在板边放瞬时按键 `SW_KEY`：一端接 `IP5306_KEY`，另一端接 GND，网络名为 `PWR_KEY`，并放 `TP_PWR_KEY`。短按用于冷启动；关断动作（长按或双击）必须按最终 `-CK` 料号的 KEY 配置和样品实测确定，不能把标准 IP5306 的手势直接当成 `-CK` 保证。不要把拨动开关或船型开关直接长期接在 `KEY` 上，长时间拉低可能被识别为长按/其他按键事件。
+
+这里的“升压关闭”会使 `5V_IP53 → AMS1117 → 3V3` 整条系统电源掉电，CH582M 也会停止运行；它不是 MCU 的深度睡眠。MCU 只能在 `3V3` 已建立后用开漏晶体管模拟 `KEY` 脉冲；完全掉电时第一次脉冲仍由 `SW_KEY` 提供。底层电容触摸按键不能代替冷启动按键，因为触摸电路在 3V3 尚未建立时没有电源。若未来采购明确带 `BOOST_EN` 或 I²C 的定制变体，可再增加受控关断逻辑，但标准/常见 CK 裸芯片没有一个可以直接接拨动开关的独立 `EN` 脚。
 
 #### 5V Host：用 TPS2553 `EN` 控制，不切大电流
 
@@ -271,9 +270,9 @@ CH582M HOST_KILL（开漏/仅下拉）──────┘
 
 若还要同时切断两路 PS/2 的 5 V，把 `5V_PS2_K/M` 放在同一个受控 5 V 负载开关之后，或为每路增加独立 `PS2_EN`；只切 TPS2553 的 `EN` 只会关闭 USB-A VBUS，不会自动关闭 PS/2。
 
-![IP5306-CK 总电源、PWR_KEY 和 USB Host 控制](schematic-guide/power-switch-control.svg)
+![IP5306-CK 电池拔插、PWR_KEY 和 USB Host 控制](schematic-guide/power-switch-control.svg)
 
-图 7：DPST 总开关同时隔离电池和 USB 输入；`PWR_KEY` 负责冷启动；`SW_HOST` 与 MCU 开漏下拉共同控制 TPS2553 `EN`。
+图 7：XH2.54 电池插头负责电池侧硬断电；`PWR_KEY` 负责 IP5306-CK 冷启动/按键事件；`SW_HOST` 与 MCU 开漏下拉共同控制 TPS2553 `EN`。
 
 ## 5. USB 设备和主机
 
@@ -427,7 +426,10 @@ J9 2×3：1 `3V3_VTref`、2 GND、3 `WCH_TCK`、4 `WCH_TIO`、5 `RESET_N`、6 GN
 
 ## 10. OLED、底层触摸和机械相关电气规则
 
-- OLED 供电电压、电流、FPC pinout 和背光电源必须以最终模块数据手册为准；不要仅因接口叫 I²C 就假设其能直接接 3V3。
+- OLED 供电电压、电流、FPC pinout 和背光电源必须以最终模块数据手册为准；不要仅因接口叫 I²C 就假设其能直接接 3V3。当前基线不放独立 OLED 电源开关，OLED 由固件在正常工作时执行熄屏。
+- SSD1306 用 `0xAE`（Display OFF）关闭 SEG/COM；若最终控制器支持其电荷泵命令，熄屏后再发 `0x8D, 0x10` 关闭 charge pump，唤醒时按“开 charge pump → `0xAF`”顺序恢复。SH1106 也有 Display OFF/Sleep 状态。原厂/控制器资料给出的裸芯片睡眠电流是微安级（SSD1306 的 display-off、无面板测试约 10 µA 量级；SH1106 sleep <5 µA），但带 AMS1117、分压、I²C 电平转换或指示灯的成品模块会明显更高，必须在模块 VCC 处实测。[SSD1306 产品资料](https://www.solomon-systech.com/zh-hant/product/SSD1306)；[SSD1306 数据表镜像](https://www.olimex.com/Products/Modules/LCD/MOD-OLED-128x64/resources/SSD1306.pdf)；[SH1106 数据表](https://www.displayfuture.com/Display/datasheet/controller/SH1106.pdf)
+- 在原理图放 `TP_OLED_3V3`，把“Display OFF 后 200 ms 的 OLED 供电电流”写进样板验收表。若实测仍超过产品待机预算，再装配预留的高边 `U_OLED_EN` 负载开关；默认 DNP，不把它作为第一版必需器件。切断 VCC 前先让 SDA/SCL 高阻，或选带反向电流阻断的负载开关，避免通过 I²C 钳位二极管反向给 OLED 模块供电。
+- 这里的“熄屏”只针对正常运行中的省电，不是系统关机。IP5306-CK 约 3 mA 的常开待机和 AMS1117 约 5 mA 的静态电流不会因 OLED `0xAE` 消失；如果目标是数天级待机，应先换低 IQ 电源，再考虑 OLED 断电。
 - PB18=`USER_TOUCH` 是当前确认的用户触摸输入。按 WCH 触摸模式/SDK 配置电极、守护地、串联电阻和 ESD；不要因为它叫“按键”就默认加 GPIO 上拉，外部上拉会改变电极的电容和基线。电极必须远离电池、DC/DC SW 节点、晶振和天线馈线。
 - PB22=`BOOT_N`、PB23=`RESET_N` 同时承担 ISP/复位功能。除非已经确认 CH582M 触摸通道、复位滤波和 ISP 低电平时序，否则原理图中只画成调试/系统信号，不要把它们直接当普通触摸按键。
 - 触摸电极和红外 TX/RX 是两个独立模块；没有共享网络，也不需要 SN74LVC2G157 或其他外部多路器。
@@ -435,7 +437,7 @@ J9 2×3：1 `3V3_VTref`、2 GND、3 `WCH_TCK`、4 `WCH_TIO`、5 `RESET_N`、6 GN
 
 ## 11. 测试点和 ERC/DRC 验收
 
-至少放置以下测试点：`VBUS_RAW`、`BAT`、`SYS`、`3V3`、`5V_HOST`、`VBUS_HOST`、`CHG_N`、`INPUT_PGOOD_N`、`HOST_FAULT_N`、`RESET_N`、`BOOT_N`、USB D+/D− 两组、`IR_RX_RAW`、`IR_TXD_U9`、UART3 TX/RX、SPI SCK/MOSI/MISO/CS；只有装配 Q_IR 时再加 `IR_EXT_SINK_GATE`。
+至少放置以下测试点：`VBUS_RAW`、`BAT`、`SYS`、`3V3`、`5V_HOST`、`VBUS_HOST`、`TP_OLED_3V3`、`CHG_N`、`INPUT_PGOOD_N`、`HOST_FAULT_N`、`RESET_N`、`BOOT_N`、USB D+/D− 两组、`IR_RX_RAW`、`IR_TXD_U9`、UART3 TX/RX、SPI SCK/MOSI/MISO/CS；只有装配 Q_IR 时再加 `IR_EXT_SINK_GATE`。
 
 原理图 ERC 逐项确认：
 
