@@ -22,6 +22,7 @@
 - 原理图按电源、USB、CH582M/RF、PS/2、RS232、调试/扩展分区；短引线不显示重复网络名，网络由引脚处端口维护。
 - 暂不纳入 2.4 GHz 接收端软硬件；2.4 GHz 这里仅指 CH582M 的 BLE/RF 部分。
 - 已完成 Rev B PCB 概念布局、引脚分配、Rev B-M 物理层叠和 Rev B-IR 单光电收发修订；Rev B-IR 以带 IRED 阴极的 TFBS4650 级光头、PB7/TXD0/PWM9 直连为基线，Q_IR/R_IR/MCP2120 只作可选 DNP 增强支路，外部 TX 多路器已从设计中删除，尚未建立可制造的 PCB 布局布线工程。云端原理图仍是待审查的 Rev A，不是可直接打板的 release 版本。
+- IP5305T + AMS1117 已按原厂数据表完成候选电源评估；轻载自动关机、1 A 总 5 V 输出、缺少 BQ24074 状态脚以及 AMS1117 的热/压差裕量使其暂不进入 Rev B 正式电源基线。评估和受限原型接法见 [`docs/hardware/power-management-evaluation.md`](docs/hardware/power-management-evaluation.md)。
 - USB-C、USB-A、DB9、电池、OLED/直角排母、晶振、天线和触摸电极中仍有若干 C990 Extended Part 或机械候选，尚未达到生产 BOM 的可追溯要求；中央电池盆地和四孔 3D 打印结构还需实物验证。
 - 已加入根目录的 CH582M MounRiver Studio 固件工程；Milestone 1 的 USB Device HID/CDC、Milestone 2 的 BLE HOGP/NUS-compatible 输出、Milestone 3 的 PS/2/UART1/UART3 输入适配器、Milestone 4 的 USB Host HID 枚举/解析、Milestone 5 的 Event_Router 全链路合并和 Milestone 6 的运行时诊断代码已经落地。当前固件仍对应旧的 UART0/MCP2120/TFBS4711、PB1/TSOP 和 PB0/独立 LED 分立原型；Rev B-IR 的 PB7 直连 UART0/PWM9、共用 RXD 原始脉冲学习和 MCU-only IrDA 仍待迁移。完整迁移状态见 [`docs/revb-firmware-migration.md`](docs/revb-firmware-migration.md)。真实开发板验收仍需按 [`docs/revb-firmware-test-plan.md`](docs/revb-firmware-test-plan.md) 执行。
 
@@ -67,6 +68,8 @@ USB-C VBUS_RAW ── BQ24074 ── SYS ─┬─ TPS63031 ── 3V3
 J6 按“自带保护板的 1S 锂电池”建模。充电电流、终止电流、TS/NTC、输入限流和 USB-A 最大负载仍需结合最终电池规格及热设计确认。
 
 上述图按 `docs/pin-plan.md` 的 SYS 供电意图修正了旧 README 中 BAT 直供升压的矛盾，实际云端网表仍待读回复核。Rev A 开关记录为 SY6280；Rev B 提议改为 TPS2553 并增加 FAULT#，尚未实施，详见 [Rev B 方案](docs/hardware/pcb-design-study.md)。
+
+IP5305T + AMS1117 不替换这张正式电源树；它的原型网络必须使用独立的 `IP5_VIN`、`5V_IP5` 和 `3V3` 标注，并保留 USB-A 的逐口限流开关，详见[电源方案评估](docs/hardware/power-management-evaluation.md)。
 
 ## 被动件封装约束
 

@@ -6,6 +6,8 @@
 
 **2026-09-30 修订重点**：上一版把 U12 外部逻辑多路器误写成 IrDA/遥控的必需器件，也把 PB18 触摸写成普通上拉输入。本版撤销这两个结论：PB7/TXD0/PWM9 直接接 U9 TXD，由 CH582M 内部复用和固件在 UART0 与 PWM/定时器之间切换；触摸只走 WCH 触摸通道，和红外没有硬件复用关系。U12 不进入基线 BOM。
 
+**2026-09-30 电源评估结论**：IP5305T + AMS1117 可以组成充电宝式的 5 V/3.3 V 原型，但不满足本板正式电源树的低负载常供电、USB-A 逐口限流和 BQ24074 状态脚需求。本指南的正式基线仍是 `BQ24074 → SYS → TPS63031/TPS61023 → TPS2553`；候选方案的计算、原型接法和晋级条件见 [IP5305T + AMS1117 电源方案评估](power-management-evaluation.md)。不要把候选图中的 `5V_IP5` 直接改名为 `SYS`。
+
 ## 0. 先冻结哪些设计决定
 
 在 EDA 中放置第一个符号前，先在项目标题栏写明 `Rev B-IR / Schematic Draft`，并把下列决定记录为设计参数：
@@ -16,6 +18,7 @@
 | 红外 | 一个带 IREDC 引出的 TFBS4650 级共用光头 | U9 同时负责 IrDA 和遥控收发；不再并列放 TSOP 或独立 IrDA LED |
 | 遥控发射 | **U9 TXD 直接由 PB7/TXD0/PWM9 驱动** | 同一根线在软件中输出 UART/SIR 或 38 kHz 载波+包络；IREDC/Q_IR/R_IR 只保留为实测不足时的 DNP 增强支路 |
 | IrDA 编码 | MCU 软件 UART/定时器为主 | MCP2120 仅作为 DNP 可选物理层编码器，不能把它当协议栈；不放运行时外部 TX 多路器 |
+| 电源架构 | `VBUS_RAW → BQ24074 → SYS → TPS63031/TPS61023 → TPS2553` | IP5305T + AMS1117 仅为未批准的原型分支；正式原理图不要删除 power-path、5 V 升压或 USB-A 限流开关 |
 | 电池 | 1S 受保护锂电池，中央盆地 | J6 只定义 BAT+/GND；NTC 独立焊盘或随电池连接器引出，极性必须在丝印和原理图同时标明 |
 | 机械 | CH582M 顶层面向盆地，OLED/触摸在底层面向用户 | 原理图不表达上下翻转；在装配备注中写明顶层器件高度、光窗、天线和电池禁压区 |
 | 接口 | USB-C 设备、USB-A 主机、DB9 公座、两路 Mini-DIN-6 PS/2、板边直角排母 | 连接器的 mating-face/PCB-side 脚序必须用最终 3D 模型复核 |
@@ -168,6 +171,27 @@ U5 TPS2553 是 USB-A VBUS 的受控限流开关：
 | FAULT | `HOST_FAULT_N`/PB5 | 开漏，4.7–10 kΩ 上拉到 3V3；这是故障指示，不是电压测量 |
 | ILIM | `R_ILIM` | 按最终料号公式和 USB-A 目标电流选值；原理图写明目标电流 |
 | GND | `GND` | 与 USB-A 回流和散热铜区短而宽 |
+
+### 4.5 IP5305T + AMS1117 候选方案（不进入正式基线）
+
+本节专门记录本次评估，防止在嘉立创 EDA 中把一个“充电宝电源芯片 + LDO”误当成当前整板的等价替换。正式电源页仍按 4.1–4.4 绘制；候选原型的图示见 [power-candidate-ip5305t.svg](schematic-guide/power-candidate-ip5305t.svg)，完整计算见 [IP5305T + AMS1117 电源方案评估](power-management-evaluation.md)。
+
+IP5305T 的 ESOP8 只有 `VIN`、`LED1/VSET`、`LED2/VTHS`、`LED3`、`KEY`、`BAT`、`SW`、`VOUT` 和接地裸焊盘。它没有 `CHG#`、`PGOOD#`、`CE`、`EN1/EN2` 或电池 `TS` 引脚，因此不能把旧图中的 `CHG_N`、`INPUT_PGOOD_N`、`CHG_EN1`、`CHG_EN2` 直接移植到某个 LED/KEY 脚。需要这些状态时，必须另加监测器并重写电源状态机。
+
+若只做独立原型，按以下网络名绘制，**不要使用 `SYS`**：
+
+| 候选网络 | 连接 | 原理图要求 |
+|---|---|---|
+| `IP5_VIN` | USB-C VBUS 经入口保护后到 IP5305T VIN | CC1/CC2 各 5.1 kΩ Rd；输入电容贴近 VIN；不宣称 USB PD |
+| `BAT` | IP5305T BAT 到 1S 受保护电池 | 按电芯选择 `VSET/LED1`；电池极性、NTC 和保护板单独标注 |
+| `5V_IP5` | IP5305T VOUT | 2.2 µH SW 回路、输入/输出储能和测试点按原厂典型应用；这是单路 5 V 总线 |
+| `3V3` | `5V_IP5 → AMS1117-3.3` | 近端输入/输出电容和散热铜区；按 `P=(5−3.3)×I3V3` 计算温升 |
+| `VBUS_HOST` | `5V_IP5 → TPS2553 → USB-A` | 仍保留 `HOST_EN`、`HOST_FAULT_N` 和逐口限流；不能把 VOUT 直接接 USB-A |
+| `5V_PS2_K/M` | 从受控 5 V 分支 | 和 USB-A 共同计入 IP5305T 的 1 A 总预算，必要时逐口加开关 |
+
+IP5305T 数据表还规定：VOUT 负载持续低于约 45 mA 时会在约 32 s 后进入轻载关机。BLE/OLED/触摸待机若低于此阈值，5 V 和 AMS1117 的 3V3 会被切断；靠约 100 Ω 保持负载会长期浪费约 50 mA。当前产品需要电池状态下持续待机，所以该候选不通过正式设计评审。
+
+在正式原理图中，P00–P03 仍保留 `VBUS_RAW`、`BAT`、`SYS`、`3V3`、`5V_HOST`、`VBUS_HOST` 和 `CHG_N/INPUT_PGOOD_N` 的现有定义；只有当候选方案完成低负载、输入插拔、满载、温升和电源状态机测试后，才另开 `Rev B-P` 重新编号和审查。
 
 ## 5. USB 设备和主机
 
@@ -363,5 +387,7 @@ J9 2×3：1 `3V3_VTref`、2 GND、3 `WCH_TCK`、4 `WCH_TIO`、5 `RESET_N`、6 GN
 - [Microchip MCP2120 数据手册](https://ww1.microchip.com/downloads/en/devicedoc/21618b.pdf)：可选编码器的 pinout、MODE/EN/BAUD 和晶振要求。
 - [TI BQ24074 数据手册](https://www.ti.com/lit/ds/symlink/bq24074.pdf)：充电、power-path、TS、ISET、ILIM、ITERM、TMR 和输入/输出电容。
 - [TI TPS63031 数据手册](https://www.ti.com/lit/ds/symlink/tps63031.pdf)、[TPS61023 数据手册](https://www.ti.com/lit/ds/symlink/tps61023.pdf)、[TPS2553 数据手册](https://www.ti.com/lit/ds/symlink/tps2553.pdf)：3V3 buck-boost、5 V boost 和 USB 限流开关的最终参数。
+- [Injoinic IP5305T 原厂数据表](https://www.injoinic.com/api/static/uploads/20250529/20250529092838_6837b846e7f6c.pdf)：候选 1S 充电/5 V 升压方案；其 1 A 总输出、轻载自动关机和 ESOP8 引脚限制决定它不进入当前基线。
+- [AMS1117-3.3 数据表](https://datasheet.lcsc.com/lcsc/1810231814_Advanced-Monolithic-Systems-AMS1117-3-3_C6186.pdf)：候选 5 V→3.3 V 线性稳压器的输入裕量、压差和热设计依据。
 
 当前固件仍对应旧的 UART0/MCP2120/TFBS4711、PB1/TSOP 和 PB0/独立 LED 分立原型；完成本指南后的原理图还需要按 `docs/revb-firmware-migration.md` 迁移到 PB7 直连 TXD、PB4 直连 RXD、可选 PB1 原始捕获和 MCU 内部 UART/PWM 模式状态机，再进行开发板实测。

@@ -206,3 +206,10 @@ API 可以取得当前页 PNG 渲染用于复查；当前 Gateway 下 PDF 导出
 2. U9 RXD 直接连接 PB4/RXD0，并以高阻/0 Ω 可选分支送 PB1 学习捕获；IREDC/Q_IR/R_IR 仅保留为直接 TXD 光强不足时的 DNP 增强支路，MCP2120 只用装配时 0 Ω 选择 TX 源。
 3. I²C 规则改为“板级每线一组 2.2–4.7 kΩ 上拉，内部上拉只作短线低速后备”；SPI 只保留 CS 默认上拉，SCK/MOSI 不默认加上拉，MISO 仅按空闲电平需求处理。PB18 改为 WCH 电容触摸通道，不默认放 GPIO 上拉，触摸与红外完全分离。
 4. 重新生成引脚表、坐标、顶层/底层/剖面/引脚 SVG 与 PNG，更新 P08 直接连接示意图和分页图；49 个引脚、40 个 GPIO、预留区边界/重叠检查仍通过，未触碰用户已有固件修改。
+
+## 2026-09-30 IP5305T + AMS1117 电源候选评估
+
+1. 联网核对 Injoinic IP5305T 原厂数据表和 Advanced Monolithic Systems AMS1117-3.3 数据表；确认 IP5305T 是 1S 充电、单路 5 V 升压的充电宝 SOC，典型充电 1.2 A、升压 1.0 A，并集成 power-path。
+2. 评估发现 IP5305T 在 VOUT 负载持续低于约 45 mA 时约 32 s 后轻载关机，ESOP8 没有 CHG#/PGOOD/EN1/EN2/TS，且 USB-A/PS/2 共用一条 1 A 5 V 总线；AMS1117 从 5 V 降到 3.3 V 还要承担压差和热耗散。
+3. 新增 `docs/hardware/power-management-evaluation.md` 和 `schematic-guide/power-candidate-ip5305t.svg`，把候选接法、总电流/电池电流公式、原型测试和晋级条件写清楚；正式 Rev B 电源树不改，仍为 BQ24074/TPS63031/TPS61023/TPS2553。
+4. 同步更新原理图绘制指南、硬件索引和 README，明确 `5V_IP5` 不得冒充 `SYS`，候选方案若要继续只能另开 `Rev B-P` 并保留 USB-A 独立限流开关。

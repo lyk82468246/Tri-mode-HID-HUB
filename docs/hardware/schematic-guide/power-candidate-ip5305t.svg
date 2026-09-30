@@ -1,0 +1,90 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1400" height="760" viewBox="0 0 1400 760">
+  <title>IP5305T 与 AMS1117 原型电源评估示意</title>
+  <desc>候选原型：USB-C 输入进入 IP5305T，输出 5V，再由 AMS1117 产生 3V3；USB-A 仍需独立限流开关。图中红色警告说明 IP5305T 的自动轻载关机、1A总输出和缺少状态脚。</desc>
+  <defs>
+    <style>
+      .bg{fill:#f8fafc}.title{font:700 26px "Microsoft YaHei",sans-serif;fill:#172033}.sub{font:14px "Microsoft YaHei",sans-serif;fill:#526071}
+      .blk{fill:#fff;stroke:#66758c;stroke-width:2}.power{fill:#fff3df;stroke:#d58b2d;stroke-width:2}.logic{fill:#edf8ef;stroke:#5a9d72;stroke-width:2}.port{fill:#eaf4ff;stroke:#5790c7;stroke-width:2}.warn{fill:#fff0f0;stroke:#cc4b4b;stroke-width:2}.note{fill:#fff;stroke:#c8d1dc;stroke-width:1.4;stroke-dasharray:6 4}
+      .head{font:700 18px "Microsoft YaHei",sans-serif;fill:#172033}.text{font:13px "Microsoft YaHei",sans-serif;fill:#526071}.small{font:12px "Microsoft YaHei",sans-serif;fill:#526071}.net{font:700 13px "Consolas",monospace;fill:#9a4e16}.wire{fill:none;stroke:#c06d19;stroke-width:4;marker-end:url(#arrow)}.wire2{fill:none;stroke:#2b7c5a;stroke-width:4;marker-end:url(#arrow)}.warnline{fill:none;stroke:#cc4b4b;stroke-width:2.5;stroke-dasharray:7 5;marker-end:url(#warnarrow)}
+    </style>
+    <marker id="arrow" markerWidth="10" markerHeight="10" refX="9" refY="5" orient="auto"><path d="M0,0 L10,5 L0,10 Z" fill="#c06d19"/></marker>
+    <marker id="warnarrow" markerWidth="10" markerHeight="10" refX="9" refY="5" orient="auto"><path d="M0,0 L10,5 L0,10 Z" fill="#cc4b4b"/></marker>
+  </defs>
+  <rect class="bg" width="1400" height="760"/>
+  <text class="title" x="42" y="43">候选原型：IP5305T + AMS1117（不等于正式电源树）</text>
+  <text class="sub" x="42" y="70">橙色为 5 V 电源路径，绿色为 3V3 逻辑域；红色框是当前 Rev B 不能接受的约束。</text>
+
+  <g transform="translate(45,165)">
+    <rect class="port" width="190" height="135" rx="12"/>
+    <text class="head" x="95" y="31" text-anchor="middle">J1 USB-C</text>
+    <text class="text" x="18" y="61">VBUS → IP5_VIN</text>
+    <text class="text" x="18" y="83">CC1/CC2：5.1 kΩ Rd</text>
+    <text class="text" x="18" y="105">TVS / 入口电容</text>
+  </g>
+  <path class="wire" d="M235 232 H300"/><text class="net" x="238" y="216">IP5_VIN</text>
+
+  <g transform="translate(300,120)">
+    <rect class="power" width="330" height="230" rx="12"/>
+    <text class="head" x="165" y="31" text-anchor="middle">U2 IP5305T ESOP8</text>
+    <text class="text" x="20" y="66">VIN ← IP5_VIN</text>
+    <text class="text" x="20" y="88">BAT ← 1S 受保护电池</text>
+    <text class="text" x="20" y="110">SW ↔ 2.2 µH 电感</text>
+    <text class="text" x="20" y="132">VOUT → 5V_IP5</text>
+    <text class="text" x="20" y="154">LED1/VSET、LED2/VTHS</text>
+    <text class="text" x="20" y="176">LED3、KEY 按数据表处理</text>
+    <text class="small" x="20" y="205">无 CHG# / PGOOD# / EN1 / EN2 / TS</text>
+  </g>
+  <path class="wire" d="M465 350 V425"/><text class="net" x="480" y="396">BAT</text>
+  <g transform="translate(370,425)">
+    <rect class="port" width="190" height="92" rx="12"/>
+    <text class="head" x="95" y="30" text-anchor="middle">J6 1S 电池</text>
+    <text class="text" x="20" y="58">BAT+ / GND / NTC</text>
+  </g>
+
+  <path class="wire" d="M630 235 H700"/><text class="net" x="642" y="219">5V_IP5</text>
+  <g transform="translate(700,155)">
+    <rect class="power" width="245" height="160" rx="12"/>
+    <text class="head" x="122" y="31" text-anchor="middle">U3 AMS1117-3.3</text>
+    <text class="text" x="18" y="65">VIN ← 5V_IP5</text>
+    <text class="text" x="18" y="87">CIN/COUT 靠近引脚</text>
+    <text class="text" x="18" y="109">VOUT → 3V3</text>
+    <text class="small" x="18" y="137">P = (5−3.3) × I3V3</text>
+  </g>
+  <path class="wire2" d="M945 235 H1010"/><text class="net" x="955" y="219">3V3</text>
+  <g transform="translate(1010,155)">
+    <rect class="logic" width="300" height="160" rx="12"/>
+    <text class="head" x="150" y="31" text-anchor="middle">CH582M / 3.3 V 外设</text>
+    <text class="text" x="20" y="65">MCU、BLE、OLED、触摸</text>
+    <text class="text" x="20" y="87">MAX3232、I²C/SPI 上拉</text>
+    <text class="text" x="20" y="109">必须计算最大 I3V3</text>
+  </g>
+
+  <path class="wire" d="M630 285 H670 V510 H700"/><text class="net" x="640" y="500">5V_IP5</text>
+  <g transform="translate(700,440)">
+    <rect class="blk" width="245" height="155" rx="12"/>
+    <text class="head" x="122" y="31" text-anchor="middle">U5 TPS2553</text>
+    <text class="text" x="18" y="65">IN ← 5V_IP5</text>
+    <text class="text" x="18" y="87">EN ← HOST_EN</text>
+    <text class="text" x="18" y="109">FAULT# → MCU</text>
+    <text class="text" x="18" y="131">OUT → VBUS_HOST</text>
+  </g>
+  <path class="wire" d="M945 518 H1010"/><text class="net" x="951" y="502">VBUS_HOST</text>
+  <g transform="translate(1010,440)">
+    <rect class="port" width="300" height="155" rx="12"/>
+    <text class="head" x="150" y="31" text-anchor="middle">USB-A / 两路 PS/2</text>
+    <text class="text" x="20" y="65">USB-A 受控 5 V</text>
+    <text class="text" x="20" y="87">PS/2 5 V 分支</text>
+    <text class="text" x="20" y="109">全部共享 IP5305T 1 A 总额度</text>
+    <text class="small" x="20" y="133">按每个外设最大电流重新预算</text>
+  </g>
+
+  <g transform="translate(45,625)">
+    <rect class="warn" width="1265" height="80" rx="12"/>
+    <text class="head" x="20" y="29" fill="#a52b2b">否决点</text>
+    <text class="text" x="110" y="29">VOUT 负载持续 &lt;45 mA 约 32 s 会自动关机；低功耗 BLE/触摸待机可能掉电。</text>
+    <text class="text" x="110" y="53">若用 100 Ω 保持负载，约 50 mA、0.25 W 常耗电；若不保留 U5，USB-A 没有逐口限流和 HOST_EN。</text>
+  </g>
+  <path class="warnline" d="M460 350 C650 365 1030 360 1190 440"/>
+  <path class="warnline" d="M630 236 C660 210 655 115 640 82"/>
+  <text class="small" x="620" y="105" fill="#a52b2b">1 A 是全 VOUT 总预算</text>
+</svg>
