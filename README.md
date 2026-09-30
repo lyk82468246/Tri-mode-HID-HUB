@@ -69,7 +69,7 @@ J6 按“自带保护板的 1S 锂电池”建模。充电电流、终止电流�
 
 上述图按 `docs/pin-plan.md` 的 SYS 供电意图修正了旧 README 中 BAT 直供升压的矛盾，实际云端网表仍待读回复核。Rev A 开关记录为 SY6280；Rev B 提议改为 TPS2553 并增加 FAULT#，尚未实施，详见 [Rev B 方案](docs/hardware/pcb-design-study.md)。
 
-IP5306-CK + AMS1117 目前也不替换这张正式电源树；候选网络使用独立的 `IP53_VIN`、`5V_IP53` 和 `3V3` 标注，并保留 USB-A 的逐口限流开关。电池通过带保护的 XH2.54 插头拔出实现电池侧硬断电，不再放电池总开关；`PWR_KEY` 使用瞬时按键，Host 由 TPS2553 `EN` 控制。CK 常开、低负载、5 V 总电流和 LDO 温升全部通过样品测试后，才可另开 `Rev B-P`，详见[电源方案评估](docs/hardware/power-management-evaluation.md)。
+IP5306-CK + AMS1117 目前也不替换这张正式电源树；候选网络使用独立的 `IP53_VIN`、`5V_IP53` 和 `3V3` 标注，并保留 USB-A 的逐口限流开关。电池通过带保护的 XH2.54 插头拔出实现电池侧硬断电，不再放电池总开关；`PWR_KEY` 使用瞬时按键，Host 由 TPS2553 `EN` 控制。当前 `PWR_KEY` 只能保证冷启动路径，不能把 CK 当作任意状态都能硬关断的维持型总开关。CK 常开、低负载、5 V 总电流、LDO 温升和关断状态全部通过样品测试后，才可另开 `Rev B-P`，详见[电源方案评估](docs/hardware/power-management-evaluation.md)。
 
 ## 被动件封装约束
 
