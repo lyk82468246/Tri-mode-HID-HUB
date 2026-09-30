@@ -1,6 +1,6 @@
 <svg xmlns="http://www.w3.org/2000/svg" width="1500" height="820" viewBox="0 0 1500 820">
   <title>ETA9697 与 AMS1117 候选电源示意</title>
-  <desc>USB-C 输入和受保护 1S 电池连接 ETA9697，ENBST 由电池或 USB 输入侧的 SW_SYS 控制，5V 输出再进入 AMS1117、TPS2553 和受控外设分支。</desc>
+  <desc>USB-C 输入和受保护 1S 电池连接 ETA9697，ENBST 由 BAT 经 100kΩ 上拉并由 SW_SYS 接地控制；5V 输出再进入 AMS1117、TPS2553 和受控外设分支。</desc>
   <defs>
     <style>
       .bg{fill:#f8fafc}.title{font:700 26px "Microsoft YaHei",sans-serif;fill:#172033}.sub{font:14px "Microsoft YaHei",sans-serif;fill:#526071}
@@ -12,7 +12,7 @@
   </defs>
   <rect class="bg" width="1500" height="820"/>
   <text class="title" x="42" y="43">ETA9697 + AMS1117：候选电源树</text>
-  <text class="sub" x="42" y="70">ETA9697 提供 1S 充电和可真关断的 5V 升压；0.4 A 额定输出不能覆盖当前全板 Host/PS2 预算。</text>
+  <text class="sub" x="42" y="70">ETA9697 提供 1S 充电和可真关断的 5V 升压；BAT 上拉 ENBST，0.4 A 额定输出不能覆盖当前全板 Host/PS2 预算。</text>
 
   <g transform="translate(45,125)">
     <rect class="port" width="230" height="125" rx="12"/>
@@ -68,10 +68,10 @@
   <g transform="translate(45,535)">
     <rect class="logic" width="440" height="150" rx="12"/>
     <text class="head" x="220" y="31" text-anchor="middle">ENBST 硬件控制</text>
-    <text class="text" x="18" y="66">BAT ─|&gt;─┐</text>
-    <text class="text" x="18" y="90">ETA_VIN ─|&gt;─┴─ EN_AUX</text>
-    <text class="text" x="18" y="114">EN_AUX → SW_SYS → 10 kΩ → ENBST</text>
-    <text class="small" x="18" y="137">ENBST 另放 100 kΩ 下拉到 GND</text>
+    <text class="text" x="18" y="66">BAT → R_EN_UP 100 kΩ</text>
+    <text class="text" x="18" y="90">R_EN_UP → ENBST</text>
+    <text class="text" x="18" y="114">ENBST → SW_SYS → GND</text>
+    <text class="small" x="18" y="137">USB-only 需改用 VIN 上拉或双源选择</text>
   </g>
   <path class="ctl" d="M485 610 H650 V276 H820"/><text class="net" x="515" y="594">ENBST</text>
 

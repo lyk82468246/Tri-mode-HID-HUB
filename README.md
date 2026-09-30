@@ -63,7 +63,7 @@ MounRiver Studio 入口为 [`CH582M.wvproj`](CH582M.wvproj)，固件源码从 [`
 USB-C VBUS ── 入口保护 ── ETA9697 VIN ── 5V_ETA ── AMS1117 ── 3V3
                               │             └─ 低功耗逻辑 / OLED / 红外
 1S 受保护电池 ── XH2.54 ── ETA9697 BAT
-BAT/ETA_VIN ── 二极管 OR ── SW_SYS ── ENBST
+BAT ── 100 kΩ ── ENBST ── SW_SYS ── GND
 高电流 Host/PS2 ── 待选高电流升压 ── TPS2553/负载开关 ── VBUS_HOST
 ```
 
@@ -71,7 +71,7 @@ J6 按“自带保护板的 1S 锂电池”建模。充电电流、终止电流�
 
 上述图是 ETA9697 当前小样候选，不是已经放行的制造电源树；0.4 A 的 `5V_ETA` 不能默认承担 USB-A、两路 PS/2 和全板 3V3。旧 Rev A 的 BQ24074/SYS 记录仍保留在历史文档中，详见 [Rev B 方案](docs/hardware/pcb-design-study.md)。
 
-ETA9697 + AMS1117 进入当前电源小样评估：`ENBST` 由电池/USB 输入侧的维持型 `SW_SYS` 控制，OFF 时停止 5V 升压但保留充电。ETA9697 的 5V 额定只有 0.4 A，不能独自承担 USB-A、两路 PS/2 和全板 3V3；候选网络使用 `ETA_VIN`、`5V_ETA`、`EN_AUX` 和 `ENBST`，高电流 Host/PS2 需要另一路升压或更高电流替代器件，详见[电源方案评估](docs/hardware/power-management-evaluation.md)。
+ETA9697 + AMS1117 进入当前电源小样评估：`BAT` 经 100 kΩ 上拉 `ENBST`，维持型 `SW_SYS` 接地即可关闭升压而保留充电。ETA9697 的 5V 额定只有 0.4 A，不能独自承担 USB-A、两路 PS/2 和全板 3V3；高电流 Host/PS2 需要另一路升压或更高电流替代器件。若要无电池 USB-only 启动，才把 ENBST 上拉源改为 `ETA_VIN`，详见[电源方案评估](docs/hardware/power-management-evaluation.md)。
 
 ## 被动件封装约束
 

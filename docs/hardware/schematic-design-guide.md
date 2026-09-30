@@ -54,7 +54,7 @@
 
 | 类别 | 网络名 |
 |---|---|
-| 电源 | `ETA_VIN`, `BAT`, `5V_ETA`, `3V3`, `5V_HOST`, `VBUS_HOST`, `5V_PS2_K`, `5V_PS2_M`, `EN_AUX`, `ENBST`, `STAT_CHG_N`, `GND` |
+| 电源 | `ETA_VIN`, `BAT`, `5V_ETA`, `3V3`, `5V_HOST`, `VBUS_HOST`, `5V_PS2_K`, `5V_PS2_M`, `ENBST`, `STAT_CHG_N`, `GND` |
 | USB | `USB_DEV_DP_MCU`, `USB_DEV_DN_MCU`, `USB_HOST_DP_MCU`, `USB_HOST_DN_MCU`, `USB_C_VBUS_ADC` |
 | RS232 | `RS232_RX_TTL`, `RS232_TX_TTL`, `RS232_RX_DB9`, `RS232_TX_DB9` |
 | PS/2 | `KBD_CLK_5V`, `KBD_DATA_5V`, `KBD_CLK_MCU`, `KBD_DATA_MCU`, `MOUSE_CLK_5V`, `MOUSE_DATA_5V`, `MOUSE_CLK_MCU`, `MOUSE_DATA_MCU` |
@@ -208,14 +208,13 @@ ETA9697 的优势是它有独立的 `ENBST` 升压使能和真正关断：`ENBST
 | `ETA_VIN` | USB-C VBUS 经入口保护后到 U2 VIN | CC1/CC2 各 5.1 kΩ Rd；VIN 旁至少 10 µF；本板按 5 V 输入设计，不把 `ENBST` 接到可能超过 6.5 V 的外部输入 |
 | `BAT` | U2 BAT 到受保护 1S 电池 P+ | 4.2 V 浮充；建议电池连接器增加 NTC 触点或在电池包上固定 NTC |
 | `5V_ETA` | U2 5VOUT | 4.7 µF 或更大输出电容靠近 5VOUT；L1 按数据手册从 2.2 µH 起步，按峰值电流和饱和电流核对 |
-| `EN_AUX` | `BAT` 与受保护 `ETA_VIN` 经过两个二极管 OR | 为了 USB-only 和电池供电都能开机，不能只从 3V3 产生；`ENBST` 高电平最小 1.2 V、低电平最大 0.4 V |
-| `ENBST` | `EN_AUX → SW_SYS → R_EN → ENBST`，`R_EN_PD` 下拉 GND | `SW_SYS` 用维持型 SPST/船型开关；OFF 关升压但不禁止充电，ON 请求启动升压；USB-only 能否工作按样品确认 |
+| `ENBST` | `BAT → R_EN_UP=100 kΩ → ENBST`；`SW_SYS` 将 ENBST 接 GND | `SW_SYS` 用维持型 SPST/船型开关；OFF 关升压但不禁止充电，ON 由电池启动升压。若改接 VIN，则电池-only 不可启动 |
 | `3V3` | `5V_ETA → AMS1117-3.3` | `I3V3≤100–150 mA` 才考虑 AMS1117；`P=(5−3.3)×I3V3`，保留大铜区并记录约 5 mA 静态电流 |
 | `STAT_CHG_N` | U2 STAT 开漏输出到 MCU | 以 10 kΩ 左右上拉到 3V3；STAT 低表示充电中，高阻表示充电结束 |
 | `ISET` | 1% 电阻到 GND | 1.00 kΩ 约 0.92 A 典型，2.00 kΩ 约 0.48 A 典型；最终按电芯允许充电电流选择 |
 | `NTC` | 电池温度检测网络 | NTC 接 GND 会禁用温度检测，不作为量产默认方案 |
 
-`ENBST` 不要由 MCU 的 3V3 直接驱动：升压关闭时 3V3 也关闭，MCU 没有电源保持开关状态。板边 `SW_SYS` 必须直接控制电池/USB 输入侧的 `EN_AUX`。原理图至少放 `TP_ETA_VIN`、`TP_BAT`、`TP_5V_ETA`、`TP_ENBST`、`TP_3V3`、`TP_VBUS_HOST`，并在 PCB 上把 VIN/SW/5VOUT/PGND 组成的高 di/dt 回路压到 U2 附近。
+`ENBST` 不要由 MCU 的 3V3 直接驱动：升压关闭时 3V3 也关闭，MCU 没有电源保持开关状态。当前基线让 `BAT` 通过 100 kΩ 上拉 ENBST，再由板边 `SW_SYS` 接地关断；若要 USB-only 自动启动，才把上拉源换成 `ETA_VIN` 或增加双源选择。原理图至少放 `TP_ETA_VIN`、`TP_BAT`、`TP_5V_ETA`、`TP_ENBST`、`TP_3V3`、`TP_VBUS_HOST`，并在 PCB 上把 VIN/SW/5VOUT/PGND 组成的高 di/dt 回路压到 U2 附近。
 
 ### 4.7 电池拔插、ETA9697 升压开关和 5V Host 开关
 
@@ -236,16 +235,11 @@ USB-C VBUS保护后 ────────────────────
 #### ETA9697 总电源开关：`SW_SYS`
 
 ```text
-BAT ──|>|──┐
-         ├── EN_AUX ── SW_SYS（维持型 SPST）── R_EN 10 kΩ ── ENBST
-ETA_VIN ─|>|──┘                                      │
-                                                  100 kΩ
-                                                     │
-                                                    GND
+BAT ── R_EN_UP 100 kΩ ── ENBST ── SW_SYS（维持型 SPST）── GND
 ```
 
-- `D_BAT/D_VIN` 只做低电流二极管 OR，保证电池供电和 USB-only 都能给 `ENBST` 提供高电平；本板按 5 V USB 输入设计，不能把可能超过 6.5 V 的外部输入直接接到 `ENBST`。
-- `SW_SYS=ON` 时 `ENBST` 为高，ETA9697 请求启动 `5V_ETA`；`SW_SYS=OFF` 时 `ENBST` 被 100 kΩ 拉低，升压输出断开，充电器仍可工作。电池已接入时开关状态可确定；USB-only 启动要按最终样品验证。
+- `SW_SYS=ON` 时 `ENBST` 由 BAT 通过 100 kΩ 拉高，ETA9697 启动 `5V_ETA`；`SW_SYS=OFF` 时 ENBST 被直接拉低，升压输出断开，充电器仍可工作。
+- 这个基线不支持无电池 USB-only 启动；若产品需要该状态，把 R_EN_UP 接到受保护的 `ETA_VIN`，或另加双源选择。不要为了同时支持两种来源而把 VIN 和 BAT 直接硬短接。
 - `ENBST` 不要由 `3V3` 驱动，因为关机时 `3V3` 已经消失；也不要把底层触摸按键作为总电源开关。
 - 这是真正的维持型总电源控制：在电池或 USB 输入存在时，可从 ON/OFF 任意状态切换；无电池且无 USB 时，任何开关都不能启动系统。
 

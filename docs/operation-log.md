@@ -248,3 +248,8 @@ API 可以取得当前页 PNG 渲染用于复查；当前 Gateway 下 PDF 导出
 3. ETA9697 的 0.4 A 额定输出不足以同时覆盖 USB-A、两路 PS/2 和全板 3V3；文档明确要求低功耗分支或另加高电流 Host/PS2 升压分支，TPS2553 不能弥补上游电流不足。
 4. 新增 `schematic-guide/power-candidate-eta9697.svg` 和 `schematic-guide/eta9697-power-switch-control.svg`，并同步更新 README、硬件索引、原理图绘制指南和电源评估。
 5. 同步更新 Rev B 引脚分配、布局生成脚本和概念图：PB9 改为 `STAT_CHG_N`，PB8/PB17 预留给高电流分支，PB16 不再伪装成 BQ24074 PGOOD；U2/U3/U4 的布局标注改为 ETA9697、AMS1117 和待选高电流升压。
+
+## 2026-09-30 简化 ETA9697 ENBST 开关
+
+1. 复核 ETA9697 数据手册后，取消此前的 BAT/VIN 二极管 OR。当前电池供电基线改为 `BAT → 100 kΩ → ENBST`，维持型 `SW_SYS` 将 ENBST 接 GND；开关断开升压，充电路径不受影响。
+2. 明确 `VIN → 100 kΩ → ENBST` 只适用于“必须插 USB 才启动”或 USB-only 变体；采用该接法时，USB 拔出后电池不能独立启动升压。
