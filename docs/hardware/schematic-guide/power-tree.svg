@@ -1,6 +1,6 @@
 <svg xmlns="http://www.w3.org/2000/svg" width="1300" height="700" viewBox="0 0 1300 700">
-  <title>Rev B-IR 电源树原理图示意</title>
-  <desc>USB-C VBUS_RAW 经过 BQ24074 形成 SYS 和 BAT，再由 TPS63031、TPS61023、TPS2553 产生 3V3、5V_HOST 和 VBUS_HOST。</desc>
+  <title>历史 Rev A/BQ24074 电源树（保留追溯）</title>
+  <desc>历史示意：USB-C VBUS_RAW 经过 BQ24074 形成 SYS 和 BAT，再由 TPS63031、TPS61023、TPS2553 产生 3V3、5V_HOST 和 VBUS_HOST。当前 ETA9697 方案见 power-candidate-eta9697.svg。</desc>
   <defs>
     <style>
       .bg{fill:#f8fafc}.title{font:700 25px "Microsoft YaHei",sans-serif;fill:#172033}.sub{font:14px "Microsoft YaHei",sans-serif;fill:#526071}

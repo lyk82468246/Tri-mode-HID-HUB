@@ -1,0 +1,86 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1500" height="820" viewBox="0 0 1500 820">
+  <title>ETA9697 与 AMS1117 候选电源示意</title>
+  <desc>USB-C 输入和受保护 1S 电池连接 ETA9697，ENBST 由电池或 USB 输入侧的 SW_SYS 控制，5V 输出再进入 AMS1117、TPS2553 和受控外设分支。</desc>
+  <defs>
+    <style>
+      .bg{fill:#f8fafc}.title{font:700 26px "Microsoft YaHei",sans-serif;fill:#172033}.sub{font:14px "Microsoft YaHei",sans-serif;fill:#526071}
+      .power{fill:#fff3df;stroke:#d58b2d;stroke-width:2}.logic{fill:#edf8ef;stroke:#5a9d72;stroke-width:2}.port{fill:#eaf4ff;stroke:#5790c7;stroke-width:2}.warn{fill:#fff0f0;stroke:#cc4b4b;stroke-width:2}.switch{fill:#f1edff;stroke:#7f63b2;stroke-width:2}.note{fill:#fff;stroke:#c8d1dc;stroke-width:1.4;stroke-dasharray:6 4}
+      .head{font:700 18px "Microsoft YaHei",sans-serif;fill:#172033}.text{font:13px "Microsoft YaHei",sans-serif;fill:#526071}.small{font:12px "Microsoft YaHei",sans-serif;fill:#526071}.net{font:700 13px "Consolas",monospace;fill:#9a4e16}.wire{fill:none;stroke:#c06d19;stroke-width:4;marker-end:url(#arrow)}.ctl{fill:none;stroke:#6b4ba5;stroke-width:3;marker-end:url(#ctlArrow)}
+    </style>
+    <marker id="arrow" markerWidth="10" markerHeight="10" refX="9" refY="5" orient="auto"><path d="M0,0 L10,5 L0,10 Z" fill="#c06d19"/></marker>
+    <marker id="ctlArrow" markerWidth="10" markerHeight="10" refX="9" refY="5" orient="auto"><path d="M0,0 L10,5 L0,10 Z" fill="#6b4ba5"/></marker>
+  </defs>
+  <rect class="bg" width="1500" height="820"/>
+  <text class="title" x="42" y="43">ETA9697 + AMS1117：候选电源树</text>
+  <text class="sub" x="42" y="70">ETA9697 提供 1S 充电和可真关断的 5V 升压；0.4 A 额定输出不能覆盖当前全板 Host/PS2 预算。</text>
+
+  <g transform="translate(45,125)">
+    <rect class="port" width="230" height="125" rx="12"/>
+    <text class="head" x="115" y="31" text-anchor="middle">J_BAT XH2.54</text>
+    <text class="text" x="18" y="64">P+ → BAT</text>
+    <text class="text" x="18" y="87">P− → GND</text>
+    <text class="small" x="18" y="109">三针版本另引 NTC</text>
+  </g>
+  <g transform="translate(45,315)">
+    <rect class="port" width="230" height="125" rx="12"/>
+    <text class="head" x="115" y="31" text-anchor="middle">USB-C 设备口</text>
+    <text class="text" x="18" y="64">VBUS → ETA_VIN</text>
+    <text class="text" x="18" y="87">CC1/CC2：5.1 kΩ Rd</text>
+    <text class="small" x="18" y="109">入口 ESD / 保险 / 10 µF</text>
+  </g>
+
+  <g transform="translate(430,110)">
+    <rect class="power" width="390" height="315" rx="12"/>
+    <text class="head" x="195" y="31" text-anchor="middle">U2 ETA9697E8A</text>
+    <text class="text" x="20" y="70">VIN ← ETA_VIN</text>
+    <text class="text" x="20" y="94">BAT ← 1S 受保护电池</text>
+    <text class="text" x="20" y="118">SW ↔ L1 2.2 µH 起步</text>
+    <text class="text" x="20" y="142">5VOUT → 5V_ETA</text>
+    <text class="text" x="20" y="166">ENBST ← SW_SYS</text>
+    <text class="text" x="20" y="190">ISET → RSET 1%</text>
+    <text class="text" x="20" y="214">NTC → 电池温度</text>
+    <text class="text" x="20" y="238">STAT → STAT_CHG_N</text>
+    <text class="small" x="20" y="275">ENBST=0：升压输出断开</text>
+    <text class="small" x="20" y="296">5V 额定 0.4 A，非全板总线</text>
+  </g>
+  <path class="wire" d="M275 187 H350 V205 H430"/><text class="net" x="294" y="171">BAT</text>
+  <path class="wire" d="M275 377 H350 V175 H430"/><text class="net" x="290" y="361">ETA_VIN</text>
+
+  <g transform="translate(900,105)">
+    <rect class="power" width="245" height="130" rx="12"/>
+    <text class="head" x="122" y="31" text-anchor="middle">3V3 LDO</text>
+    <text class="text" x="18" y="65">5V_ETA → AMS1117</text>
+    <text class="text" x="18" y="88">I3V3 ≤ 100–150 mA</text>
+    <text class="small" x="18" y="110">约 5 mA 静态电流</text>
+  </g>
+  <path class="wire" d="M820 252 H900 V170"/><text class="net" x="834" y="236">5V_ETA</text>
+
+  <g transform="translate(900,290)">
+    <rect class="power" width="245" height="155" rx="12"/>
+    <text class="head" x="122" y="31" text-anchor="middle">U5 TPS2553</text>
+    <text class="text" x="18" y="65">IN ← 5V_ETA</text>
+    <text class="text" x="18" y="88">EN ← HOST_EN</text>
+    <text class="text" x="18" y="111">OUT → VBUS_HOST</text>
+    <text class="small" x="18" y="135">仅在上游电流预算合格时装配</text>
+  </g>
+  <path class="wire" d="M820 280 H860 V355 H900"/><text class="net" x="833" y="264">5V_ETA</text>
+
+  <g transform="translate(45,535)">
+    <rect class="logic" width="440" height="150" rx="12"/>
+    <text class="head" x="220" y="31" text-anchor="middle">ENBST 硬件控制</text>
+    <text class="text" x="18" y="66">BAT ─|&gt;─┐</text>
+    <text class="text" x="18" y="90">ETA_VIN ─|&gt;─┴─ EN_AUX</text>
+    <text class="text" x="18" y="114">EN_AUX → SW_SYS → 10 kΩ → ENBST</text>
+    <text class="small" x="18" y="137">ENBST 另放 100 kΩ 下拉到 GND</text>
+  </g>
+  <path class="ctl" d="M485 610 H650 V276 H820"/><text class="net" x="515" y="594">ENBST</text>
+
+  <g transform="translate(520,535)">
+    <rect class="warn" width="900" height="150" rx="12"/>
+    <text class="head" x="20" y="31" fill="#a52b2b">设计边界</text>
+    <text class="text" x="130" y="31">1. `SW_SYS` OFF 只关闭 ETA9697 升压，充电器仍可由 USB-C 工作。</text>
+    <text class="text" x="130" y="63">2. ETA9697 5V 额定 0.4 A，不能同时承担 USB-A 0.5 A、两路 PS/2 和 3V3。</text>
+    <text class="text" x="130" y="95">3. 若保留全板 Host/PS2，必须增加高电流升压分支；TPS2553 不能弥补上游不足。</text>
+    <text class="text" x="130" y="127">4. 独立高电流升压的 EN 也必须取 SW_SYS 后节点；所有外部接口检查反向供电。</text>
+  </g>
+</svg>

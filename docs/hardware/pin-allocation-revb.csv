@@ -5,10 +5,10 @@
 4,PA7/AIN11,南,USB_C_VBUS_ADC,power,新增：VBUS_RAW 分压/RC；禁止 5 V 直连
 5,PA8/RXD1,南,RS232_RX_TTL,uart,UART1 默认映射；MAX3232 ROUT1 到 MCU
 6,PA9/TXD1,南,RS232_TX_TTL,uart,UART1 默认映射；MCU 到 MAX3232 DIN1
-7,PB9,南,CHG_N,power,BQ24074 CHG#；开漏，外部上拉到 3V3
-8,PB8,南,CHG_EN1,power,BQ24074 EN1；外部下拉，上电默认 USB100
-9,PB17,南,CHG_EN2,power,BQ24074 EN2；外部下拉，上电默认 USB100
-10,PB16,南,INPUT_PGOOD_N,power,BQ24074 PGOOD#；数字输入，非 ADC
+7,PB9,南,STAT_CHG_N,power,ETA9697 STAT；开漏，外部约 10 kΩ 上拉到 3V3，低电平表示充电中
+8,PB8,南,POWER_AUX_EN,power,高电流分支运行时控制/监测预留；硬件总开关必须取 SW_SYS 后节点，ETA9697 不使用该脚，外部下拉保持安全态
+9,PB17,南,POWER_AUX_FAULT_N,power,预留给高电流升压/电源监测故障输入；ETA9697 不使用该脚，外部上拉或 NC 按最终分支处理
+10,PB16,南,POWER_RESERVED,power,ETA9697 没有 PGOOD 输出；保留数字测试点，禁止当 ADC 使用
 11,PB15/TCK,东,WCH_TCK,debug,保留 WCH 两线调试，不复用 SPI
 12,PB14/TIO,东,WCH_TIO,debug,保留 WCH 两线调试，不复用 SPI
 13,PB13/U2D+,东,USB_HOST_DP_MCU,usb,USB2 Host，固定数据引脚

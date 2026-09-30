@@ -22,7 +22,7 @@
 - 原理图按电源、USB、CH582M/RF、PS/2、RS232、调试/扩展分区；短引线不显示重复网络名，网络由引脚处端口维护。
 - 暂不纳入 2.4 GHz 接收端软硬件；2.4 GHz 这里仅指 CH582M 的 BLE/RF 部分。
 - 已完成 Rev B PCB 概念布局、引脚分配、Rev B-M 物理层叠和 Rev B-IR 单光电收发修订；Rev B-IR 以带 IRED 阴极的 TFBS4650 级光头、PB7/TXD0/PWM9 直连为基线，Q_IR/R_IR/MCP2120 只作可选 DNP 增强支路，外部 TX 多路器已从设计中删除，尚未建立可制造的 PCB 布局布线工程。云端原理图仍是待审查的 Rev A，不是可直接打板的 release 版本。
-- IP5305T + AMS1117 已作为历史候选记录；当前新增 IP5306-CK + AMS1117 条件性候选。IP5306-CK 的“常开”后缀尚缺公开厂家独立数据表，必须先做样品验证，因此暂不进入 Rev B 正式电源基线。电流预算、LDO 热设计、原理图接法和放行条件见 [`docs/hardware/power-management-evaluation.md`](docs/hardware/power-management-evaluation.md)。
+- IP5305T 和 IP5306-CK 已降为历史候选；当前电源小样评估改用 ETA9697 + AMS1117。ETA9697 的 `ENBST` 可由输入侧维持型开关直接控制，关断升压时仍可充电，但 5V 额定只有 0.4 A，不能独自承担全板 Host/PS/2 负载。电流预算、开关接法、LDO 热设计和放行条件见 [`docs/hardware/power-management-evaluation.md`](docs/hardware/power-management-evaluation.md)。
 - USB-C、USB-A、DB9、电池、OLED/直角排母、晶振、天线和触摸电极中仍有若干 C990 Extended Part 或机械候选，尚未达到生产 BOM 的可追溯要求；中央电池盆地和四孔 3D 打印结构还需实物验证。
 - 已加入根目录的 CH582M MounRiver Studio 固件工程；Milestone 1 的 USB Device HID/CDC、Milestone 2 的 BLE HOGP/NUS-compatible 输出、Milestone 3 的 PS/2/UART1/UART3 输入适配器、Milestone 4 的 USB Host HID 枚举/解析、Milestone 5 的 Event_Router 全链路合并和 Milestone 6 的运行时诊断代码已经落地。当前固件仍对应旧的 UART0/MCP2120/TFBS4711、PB1/TSOP 和 PB0/独立 LED 分立原型；Rev B-IR 的 PB7 直连 UART0/PWM9、共用 RXD 原始脉冲学习和 MCU-only IrDA 仍待迁移。完整迁移状态见 [`docs/revb-firmware-migration.md`](docs/revb-firmware-migration.md)。真实开发板验收仍需按 [`docs/revb-firmware-test-plan.md`](docs/revb-firmware-test-plan.md) 执行。
 
@@ -60,16 +60,18 @@ MounRiver Studio 入口为 [`CH582M.wvproj`](CH582M.wvproj)，固件源码从 [`
 ## 电源设计意图与待核对项
 
 ```text
-USB-C VBUS_RAW ── BQ24074 ── SYS ─┬─ TPS63031 ── 3V3
-                      │         └─ TPS61023 ── 5V_HOST ── 受控限流开关 ── VBUS_HOST
-                      └── BAT ── 1S 受保护电池
+USB-C VBUS ── 入口保护 ── ETA9697 VIN ── 5V_ETA ── AMS1117 ── 3V3
+                              │             └─ 低功耗逻辑 / OLED / 红外
+1S 受保护电池 ── XH2.54 ── ETA9697 BAT
+BAT/ETA_VIN ── 二极管 OR ── SW_SYS ── ENBST
+高电流 Host/PS2 ── 待选高电流升压 ── TPS2553/负载开关 ── VBUS_HOST
 ```
 
 J6 按“自带保护板的 1S 锂电池”建模。充电电流、终止电流、TS/NTC、输入限流和 USB-A 最大负载仍需结合最终电池规格及热设计确认。
 
-上述图按 `docs/pin-plan.md` 的 SYS 供电意图修正了旧 README 中 BAT 直供升压的矛盾，实际云端网表仍待读回复核。Rev A 开关记录为 SY6280；Rev B 提议改为 TPS2553 并增加 FAULT#，尚未实施，详见 [Rev B 方案](docs/hardware/pcb-design-study.md)。
+上述图是 ETA9697 当前小样候选，不是已经放行的制造电源树；0.4 A 的 `5V_ETA` 不能默认承担 USB-A、两路 PS/2 和全板 3V3。旧 Rev A 的 BQ24074/SYS 记录仍保留在历史文档中，详见 [Rev B 方案](docs/hardware/pcb-design-study.md)。
 
-IP5306-CK + AMS1117 目前也不替换这张正式电源树；候选网络使用独立的 `IP53_VIN`、`5V_IP53` 和 `3V3` 标注，并保留 USB-A 的逐口限流开关。电池通过带保护的 XH2.54 插头拔出实现电池侧硬断电，不再放电池总开关；`PWR_KEY` 使用瞬时按键，Host 由 TPS2553 `EN` 控制。当前 `PWR_KEY` 只能保证冷启动路径，不能把 CK 当作任意状态都能硬关断的维持型总开关。CK 常开、低负载、5 V 总电流、LDO 温升和关断状态全部通过样品测试后，才可另开 `Rev B-P`，详见[电源方案评估](docs/hardware/power-management-evaluation.md)。
+ETA9697 + AMS1117 进入当前电源小样评估：`ENBST` 由电池/USB 输入侧的维持型 `SW_SYS` 控制，OFF 时停止 5V 升压但保留充电。ETA9697 的 5V 额定只有 0.4 A，不能独自承担 USB-A、两路 PS/2 和全板 3V3；候选网络使用 `ETA_VIN`、`5V_ETA`、`EN_AUX` 和 `ENBST`，高电流 Host/PS2 需要另一路升压或更高电流替代器件，详见[电源方案评估](docs/hardware/power-management-evaluation.md)。
 
 ## 被动件封装约束
 
@@ -90,3 +92,4 @@ IP5306-CK + AMS1117 目前也不替换这张正式电源树；候选网络使用
 - TI BQ24074：[datasheet](https://www.ti.com/document-viewer/bq24074/datasheet)
 - TI TPS63031：[datasheet PDF](https://www.ti.com/lit/ds/symlink/tps63031.pdf)
 - TI TPS61023：[datasheet PDF](https://www.ti.com/lit/ds/symlink/tps61023.pdf)
+- ETA9697：[原厂数据手册](https://www.eta-semi.com/wp-content/uploads/2022/03/ETA9697_V1.3.pdf)

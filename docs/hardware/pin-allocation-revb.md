@@ -13,10 +13,10 @@
 | 4 | PA7/AIN11 | 南 | `USB_C_VBUS_ADC` | 新增：VBUS_RAW 分压/RC；禁止 5 V 直连 |
 | 5 | PA8/RXD1 | 南 | `RS232_RX_TTL` | UART1 默认映射；MAX3232 ROUT1 到 MCU |
 | 6 | PA9/TXD1 | 南 | `RS232_TX_TTL` | UART1 默认映射；MCU 到 MAX3232 DIN1 |
-| 7 | PB9 | 南 | `CHG_N` | BQ24074 CHG#；开漏，外部上拉到 3V3 |
-| 8 | PB8 | 南 | `CHG_EN1` | BQ24074 EN1；外部下拉，上电默认 USB100 |
-| 9 | PB17 | 南 | `CHG_EN2` | BQ24074 EN2；外部下拉，上电默认 USB100 |
-| 10 | PB16 | 南 | `INPUT_PGOOD_N` | BQ24074 PGOOD#；数字输入，非 ADC |
+| 7 | PB9 | 南 | `STAT_CHG_N` | ETA9697 STAT；开漏，外部约 10 kΩ 上拉到 3V3，低电平表示充电中 |
+| 8 | PB8 | 南 | `POWER_AUX_EN` | 高电流分支运行时控制/监测预留；硬件总开关必须取 SW_SYS 后节点，ETA9697 不使用该脚，外部下拉保持安全态 |
+| 9 | PB17 | 南 | `POWER_AUX_FAULT_N` | 预留给高电流升压/电源监测故障输入；ETA9697 不使用该脚，外部上拉或 NC 按最终分支处理 |
+| 10 | PB16 | 南 | `POWER_RESERVED` | ETA9697 没有 PGOOD 输出；保留数字测试点，禁止当 ADC 使用 |
 | 11 | PB15/TCK | 东 | `WCH_TCK` | 保留 WCH 两线调试，不复用 SPI |
 | 12 | PB14/TIO | 东 | `WCH_TIO` | 保留 WCH 两线调试，不复用 SPI |
 | 13 | PB13/U2D+ | 东 | `USB_HOST_DP_MCU` | USB2 Host，固定数据引脚 |
@@ -61,7 +61,7 @@
 
 | 接口 | 接线定义 |
 |---|---|
-| J1 USB-C | A4/A9/B4/B9 = VBUS_RAW；A6/B6 = D+；A7/B7 = D−；CC1/CC2 各自独立 5.1 kΩ 到地；SBU NC；GND 与壳体接法按 ESD 设计 |
+| J1 USB-C | A4/A9/B4/B9 = VBUS_RAW → 入口保护 → ETA_VIN；A6/B6 = D+；A7/B7 = D−；CC1/CC2 各自独立 5.1 kΩ 到地；SBU NC；GND 与壳体接法按 ESD 设计 |
 | J2 USB-A | 1 VBUS_HOST；2 D−；3 D+；4 GND；壳体接屏蔽/地方案 |
 | J3/J4 Mini-DIN-6 | 1 DATA；2 NC；3 GND；4 受保护的 5V_PS2_K/M；5 CLK；6 NC；外壳地；必须核对实际座子的 mating-face 与 PCB-side 图 |
 | J5 DB9 公座 DTE | 2 RX（到 MAX3232 RIN1）；3 TX（来自 DOUT1）；5 GND；1/4/6/7/8/9 NC；不提供 RTS/CTS 硬件握手 |
@@ -97,7 +97,7 @@ J7/J8/J9/J10 均是向板外插拔的直角排母；正式 footprint 应以方�
 | ADC | AIN10=PA6 电池；AIN11=PA7 上行 VBUS | 采样前关闭数字输入/上拉，按 ADC PGA 范围核算分压 |
 | LSE | PA10/PA11 可选晶振 | 与现有 LSI 模式二选一；没有分配给其他信号 |
 
-PB16 不支持 ADC。Rev A 的 USB-A 电压模拟采样不再占用 PA4：PA4/PA5 用于独立 UART3；本提案使用 HOST_FAULT_N 报告开关故障，FAULT# 不能代替 5 V 电压测量。若还要求 USB-A 电压数值，需加模拟开关复用 ADC 或外置 ADC，不能把 PB16 标成 ADC。
+PB16 不支持 ADC。Rev A 的 USB-A 电压模拟采样不再占用 PA4：PA4/PA5 用于独立 UART3；本提案使用 HOST_FAULT_N 报告开关故障，FAULT# 不能代替 5 V 电压测量。ETA9697 的 STAT 接 PB9；PB8/PB17 预留给高电流分支 EN/故障，不能假定为 BQ24074 的 EN1/EN2；若还要求 USB-A 电压数值，需加模拟开关复用 ADC 或外置 ADC，不能把 PB16 标成 ADC。
 
 ## Rev B-IR 红外电路连接
 
@@ -113,8 +113,8 @@ PB16 不支持 ADC。Rev A 的 USB-A 电压模拟采样不再占用 PA4：PA4/PA
 ## 与当前固件/Rev A 的差异
 
 - 保留 USB 两组固定引脚、PS/2 PA0–PA3、SPI0 PA12–PA15、RS232 UART1、调试与 BOOT/RESET。
-- VBAT_SENSE：PB16 → PA6/AIN10；PA7/AIN11 新增上行 VBUS 检测；PA4/PA5 改为 UART3 板边直角排母。
-- USER：PB8 → PB18；CHG#：PB19 → PB9；PB8/PB17 新增充电模式控制；PB16 改为输入电源有效状态。
+- VBAT_SENSE：PA6/AIN10；PA7/AIN11 新增上行 VBUS 检测；PA4/PA5 改为 UART3 板边直角排母。
+- USER：PB18；ETA9697 STAT：PB9；PB8/PB17 预留给高电流分支 EN/故障；PB16 保留数字测试点，不作为 ADC/PGOOD。
 - U5 计划由 SY6280 改为 TPS2553，新增 PB5 FAULT#，需要新封装/参数，绝不是直接替换料号。
 - 当前运行固件仍是旧的 UART0/MCP2120/TFBS4711 + PB1 TSOP/PB0 独立 LED 原型；单模块方案需要迁移到 PB7 直连 TXD、PB4 直连 RXD、可选 PB1 捕获和 MCU 内部 UART/PWM 模式状态机后，才能宣称软件与硬件一致。
 

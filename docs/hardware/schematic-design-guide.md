@@ -6,7 +6,7 @@
 
 **2026-09-30 修订重点**：上一版把 U12 外部逻辑多路器误写成 IrDA/遥控的必需器件，也把 PB18 触摸写成普通上拉输入。本版撤销这两个结论：PB7/TXD0/PWM9 直接接 U9 TXD，由 CH582M 内部复用和固件在 UART0 与 PWM/定时器之间切换；触摸只走 WCH 触摸通道，和红外没有硬件复用关系。U12 不进入基线 BOM。
 
-**2026-09-30 电源评估结论**：IP5305T + AMS1117 仍只作为历史原型记录；IP5306-CK + AMS1117 可以进入小样验证，但 `CK` 的常开行为没有公开的厂家独立数据表，尚不能直接替换制造基线。本指南的正式基线仍是 `BQ24074 → SYS → TPS63031/TPS61023 → TPS2553`；候选方案的计算、原理图接法、5 V 预算和放行条件见 [IP5306-CK / AMS1117 电源方案再评估](power-management-evaluation.md)。不要把候选图中的 `5V_IP53` 直接改名为 `SYS`。
+**2026-09-30 电源评估结论**：IP5305T 和 IP5306-CK 降为历史候选；ETA9697 + AMS1117 进入当前小样评估。ETA9697 的 `ENBST` 能提供真正升压关断和维持型总电源开关，但 5V 额定只有 0.4 A，不能独自承担当前 USB-A、两路 PS/2 和全板 3V3。本指南的正式全板电源基线仍需在“ETA9697 低功耗分支 + 高电流 Host/PS2 分支”或更高电流替代器件之间冻结；候选方案见 [ETA9697 / AMS1117 电源方案评估](power-management-evaluation.md)。不要把 `5V_ETA` 直接改名为旧 `SYS`。
 
 ## 0. 先冻结哪些设计决定
 
@@ -18,7 +18,7 @@
 | 红外 | 一个带 IREDC 引出的 TFBS4650 级共用光头 | U9 同时负责 IrDA 和遥控收发；不再并列放 TSOP 或独立 IrDA LED |
 | 遥控发射 | **U9 TXD 直接由 PB7/TXD0/PWM9 驱动** | 同一根线在软件中输出 UART/SIR 或 38 kHz 载波+包络；IREDC/Q_IR/R_IR 只保留为实测不足时的 DNP 增强支路 |
 | IrDA 编码 | MCU 软件 UART/定时器为主 | MCP2120 仅作为 DNP 可选物理层编码器，不能把它当协议栈；不放运行时外部 TX 多路器 |
-| 电源架构 | `VBUS_RAW → BQ24074 → SYS → TPS63031/TPS61023 → TPS2553` | IP5306-CK + LDO 仅为待验证原型分支；正式原理图不要删除 power-path、5 V 升压或 USB-A 限流开关 |
+| 电源架构 | `ETA_VIN/BAT → ETA9697 → 5V_ETA → AMS1117`，`ENBST` 由 `SW_SYS` 控制 | ETA9697 只作为 0.4 A 低功耗分支候选；USB-A/PS/2 的总电流超过 0.4 A 时必须另加高电流升压分支，不能删掉逐口限流 |
 | 电池 | 1S 受保护锂电池，中央盆地 | J6 只定义 BAT+/GND；NTC 独立焊盘或随电池连接器引出，极性必须在丝印和原理图同时标明 |
 | 机械 | CH582M 顶层面向盆地，OLED/触摸在底层面向用户 | 原理图不表达上下翻转；在装配备注中写明顶层器件高度、光窗、天线和电池禁压区 |
 | 接口 | USB-C 设备、USB-A 主机、DB9 公座、两路 Mini-DIN-6 PS/2、板边直角排母 | 连接器的 mating-face/PCB-side 脚序必须用最终 3D 模型复核 |
@@ -29,10 +29,10 @@
 
 采用多页原理图，每页只表达一个功能边界。页面之间只用全局网络标签或层次端口连接，避免跨页长线。
 
-1. **P00 电源树与测试点**：`VBUS_RAW`、充电 power-path、`BAT`、`SYS`、`3V3`、`5V_HOST`、`VBUS_HOST`。
+1. **P00 电源树与测试点**：`ETA_VIN`、`BAT`、`5V_ETA`、`3V3`、`5V_HOST`、`VBUS_HOST`、`ENBST`、`STAT_CHG_N`。
 2. **P01 USB-C 设备口**：VBUS、CC、D+/D−、ESD、VBUS 分压。
-3. **P02 充电与电池**：BQ24074、NTC、CHG#/PGOOD、ISET/ILIM/ITERM/TMR、J6。
-4. **P03 3.3 V 与 5 V 主机电源**：TPS63031、TPS61023、TPS2553、HOST_EN/FAULT#。
+3. **P02 充电与电池**：ETA9697、NTC、STAT、ISET、`ENBST`、J6 和 `SW_SYS`。
+4. **P03 3.3 V 与 5 V 主机电源**：AMS1117、`5V_ETA` 低功耗分支、预留的高电流 Host/PS/2 升压分支、TPS2553、`HOST_EN/FAULT#`。
 5. **P04 CH582M 核心与 RF**：U1、电源脚、EP、32 MHz 晶振、ANT、RESET_N、BOOT_N、WCH-Link。
 6. **P05 USB 主从数据**：U1 USB Device/Host 引脚、USB ESD、差分对标签。
 7. **P06 两路 PS/2**：J3/J4、5 V 受控供电、四颗 BSS138、5 V/3.3 V 上拉。
@@ -54,19 +54,19 @@
 
 | 类别 | 网络名 |
 |---|---|
-| 电源 | `VBUS_RAW`, `BAT`, `SYS`, `3V3`, `5V_HOST`, `VBUS_HOST`, `5V_PS2_K`, `5V_PS2_M`, `GND` |
+| 电源 | `ETA_VIN`, `BAT`, `5V_ETA`, `3V3`, `5V_HOST`, `VBUS_HOST`, `5V_PS2_K`, `5V_PS2_M`, `EN_AUX`, `ENBST`, `STAT_CHG_N`, `GND` |
 | USB | `USB_DEV_DP_MCU`, `USB_DEV_DN_MCU`, `USB_HOST_DP_MCU`, `USB_HOST_DN_MCU`, `USB_C_VBUS_ADC` |
 | RS232 | `RS232_RX_TTL`, `RS232_TX_TTL`, `RS232_RX_DB9`, `RS232_TX_DB9` |
 | PS/2 | `KBD_CLK_5V`, `KBD_DATA_5V`, `KBD_CLK_MCU`, `KBD_DATA_MCU`, `MOUSE_CLK_5V`, `MOUSE_DATA_5V`, `MOUSE_CLK_MCU`, `MOUSE_DATA_MCU` |
 | 红外 | `IR_TXD_U9`, `IR_RX_RAW`, `IR_TX_MCP`（可选）, `IRDA_SD`, `IR_VCC2`, `IR_EXT_SINK_GATE`（可选） |
 | 扩展 | `I2C_SCL`, `I2C_SDA`, `SPI_SCK`, `SPI_MOSI`, `SPI_MISO`, `SPI_CS_N`, `UART_TTL_TX`, `UART_TTL_RX`, `WCH_TCK`, `WCH_TIO`, `RESET_N`, `BOOT_N` |
-| 状态/采样 | `CHG_N`, `INPUT_PGOOD_N`, `HOST_EN`, `HOST_FAULT_N`, `VBAT_SENSE`, `USB_C_VBUS_ADC` |
+| 状态/采样 | `STAT_CHG_N`, `HOST_EN`, `HOST_FAULT_N`, `VBAT_SENSE`, `USB_C_VBUS_ADC` |
 
 必须遵守以下规则：
 
-- 所有电源脚都显式放置 `3V3`、`SYS` 或 `GND` power symbol；不要依赖隐藏电源脚名称。
-- `VBUS_RAW` 只能表示 USB-C 进入板子的 5 V；`VBUS_HOST` 只能表示经过 TPS2553 后给 USB-A 的受控 5 V；两者不能用同一个标签。
-- 开漏状态脚 `CHG_N`、`INPUT_PGOOD_N`、`HOST_FAULT_N` 各自使用独立的 4.7–10 kΩ 上拉到 3V3，不能把开漏输出直接接到 MCU 推挽输出。
+- 所有电源脚都显式放置 `3V3`、`5V_ETA`、`ETA_VIN`、`BAT` 或 `GND` power symbol；不要依赖隐藏电源脚名称。
+- `ETA_VIN` 只表示 USB-C 入口保护后的 5 V；`5V_ETA` 只表示 ETA9697 的 5VOUT；`VBUS_HOST` 只能表示经过 TPS2553 后给 USB-A 的受控 5 V；三者不能用同一个标签。
+- 开漏状态脚 `STAT_CHG_N`、`HOST_FAULT_N` 各自使用独立的 4.7–10 kΩ 上拉到 3V3，不能把开漏输出直接接到 MCU 推挽输出。
 - 每个连接器的 NC 脚都放 `No Connect` 标记；不能用“没画线”表示 NC。
 - 同名标签表示同一物理网络。不同电压域即使信号逻辑相似，也要加 `_5V`、`_MCU` 或 `_HOST` 后缀。
 - `IR_TXD_U9` 只有一个基线推挽驱动：U1 PB7。标准 IrDA 和遥控不是两根并联线，而是 PB7 的 UART0/PWM9 内部功能切换；若装 MCP2120，必须用装配时 0 Ω 选择 TX 源，不能把两个推挽输出硬并联。
@@ -95,7 +95,7 @@
 | PB20/PB21 | `I2C_SDA`/`I2C_SCL` | I²C 重映射必须在固件设置 `RB_PIN_I2C=1` |
 | PB22/PB23 | `BOOT_N`/`RESET_N` | 调试/ISP 保留脚；只有确认 WCH 触摸复用后才允许画为触摸电极 |
 | PB0/PB1/PB2/PB3/PB4/PB6/PB7 | 红外/主机/IrDA | PB7/PB4 为 U9 直连；PB1 仅作可选高阻捕获，PB0 只作可选 IREDC/Q_IR 栅极，PB2/PB3 不接外部红外选择器 |
-| PB5/PB8/PB9/PB14/PB15/PB16/PB17 | 状态/调试/充电 | PB16 是数字 `INPUT_PGOOD_N`，不是 ADC |
+| PB5/PB8/PB9/PB14/PB15/PB16/PB17 | 状态/调试/电源扩展 | PB9 接 `STAT_CHG_N`；PB8/PB17 预留高电流分支；PB16 是数字保留脚，不是 ADC |
 | EP | `GND` | 大面积地铜和多个过孔；核对库中 EP 是 pin 0 还是 pin 49 |
 
 ### 3.2 复位、BOOT 和调试
@@ -109,15 +109,17 @@
 
 ### 4.1 USB-C 入口
 
-J1 所有 VBUS 引脚并到 `VBUS_RAW`，所有 GND 引脚和屏蔽层按最终 ESD 方案处理。CC1、CC2 各放 5.1 kΩ Rd 到 GND，SBU 保持 NC。VBUS 入口依次放保险丝/限流件（若最终方案需要）、TVS 和输入电容，再进入 U2 BQ24074 的 IN。USB-C 的 5 V 不能直接接 U1 或 3V3。
+J1 所有 VBUS 引脚并到 `VBUS_RAW`，所有 GND 引脚和屏蔽层按最终 ESD 方案处理。CC1、CC2 各放 5.1 kΩ Rd 到 GND，SBU 保持 NC。VBUS 入口依次放保险丝/限流件（若最终方案需要）、TVS 和输入电容，再进入 U2 ETA9697 的 VIN，并命名为 `ETA_VIN`。USB-C 的 5 V 不能直接接 U1 或 3V3。
 
 `USB_C_VBUS_ADC` 由 `VBUS_RAW` 分压得到，分压上端电阻必须按 PA7 的 ADC 最大输入和功耗计算，下端接 GND，分压中点放 1–10 nF RC；在 MCU 采样前关闭不需要的数字上拉。
 
-![Rev B-IR 电源树](schematic-guide/power-tree.svg)
+![ETA9697 候选电源树](schematic-guide/power-candidate-eta9697.svg)
 
-图 2：电源树的原理图级连接关系。`SYS` 是 power-path 系统电源，`BAT` 是电芯端，`5V_HOST` 同时服务 PS/2 和 USB-A 限流开关。
+图 2：当前 ETA9697 候选的原理图级连接关系。`BAT` 是受保护电池端，`5V_ETA` 是 0.4 A 级低功耗 5 V 分支；USB-A/PS/2 的完整电流不能默认从此网络取得。
 
-### 4.2 U2 BQ24074 充电和 power-path
+### 4.2 历史基线：U2 BQ24074 充电和 power-path
+
+以下 BQ24074/TPS63031/TPS61023 内容保留用于 Rev A/旧网表追溯。绘制 ETA9697 版本时，以 4.6 和 4.7 为准，不要把 `CHG_N`、`INPUT_PGOOD_N`、`CHG_EN1`、`CHG_EN2` 或 `SYS` 接回 ETA9697。
 
 按最终料号符号逐脚连接，不要只画一个“充电器方框”：
 
@@ -151,13 +153,13 @@ R_TMR   = t_MAXCHG / (10 × 48 s/kΩ)
 
 在 P02 旁边写设计备注：`BAT 为电芯端，SYS 为 power-path 输出；禁止 BAT 直接驱动 3V3/5V 升压`。这样可以避免把旧 Rev A 的 BAT/SYS 误接重新带入 Rev B。
 
-### 4.3 3V3：TPS63031
+### 4.3 历史基线：3V3 TPS63031
 
 U3 以 SYS 为输入的 buck-boost 3.3 V 固定输出为基线。按最终封装连接 `VIN`、`VINA`、`EN`、`PS/SYNC`、`L1/L2`、`VOUT`、`GND/PGND` 和散热焊盘；典型起点是 1.5 µH 电感、输入 10 µF、输出 2×10 µF 加 100 nF，最后以数据手册和负载瞬态校核。固定 3.3 V 版本通常不需要 FB 分压，但仍要确认最终后缀。
 
 `EN` 和 `PS/SYNC` 必须有明确的上电状态。若 3V3 需要系统始终工作，可按数据手册上拉；若由 MCU 关闭，增加 `3V3_EN` 并放外部默认电阻。DCDC 的 SW 节点只连接电感和芯片指定引脚，不要把它当作可用电源测试点。
 
-### 4.4 5V_HOST：TPS61023 与 TPS2553
+### 4.4 历史基线：5V_HOST TPS61023 与 TPS2553
 
 U4 TPS61023 从 `SYS` 产生 `5V_HOST`。画出 VIN、SW、VOUT、FB、EN、GND，电感放在 VIN/SW 规定位置，按最坏 `SYS`、5 V 输出和负载计算电感饱和电流。不要把开关峰值电流直接当作 USB 输出电流。若使用可调后缀，必须画 FB 分压；固定 5 V 后缀则按其真值表处理。当前基线中 `5V_HOST` 同时作为 PS/2 的 5 V 来源和 U5 的输入；`5V_PS2_K/M` 是从它分出的两个端口网络，若后续需要逐口关断，再在分支处增加独立负载开关。
 
@@ -191,75 +193,70 @@ IP5305T 的 ESOP8 只有 `VIN`、`LED1/VSET`、`LED2/VTHS`、`LED3`、`KEY`、`B
 
 IP5305T 数据表还规定：VOUT 负载持续低于约 45 mA 时会在约 32 s 后进入轻载关机。BLE/OLED/触摸待机若低于此阈值，5 V 和 AMS1117 的 3V3 会被切断；靠约 100 Ω 保持负载会长期浪费约 50 mA。当前产品需要电池状态下持续待机，所以该候选不通过正式设计评审。
 
-在正式原理图中，P00–P03 仍保留 `VBUS_RAW`、`BAT`、`SYS`、`3V3`、`5V_HOST`、`VBUS_HOST` 和 `CHG_N/INPUT_PGOOD_N` 的现有定义；只有当候选方案完成低负载、输入插拔、满载、温升和电源状态机测试后，才另开 `Rev B-P` 重新编号和审查。
+这段历史候选不改变当前绘图路径。ETA9697 版本的 P00–P03 使用 4.6/4.7 定义的 `ETA_VIN`、`BAT`、`5V_ETA`、`ENBST` 和 `STAT_CHG_N`；旧 `SYS`、`CHG_N`、`INPUT_PGOOD_N` 只在维护 Rev A 网表时保留。
 
-### 4.6 IP5306-CK + AMS1117 条件性候选方案
+### 4.6 ETA9697 + AMS1117 候选方案
 
-IP5306-CK 可以作为比 IP5305T 更合适的单芯片 1S 充电/5 V 候选，但本节不是把它宣布为已批准替换。公开的标准 IP5306 资料约为 2.1 A 充电、2.4 A 级升压，且标准品仍有低于约 45 mA 持续约 32 s 的轻载关机；`-CK` 的“常开”来自供应商变体信息，必须用厂家资料和样品确认。候选页见 [power-candidate-ip5306ck.svg](schematic-guide/power-candidate-ip5306ck.svg)，总评估见 [IP5306-CK / AMS1117 电源方案再评估](power-management-evaluation.md)。
+ETA9697 的优势是它有独立的 `ENBST` 升压使能和真正关断：`ENBST=0` 时断开 BAT 到 5V 输出，升压关断电流典型约 0.5 µA；充电器仍由 `VIN` 独立工作。[ETA9697 原厂数据手册](https://www.eta-semi.com/wp-content/uploads/2022/03/ETA9697_V1.3.pdf) 这正好解决 IP5306-CK 不能保证任意状态关断的问题。
 
-候选页按以下网络名绘制，**不要使用 `SYS`**：
+但 ETA9697 的 5V 输出额定只有 **0.4 A**。当前整板按 USB-A 0.5 A、两路 PS/2 各 0.1 A、3V3 约 0.1 A 时已经约 0.8 A，因此 ETA9697 **不能单独作为 USB-A、两路 PS/2 和全板 3V3 的总 5V 电源**。若坚持使用 ETA9697，应把它限定为低功耗系统电源，或另加一颗带 `EN` 的高电流升压器供 Host/PS/2；TPS2553 只能逐口限流，不能弥补上游 0.4 A 的不足。
+
+候选页见 [power-candidate-eta9697.svg](schematic-guide/power-candidate-eta9697.svg)，总开关见 [eta9697-power-switch-control.svg](schematic-guide/eta9697-power-switch-control.svg)，总评估见 [ETA9697 / AMS1117 电源方案评估](power-management-evaluation.md)。候选网络不要使用旧 `SYS` 名称：
 
 | 候选网络 | 连接 | 原理图要求 |
 |---|---|---|
-| `IP53_VIN` | USB-C VBUS 经入口保护后到 IP5306-CK VIN | CC1/CC2 各 5.1 kΩ Rd；输入电容靠近 VIN；不宣称 USB PD |
-| `BAT` | IP5306-CK BAT 到 1S 受保护电池 | 4.2 V 截止电压、保护板、NTC 和极性必须按最终料号确认 |
-| `5V_IP53` | IP5306-CK VOUT | SW 电感先按 1.0 µH 起步、饱和电流按最坏值核对；输入/输出储能按 `-CK` 资料；先放测试点；标注“CK 常开待确认” |
-| `3V3` | `5V_IP53 → AMS1117-3.3` | `P=(5−3.3)×I3V3`；`I3V3≤100–150 mA` 才考虑 AMS1117，必须有散热铜区；另记录约 5 mA 静态电流 |
-| `VBUS_HOST` | `5V_IP53 → TPS2553 → USB-A` | 保留 `HOST_EN`、`HOST_FAULT_N` 和 0.5 A 目标限流；不能直连 VOUT |
-| `5V_PS2_K/M` | 从 `5V_IP53` 分支 | 两路、USB-A、3V3 和红外共同计入 `I5V_CONT`；需要时加独立负载开关 |
-| `PWR_KEY` | 瞬时按键/开漏脉冲 → IP5306-CK `KEY` | 完全掉电后的第一次启动不能由 MCU 或底层触摸电极提供；必须保留实体按键或电池侧唤醒电路 |
+| `ETA_VIN` | USB-C VBUS 经入口保护后到 U2 VIN | CC1/CC2 各 5.1 kΩ Rd；VIN 旁至少 10 µF；本板按 5 V 输入设计，不把 `ENBST` 接到可能超过 6.5 V 的外部输入 |
+| `BAT` | U2 BAT 到受保护 1S 电池 P+ | 4.2 V 浮充；建议电池连接器增加 NTC 触点或在电池包上固定 NTC |
+| `5V_ETA` | U2 5VOUT | 4.7 µF 或更大输出电容靠近 5VOUT；L1 按数据手册从 2.2 µH 起步，按峰值电流和饱和电流核对 |
+| `EN_AUX` | `BAT` 与受保护 `ETA_VIN` 经过两个二极管 OR | 为了 USB-only 和电池供电都能开机，不能只从 3V3 产生；`ENBST` 高电平最小 1.2 V、低电平最大 0.4 V |
+| `ENBST` | `EN_AUX → SW_SYS → R_EN → ENBST`，`R_EN_PD` 下拉 GND | `SW_SYS` 用维持型 SPST/船型开关；OFF 关升压但不禁止充电，ON 请求启动升压；USB-only 能否工作按样品确认 |
+| `3V3` | `5V_ETA → AMS1117-3.3` | `I3V3≤100–150 mA` 才考虑 AMS1117；`P=(5−3.3)×I3V3`，保留大铜区并记录约 5 mA 静态电流 |
+| `STAT_CHG_N` | U2 STAT 开漏输出到 MCU | 以 10 kΩ 左右上拉到 3V3；STAT 低表示充电中，高阻表示充电结束 |
+| `ISET` | 1% 电阻到 GND | 1.00 kΩ 约 0.92 A 典型，2.00 kΩ 约 0.48 A 典型；最终按电芯允许充电电流选择 |
+| `NTC` | 电池温度检测网络 | NTC 接 GND 会禁用温度检测，不作为量产默认方案 |
 
-不要把 IP5306 的全局过流保护当作 USB-A 逐口限流，也不要把“2.4 A”当作电池或连接器可以长期承受的电流。用下面的式子写进 P00/P03 备注，并在测试点上实测：
+`ENBST` 不要由 MCU 的 3V3 直接驱动：升压关闭时 3V3 也关闭，MCU 没有电源保持开关状态。板边 `SW_SYS` 必须直接控制电池/USB 输入侧的 `EN_AUX`。原理图至少放 `TP_ETA_VIN`、`TP_BAT`、`TP_5V_ETA`、`TP_ENBST`、`TP_3V3`、`TP_VBUS_HOST`，并在 PCB 上把 VIN/SW/5VOUT/PGND 组成的高 di/dt 回路压到 U2 附近。
 
-```text
-I5V_CONT = IUSB_A(max) + IPS2_K + IPS2_M + I3V3 + IIR_PEAK_AVG + IOTHER
-IBAT ≈ (5 V × I5V_CONT) / (ηBOOST × VBAT_MIN)
-```
+### 4.7 电池拔插、ETA9697 升压开关和 5V Host 开关
 
-标准 IP5306 的 ESOP8 没有旧 BQ24074 的 `CHG_N`、`INPUT_PGOOD_N`、`CHG_EN1`、`CHG_EN2` 和 `TS`。除非采购明确的 `IP5306-I2C` 或 `-CK` 资料，否则不要把 LED/KEY 脚接进旧的状态机；若固件需要充电状态，另加分压/监测器。`EPAD` 必须接 GND 并安排热/回流过孔，不能只焊 8 个外露引脚。原理图至少放 `TP_IP53_VIN`、`TP_BAT`、`TP_5V_IP53`、`TP_3V3`、`TP_VBUS_HOST`、`TP_PWR_KEY`，并用 0/10/50/100 mA 低负载测试确认“常开”和冷启动。
-
-在 `IP5306-CK` 的厂家资料、样品和热/电流测试全部通过前，P00–P03 仍按 BQ24074/TPS63031/TPS61023/TPS2553 正式基线绘制；候选网络不能改名为 `SYS`、`5V_HOST` 或旧充电状态网络。
-
-### 4.7 电池拔插、KEY 和 5V Host 开关
-
-IP5306-CK 的 `KEY` 是按键事件输入，不是维持型电源开关输入。电池已经通过带保护的 XH2.54 插头拔出，所以本板不再放 `SW_PWR`，也不需要为了“关机继续充电”去切断 USB-C 输入。把电池侧硬断电和升压输出控制分开画：
+ETA9697 的 `ENBST` 是真正的逻辑使能脚，因此这里可以使用维持型 SPST/船型开关作为总电源开关，同时保留“关机继续充电”。电池拔插和升压使能仍然分开：
 
 #### 电池侧硬断电：XH2.54 拔插
 
 ```text
-1S 受保护电池 P+ ── J_BAT.XH2.54-1 ── BAT_IP53 ── IP5306-CK BAT
-1S 受保护电池 P− ── J_BAT.XH2.54-2 ── GND       ── IP5306-CK GND/EPAD
-USB-C VBUS保护后 ─────────────────────────────── IP53_VIN ── IP5306-CK VIN
+1S 受保护电池 P+ ── J_BAT.XH2.54-1 ── BAT ── ETA9697 BAT
+1S 受保护电池 P− ── J_BAT.XH2.54-2 ── GND ── ETA9697 GND/EPAD
+USB-C VBUS保护后 ───────────────────── ETA_VIN ── ETA9697 VIN
 ```
 
 - `J_BAT` 必须接在电池保护板的 `P+ / P−` 之后；不能把裸电芯 `B+ / B−` 引到板上，也不能把保护板的 `B−` 与系统 `GND` 混接。
-- 拔出 `J_BAT` 后，电池不再给 IP5306-CK 供电，这就是电池侧硬断电；不需要再串一个承载升压输入电流的拨动/船型开关。
-- 若 USB-C 仍插着，`IP53_VIN` 可能继续给 IP5306-CK 供电并允许边充边用。它属于 USB 供电状态，不应在图纸上标成“电池拔出后绝对无电”；是否允许这种状态由产品测试和使用说明决定。
-- 外部排针、USB 数据线和 RS232 仍可能在电池拔出时反向给 `3V3` 或 GPIO 供电。对外连接器保留掉电隔离规则，必要时给扩展电源加负载开关。
+- 如果电池包带 NTC，优先使用 3 针 XH2.54（`P+ / P− / NTC`）；只有两针电池时，在电池包上固定板载 NTC，不要为了省一个器件把 `NTC` 直接接 GND。
+- 拔出 `J_BAT` 后电池侧硬断电；USB-C 仍可给 ETA9697 充电。是否允许 USB-only 启动需按“无电池工作”资料和样品实测确认。
 
-#### IP5306-CK 升压控制：`PWR_KEY`
+#### ETA9697 总电源开关：`SW_SYS`
 
-在板边放瞬时按键 `SW_KEY`：一端接 `IP5306_KEY`，另一端接 GND，网络名为 `PWR_KEY`，并放 `TP_PWR_KEY`。短按用于冷启动；关断动作（长按或双击）必须按最终 `-CK` 料号的 KEY 配置和样品实测确定，不能把标准 IP5306 的手势直接当成 `-CK` 保证。不要把拨动开关或船型开关直接长期接在 `KEY` 上，长时间拉低可能被识别为长按/其他按键事件。
+```text
+BAT ──|>|──┐
+         ├── EN_AUX ── SW_SYS（维持型 SPST）── R_EN 10 kΩ ── ENBST
+ETA_VIN ─|>|──┘                                      │
+                                                  100 kΩ
+                                                     │
+                                                    GND
+```
 
-这里的“升压关闭”会使 `5V_IP53 → AMS1117 → 3V3` 整条系统电源掉电，CH582M 也会停止运行；它不是 MCU 的深度睡眠。MCU 只能在 `3V3` 已建立后用开漏晶体管模拟 `KEY` 脉冲；完全掉电时第一次脉冲仍由 `SW_KEY` 提供。底层电容触摸按键不能代替冷启动按键，因为触摸电路在 3V3 尚未建立时没有电源。若未来采购明确带 `BOOST_EN` 或 I²C 的定制变体，可再增加受控关断逻辑，但标准/常见 CK 裸芯片没有一个可以直接接拨动开关的独立 `EN` 脚。
+- `D_BAT/D_VIN` 只做低电流二极管 OR，保证电池供电和 USB-only 都能给 `ENBST` 提供高电平；本板按 5 V USB 输入设计，不能把可能超过 6.5 V 的外部输入直接接到 `ENBST`。
+- `SW_SYS=ON` 时 `ENBST` 为高，ETA9697 请求启动 `5V_ETA`；`SW_SYS=OFF` 时 `ENBST` 被 100 kΩ 拉低，升压输出断开，充电器仍可工作。电池已接入时开关状态可确定；USB-only 启动要按最终样品验证。
+- `ENBST` 不要由 `3V3` 驱动，因为关机时 `3V3` 已经消失；也不要把底层触摸按键作为总电源开关。
+- 这是真正的维持型总电源控制：在电池或 USB 输入存在时，可从 ON/OFF 任意状态切换；无电池且无 USB 时，任何开关都不能启动系统。
 
-#### 当前方案的状态转换边界
-
-| 起始状态 | 操作 | 结果 | 是否可保证 |
-|---|---|---|---|
-| 电池已接、USB-C 未接、IP5306-CK 升压休眠 | 短按 `SW_KEY` | 尝试启动 `5V_IP53` 和 3V3 | **可以作为冷启动路径**，但仍需用最终 CK 样品确认 KEY 时序 |
-| 正常工作、USB-C 未接 | 长按/双击 `SW_KEY` 或 MCU 模拟脉冲 | 请求 IP5306-CK 关闭升压 | **不能由当前原理图保证**；手势由 CK 变体/配置决定 |
-| 电池未接 | 插入 `J_BAT` 后短按 `SW_KEY` | 电池侧重新上电并启动 | **可以**，但这是拔插动作，不是一个单独开关 |
-| USB-C 已接 | 尝试用 `SW_KEY` 关断 | VIN/power-path 可能继续给 VOUT/系统供电 | **不能保证系统无电** |
-
-所以当前基线的“总电源控制”应准确称为：`J_BAT` 电池硬断开 + `SW_KEY` 升压唤醒/按键事件。若产品要求在电池保持连接、USB-C 任意插拔的情况下，使用一个实体开关从任意状态确定地切到“正常工作”和“系统关机”，IP5306-CK 本身不够：应改用带明确 `EN` 的升压电源，或增加始终接在电池侧的低功耗按键脉冲/锁存电路。只在 `5V_IP53` 后面加高边负载开关只能切断系统负载，不能保证停止 IP5306-CK 的升压和电池待机耗电。
+`SW_SYS` 旁放 `TP_ENBST`，`5V_ETA` 放 `TP_5V_ETA`。外部排针、USB 数据线和 RS232 仍可能在关机时反向给 `3V3` 或 GPIO 供电；必要时给扩展电源和数据线增加掉电隔离。
 
 #### 5V Host：用 TPS2553 `EN` 控制，不切大电流
 
 USB-A Host 继续使用 U5 TPS2553：
 
 ```text
-5V_IP53 ── U5 TPS2553 IN
+5V_ETA ─── U5 TPS2553 IN
 U5 OUT ───────────── VBUS_HOST ── USB-A pin 1
 U5 EN  ───────────── HOST_EN
 U5 FAULT ─────────── HOST_FAULT_N
@@ -281,9 +278,11 @@ CH582M HOST_KILL（开漏/仅下拉）──────┘
 
 若还要同时切断两路 PS/2 的 5 V，把 `5V_PS2_K/M` 放在同一个受控 5 V 负载开关之后，或为每路增加独立 `PS2_EN`；只切 TPS2553 的 `EN` 只会关闭 USB-A VBUS，不会自动关闭 PS/2。
 
-![IP5306-CK 电池拔插、PWR_KEY 和 USB Host 控制](schematic-guide/power-switch-control.svg)
+如果因为 ETA9697 的 0.4 A 限制而增加独立高电流升压器，必须把该器件的 `AUX_BOOST_EN` 接到 `SW_SYS` 后的硬件开关节点，使 `SW_SYS=OFF` 同时关闭两条 5 V 源。PB8 的 `POWER_AUX_EN` 只能作为运行时控制/监测预留，不能承担完全掉电后的第一次启动或总电源保持。
 
-图 7：XH2.54 电池插头负责电池侧硬断电；`PWR_KEY` 负责 IP5306-CK 冷启动/按键事件；`SW_HOST` 与 MCU 开漏下拉共同控制 TPS2553 `EN`。
+![ETA9697 电池拔插、总电源开关和 USB Host 控制](schematic-guide/eta9697-power-switch-control.svg)
+
+图 7：XH2.54 电池插头负责电池侧硬断电；`SW_SYS` 直接控制 ETA9697 `ENBST`；`SW_HOST` 与 MCU 开漏下拉共同控制 TPS2553 `EN`。
 
 ## 5. USB 设备和主机
 
@@ -299,7 +298,7 @@ CH582M HOST_KILL（开漏/仅下拉）──────┘
 - J2 pin 2/3 分别接 `USB_HOST_DN_MCU`/`USB_HOST_DP_MCU`，在连接器处放 USB ESD。
 - J2 pin 1 只接 `VBUS_HOST`；J2 pin 4 接 GND；壳体按屏蔽方案接地。
 - `HOST_EN` 默认低，先开 TPS2553，再允许 USB Host 控制器枚举；`HOST_FAULT_N` 进入 PB5。
-- USB-A 5 V 电流预算必须同时满足 TPS61023、TPS2553 热、USB 负载和电池 power-path；在 P03 放“最大连续电流/峰值电流”备注。
+- USB-A 5 V 电流预算必须同时满足高电流升压分支、TPS2553 热、USB 负载和电池/USB 输入能力；在 P03 放“最大连续电流/峰值电流”备注。ETA9697 的 `5V_ETA` 只能作为低功耗分支，不能用 TPS2553 掩盖 0.4 A 上游限制。
 
 ![USB 设备、USB 主机和 RS232 信号链](schematic-guide/usb-rs232.svg)
 
@@ -440,7 +439,7 @@ J9 2×3：1 `3V3_VTref`、2 GND、3 `WCH_TCK`、4 `WCH_TIO`、5 `RESET_N`、6 GN
 - OLED 供电电压、电流、FPC pinout 和背光电源必须以最终模块数据手册为准；不要仅因接口叫 I²C 就假设其能直接接 3V3。当前基线不放独立 OLED 电源开关，OLED 由固件在正常工作时执行熄屏。
 - SSD1306 用 `0xAE`（Display OFF）关闭 SEG/COM；若最终控制器支持其电荷泵命令，熄屏后再发 `0x8D, 0x10` 关闭 charge pump，唤醒时按“开 charge pump → `0xAF`”顺序恢复。SH1106 也有 Display OFF/Sleep 状态。原厂/控制器资料给出的裸芯片睡眠电流是微安级（SSD1306 的 display-off、无面板测试约 10 µA 量级；SH1106 sleep <5 µA），但带 AMS1117、分压、I²C 电平转换或指示灯的成品模块会明显更高，必须在模块 VCC 处实测。[SSD1306 产品资料](https://www.solomon-systech.com/zh-hant/product/SSD1306)；[SSD1306 数据表镜像](https://www.olimex.com/Products/Modules/LCD/MOD-OLED-128x64/resources/SSD1306.pdf)；[SH1106 数据表](https://www.displayfuture.com/Display/datasheet/controller/SH1106.pdf)
 - 在原理图放 `TP_OLED_3V3`，把“Display OFF 后 200 ms 的 OLED 供电电流”写进样板验收表。若实测仍超过产品待机预算，再装配预留的高边 `U_OLED_EN` 负载开关；默认 DNP，不把它作为第一版必需器件。切断 VCC 前先让 SDA/SCL 高阻，或选带反向电流阻断的负载开关，避免通过 I²C 钳位二极管反向给 OLED 模块供电。
-- 这里的“熄屏”只针对正常运行中的省电，不是系统关机。IP5306-CK 约 3 mA 的常开待机和 AMS1117 约 5 mA 的静态电流不会因 OLED `0xAE` 消失；如果目标是数天级待机，应先换低 IQ 电源，再考虑 OLED 断电。
+- 这里的“熄屏”只针对正常运行中的省电，不是系统关机。ETA9697 关闭 `ENBST` 后升压静态电流可降到微安级，但 AMS1117 仍有约 5 mA 静态电流；如果目标是数天级待机，应先给 3V3 改用低 IQ 稳压器，再考虑 OLED 断电。
 - PB18=`USER_TOUCH` 是当前确认的用户触摸输入。按 WCH 触摸模式/SDK 配置电极、守护地、串联电阻和 ESD；不要因为它叫“按键”就默认加 GPIO 上拉，外部上拉会改变电极的电容和基线。电极必须远离电池、DC/DC SW 节点、晶振和天线馈线。
 - PB22=`BOOT_N`、PB23=`RESET_N` 同时承担 ISP/复位功能。除非已经确认 CH582M 触摸通道、复位滤波和 ISP 低电平时序，否则原理图中只画成调试/系统信号，不要把它们直接当普通触摸按键。
 - 触摸电极和红外 TX/RX 是两个独立模块；没有共享网络，也不需要 SN74LVC2G157 或其他外部多路器。
@@ -448,7 +447,7 @@ J9 2×3：1 `3V3_VTref`、2 GND、3 `WCH_TCK`、4 `WCH_TIO`、5 `RESET_N`、6 GN
 
 ## 11. 测试点和 ERC/DRC 验收
 
-至少放置以下测试点：`VBUS_RAW`、`BAT`、`SYS`、`3V3`、`5V_HOST`、`VBUS_HOST`、`TP_OLED_3V3`、`CHG_N`、`INPUT_PGOOD_N`、`HOST_FAULT_N`、`RESET_N`、`BOOT_N`、USB D+/D− 两组、`IR_RX_RAW`、`IR_TXD_U9`、UART3 TX/RX、SPI SCK/MOSI/MISO/CS；只有装配 Q_IR 时再加 `IR_EXT_SINK_GATE`。
+至少放置以下测试点：`VBUS_RAW`、`ETA_VIN`、`BAT`、`5V_ETA`、`3V3`、`5V_HOST`、`VBUS_HOST`、`TP_OLED_3V3`、`STAT_CHG_N`、`ENBST`、`HOST_FAULT_N`、`RESET_N`、`BOOT_N`、USB D+/D− 两组、`IR_RX_RAW`、`IR_TXD_U9`、UART3 TX/RX、SPI SCK/MOSI/MISO/CS；只有装配 Q_IR 时再加 `IR_EXT_SINK_GATE`。旧 `SYS/CHG_N/INPUT_PGOOD_N` 仅在 Rev A 网表页保留。
 
 原理图 ERC 逐项确认：
 
@@ -485,6 +484,7 @@ J9 2×3：1 `3V3_VTref`、2 GND、3 `WCH_TCK`、4 `WCH_TIO`、5 `RESET_N`、6 GN
 - [Injoinic IP5305T 原厂数据表](https://www.injoinic.com/api/static/uploads/20250529/20250529092838_6837b846e7f6c.pdf)：历史候选 1S 充电/5 V 升压方案；其 1 A 总输出和轻载自动关机决定它不进入当前基线。
 - [Injoinic IP5306 数据表](https://datasheet.lcsc.com/lcsc/INJOINIC-IP5306_C181692.pdf)：IP5306 标准型号的充放电、电流和轻载检测依据；`-CK` 后缀仍需厂家资料确认。
 - [IP5306 I²C 寄存器文档](https://m5stack.oss-cn-shenzhen.aliyuncs.com/resource/docs/datasheet/core/IIC_IP5306_REG_V1.4_cn.pdf)：标准品默认不支持 I²C，BOOST 常开和轻载计时属于可配置/变体功能。
+- [ETA9697 原厂数据手册](https://www.eta-semi.com/wp-content/uploads/2022/03/ETA9697_V1.3.pdf)：`ENBST` 真关断、0.4 A 5V 升压、ISET/NTC/STAT、2.2 µH 起步电感和输入/输出电容布局依据。
 - [AMS1117-3.3 数据表](https://datasheet.lcsc.com/lcsc/1811142212_Advanced-Monolithic-Systems-AMS1117-3-3_C6186.pdf)：候选 5 V→3.3 V 线性稳压器的输入裕量、压差、静态电流和热设计依据。
 
 当前固件仍对应旧的 UART0/MCP2120/TFBS4711、PB1/TSOP 和 PB0/独立 LED 分立原型；完成本指南后的原理图还需要按 `docs/revb-firmware-migration.md` 迁移到 PB7 直连 TXD、PB4 直连 RXD、可选 PB1 原始捕获和 MCU 内部 UART/PWM 模式状态机，再进行开发板实测。

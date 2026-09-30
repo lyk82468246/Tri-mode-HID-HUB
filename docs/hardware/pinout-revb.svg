@@ -22,13 +22,13 @@
 <polyline points="786.62,827.50 786.62,850.50" fill="none" stroke="#d06338" stroke-width="9" stroke-linejoin="round" stroke-linecap="round" stroke-dasharray="" />
 <text x="782.62" y="865.50" font-size="13" fill="#d06338" text-anchor="start" font-weight="600" transform="rotate(90 782.625 865.5)">06  PA9  RS232_TX_TTL</text>
 <polyline points="819.88,827.50 819.88,850.50" fill="none" stroke="#926432" stroke-width="9" stroke-linejoin="round" stroke-linecap="round" stroke-dasharray="" />
-<text x="815.88" y="865.50" font-size="13" fill="#926432" text-anchor="start" font-weight="600" transform="rotate(90 815.875 865.5)">07  PB9  CHG_N</text>
+<text x="815.88" y="865.50" font-size="13" fill="#926432" text-anchor="start" font-weight="600" transform="rotate(90 815.875 865.5)">07  PB9  STAT_CHG_N</text>
 <polyline points="853.12,827.50 853.12,850.50" fill="none" stroke="#926432" stroke-width="9" stroke-linejoin="round" stroke-linecap="round" stroke-dasharray="" />
-<text x="849.12" y="865.50" font-size="13" fill="#926432" text-anchor="start" font-weight="600" transform="rotate(90 849.125 865.5)">08  PB8  CHG_EN1</text>
+<text x="849.12" y="865.50" font-size="13" fill="#926432" text-anchor="start" font-weight="600" transform="rotate(90 849.125 865.5)">08  PB8  POWER_AUX_EN</text>
 <polyline points="886.38,827.50 886.38,850.50" fill="none" stroke="#926432" stroke-width="9" stroke-linejoin="round" stroke-linecap="round" stroke-dasharray="" />
-<text x="882.38" y="865.50" font-size="13" fill="#926432" text-anchor="start" font-weight="600" transform="rotate(90 882.375 865.5)">09  PB17  CHG_EN2</text>
+<text x="882.38" y="865.50" font-size="13" fill="#926432" text-anchor="start" font-weight="600" transform="rotate(90 882.375 865.5)">09  PB17  POWER_AUX_FAULT_N</text>
 <polyline points="919.62,827.50 919.62,850.50" fill="none" stroke="#926432" stroke-width="9" stroke-linejoin="round" stroke-linecap="round" stroke-dasharray="" />
-<text x="915.62" y="865.50" font-size="13" fill="#926432" text-anchor="start" font-weight="600" transform="rotate(90 915.625 865.5)">10  PB16  INPUT_PGOOD_N</text>
+<text x="915.62" y="865.50" font-size="13" fill="#926432" text-anchor="start" font-weight="600" transform="rotate(90 915.625 865.5)">10  PB16  POWER_RESERVED</text>
 <polyline points="1007.50,806.12 1030.50,806.12" fill="none" stroke="#64748b" stroke-width="9" stroke-linejoin="round" stroke-linecap="round" stroke-dasharray="" />
 <text x="1039.50" y="811.12" font-size="13" fill="#64748b" text-anchor="start" font-weight="600" >11  PB15  WCH_TCK</text>
 <polyline points="1007.50,772.88 1030.50,772.88" fill="none" stroke="#64748b" stroke-width="9" stroke-linejoin="round" stroke-linecap="round" stroke-dasharray="" />

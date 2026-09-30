@@ -28,12 +28,12 @@
   <path class="arrow" d="M580 162 H610"/>
   <g transform="translate(610,105)">
     <rect class="page power" width="255" height="115" rx="10"/><circle class="num-bg" cx="25" cy="25" r="15"/><text class="num" x="25" y="30" text-anchor="middle">P02</text>
-    <text class="page-title" x="52" y="30">充电与电池</text><text class="page-text" x="20" y="58">BQ24074 / TS / CE</text><text class="page-text" x="20" y="79">ISET / ILIM / ITERM / TMR</text><text class="page-text" x="20" y="100">BAT、SYS、CHG#、PGOOD</text>
+    <text class="page-title" x="52" y="30">充电与电池</text><text class="page-text" x="20" y="58">ETA9697 / NTC / ENBST</text><text class="page-text" x="20" y="79">ISET / STAT / SW_SYS</text><text class="page-text" x="20" y="100">BAT、5V_ETA、STAT_CHG_N</text>
   </g>
   <path class="arrow" d="M865 162 H895"/>
   <g transform="translate(895,105)">
     <rect class="page power" width="255" height="115" rx="10"/><circle class="num-bg" cx="25" cy="25" r="15"/><text class="num" x="25" y="30" text-anchor="middle">P03</text>
-    <text class="page-title" x="52" y="30">3V3 / 5V 主机电源</text><text class="page-text" x="20" y="58">TPS63031 / TPS61023</text><text class="page-text" x="20" y="79">TPS2553 / HOST_EN</text><text class="page-text" x="20" y="100">FAULT#、限流和热预算</text>
+    <text class="page-title" x="52" y="30">3V3 / 5V 主机电源</text><text class="page-text" x="20" y="58">AMS1117 / 5V_ETA</text><text class="page-text" x="20" y="79">高电流分支 / TPS2553</text><text class="page-text" x="20" y="100">HOST_EN、FAULT#、热预算</text>
   </g>
 
   <!-- row 2 -->

@@ -146,8 +146,8 @@
     },
     {
       "ref": "U4",
-      "label": "TPS61023",
-      "detail": "5V_HOST + L/C",
+      "label": "高电流升压",
+      "detail": "5V_HOST + L/C · 待选",
       "x_mm": 63,
       "y_mm": 32.5,
       "w_mm": 8.5,
@@ -157,8 +157,8 @@
     },
     {
       "ref": "U3",
-      "label": "TPS63031",
-      "detail": "3V3 + L/C",
+      "label": "AMS1117-3.3",
+      "detail": "3V3 + L/C · 低功耗分支",
       "x_mm": 60,
       "y_mm": 43,
       "w_mm": 8,
@@ -168,8 +168,8 @@
     },
     {
       "ref": "U2",
-      "label": "BQ24074",
-      "detail": "充电 / SYS",
+      "label": "ETA9697",
+      "detail": "充电 / 5V_ETA",
       "x_mm": 69,
       "y_mm": 43,
       "w_mm": 8,

@@ -76,7 +76,7 @@ WCH 的封装图确认 CH582M QFN48 是 **5 × 5 mm，0.35 mm 间距，上/下�
 
 两只 PS/2 中心距 19 mm；Type-C/Type-A 中心距 16 mm。它们在规划包络中不重叠，但最终仍要带实物插头检查塑料护套、DB9 螺钉操作空间和四面墙壁厚，不能只比较金属座子的宽度。直角排母的线缆弯折半径要留在墙体开槽外侧，不能悬在天线净空上。四角孔已加入概念图，但孔径、环形焊盘、螺丝头和 3D 打印支柱仍未锁定。
 
-电源集中右下：BQ24074、TPS63031 在底边右侧，TPS61023 位于 USB-A 内侧下方；MAX3232 位于 DB9 与 MCU 之间。PS/2 的电平转换、上拉、ESD、支路保护各放在对应插座后方，避免让两条时钟线横穿全板。U9 与可选 Q_IR/R_IR、MCP2120 放在同一光学/编解码区；PB7→TXD、RXD→PB4/PB1 节点要短、直、可测试，不能再为 U12 预留必装位置。中央电池是机械叠层对象，不应把电源高热器件或裸焊点直接顶到电芯。
+电源集中右下：ETA9697、L1 和输入/输出电容靠近 USB-C/电池入口，AMS1117 位于 `5V_ETA` 低功耗分支；USB-A/PS/2 若保留完整负载，另预留带 EN 的高电流升压器和 TPS2553 区域。MAX3232 位于 DB9 与 MCU 之间。PS/2 的电平转换、上拉、ESD、支路保护各放在对应插座后方，避免让两条时钟线横穿全板。U9 与可选 Q_IR/R_IR、MCP2120 放在同一光学/编解码区；PB7→TXD、RXD→PB4/PB1 节点要短、直、可测试，不能再为 U12 预留必装位置。中央电池是机械叠层对象，不应把电源高热器件或裸焊点直接顶到电芯。
 
 ## 5. 机械基准与器件候选
 
@@ -142,10 +142,10 @@ PB7 的 UART0/PWM9 是 CH582M 内部功能复用，固件在两个模式之间�
 - **RF**：ANT34 朝北到馈点的示意路径约 12 mm；用板厂层叠计算 50 Ω 传输线，保持参考地连续。天线区的“全层净空”不排除天线本体及规定的接地短路端，不能误画成没有短路地端的任意折线。WCH 已有内部匹配，预留外部调谐焊盘并不等于必须额外串接一套固定 π 元件。选定天线、板厚和机壳后再做匹配。[S1][S2]
 - **晶振/芯片电源**：32 MHz 晶体紧靠 31/32 脚，负载由 CL 和寄生计算，不直接沿用两颗 12 pF。VINTA33、VDCIA35、VDCID1 按 WCH 电路去耦，EP 接地过孔提供短回流。可选 32.768 kHz 在左下局部区域，未装时固件继续用已选的 LSI 时基。[S1][S2]
 - **USB**：两组各自按 90 Ω 差分设计；ESD 靠连接器且接地短，串阻靠 MCU。Type-C 的两个方向 D+/D− 在座子旁汇合，避免长支线；CC1/CC2 分别独立 Rd。不要为了绝对等长而增加不必要的蛇形线。高频回流不跨地平面开槽。[S12]
-- **电源树**：统一为 USB-C → BQ24074 OUT/SYS → TPS63031 和 TPS61023；BAT 只接电池支路，不能让升压负载绕过 power-path 直接挂 BAT。EN1/EN2 由 PB8/PB17 控制，上电外部下拉为 USB100；取得供电能力后再放开外设供电，并与 USB 描述符/挂起策略同步。[S13]
-- **IP5306-CK + AMS1117 候选**：允许进入条件性小样验证，但不改当前基线。标准 IP5306 约为 2.1 A 充电、2.4 A 级升压；参考 CK 电源板显示其可持续升压，但完全掉电后仍要用 `KEY` 激活，待机电流约 3 mA，AMS1117 还会增加约 5 mA 静态电流。候选电源使用独立网络 `IP53_VIN → IP5306-CK → 5V_IP53 → AMS1117 → 3V3`，保留 `PWR_KEY`、TPS2553 逐口限流、EPAD 接地/热过孔，按 `I5V_CONT`、`I_BAT_IDLE` 和 LDO 温升测试。IP5305T 仅作历史对照。详细计算和测试条件见 [`power-management-evaluation.md`](power-management-evaluation.md)。[S18][S19][S20][S21]
+- **电源树**：当前候选为 USB-C → `ETA9697 VIN`、受保护电池 → `BAT`，U2 产生可由 `ENBST` 真关断的 `5V_ETA`，再由 AMS1117 产生 3V3；`SW_SYS` 从输入侧控制 `ENBST`，不得由 3V3 反向驱动。ETA9697 的 5V 额定只有 0.4 A，USB-A/两路 PS/2 的完整负载必须另加带 EN 的高电流升压分支或重新选 PMU。充电状态使用 `STAT_CHG_N`，不再保留 BQ24074 的 EN1/EN2/PGOOD 假设。[S22]
+- **电源布局放行条件**：ETA9697 的 VIN、SW、L1、5VOUT、PGND 高 di/dt 回路必须压在 U2 附近；`EN_AUX` 的二极管 OR、`SW_SYS`、`R_EN` 和 `R_EN_PD` 放在输入侧。TPS2553 仍只负责 USB-A 逐口限流，不能弥补上游 0.4 A；高电流分支的 EN 与 `POWER_AUX_EN` 预留脚在同一页定义。AMS1117 仅在 `I3V3≤100–150 mA`、温升和待机指标合格时装配。[S22]
 - **外设保护**：U5 改为 TPS2553 后需重新画封装及限流电阻。两只 PS/2 的独立限流器可纳入各自 9 × 9 mm 前级区域；其使能可与 HOST_EN 共用，使启动阶段不开外设电源。BSS138 的 3V3 侧上拉在 5 V 关闭时可能通过体二极管造成反供，需同步控制上拉电源或改用有掉电隔离的转换器；不能只关 5 V 就宣称接口完全断电。[S10]
-- **功率/温升**：本图只分配功率器件及周围电感、电容空间。USB-A、两路 PS/2、U9 IRED 脉冲、可选 Q_IR/R_IR、OLED 与充电的电流上限必须联合预算；TPS61023 的开关电流参数不是输出 5 V 电流额定值。
+- **功率/温升**：本图只分配功率器件及周围电感、电容空间。USB-A、两路 PS/2、U9 IRED 脉冲、可选 Q_IR/R_IR、OLED 与充电的电流上限必须联合预算；待选高电流升压器的开关峰值电流不是输出 5 V 电流额定值，ETA9697 的 0.4 A 输出也不能被按峰值电流放大解释。
 - **共用红外光路**：U9 只保留一个朝外光窗，TXD/RXD/IREDC 走线短且不穿过天线和 DC/DC 开关节点；U9 的 VCC2/IRED 峰值电流回路按厂商建议放置本地储能和去耦。PB7→TXD、RXD→PB4/PB1 要短直；若装可选 Q_IR/R_IR 或 MCP2120，必须用 DNP/0 Ω 装配选择，禁止两个推挽源并联。
 - **红外模式安全态**：PB19 的 U9 SD 以低电平为工作默认，PB7/TXD0 上电不输出，PB0/Q_IR 栅极（若装）由下拉保持低；标准 IrDA、遥控发射和遥控学习在固件中互斥，不依赖 PB3 外部选择脚。
 - **信号/排母**：RS232 是三线 DTE，不额外提供握手；TTL、SPI、I2C 是 3.3 V 接口。直角排母上的 3V3 是受预算约束的输出，不可反向接入另一块板的电源。WCH-Link 的 3V3 标为 VTref，避免双电源硬并联。
@@ -183,3 +183,4 @@ PB7 的 UART0/PWM9 是 CH582M 内部功能复用，固件在两个模式之间�
 - S19：[Advanced Monolithic Systems AMS1117-3.3 数据表](https://datasheet.lcsc.com/lcsc/1811142212_Advanced-Monolithic-Systems-AMS1117-3-3_C6186.pdf)，输入下限、压差、静态电流和 SOT-223 热设计。
 - S20：[Injoinic IP5306 数据表](https://datasheet.lcsc.com/lcsc/INJOINIC-IP5306_C181692.pdf) 与 [IP5306 I²C 寄存器文档](https://m5stack.oss-cn-shenzhen.aliyuncs.com/resource/docs/datasheet/core/IIC_IP5306_REG_V1.4_cn.pdf)，标准型号的 2.1 A/2.4 A 级能力、轻载检测和常开/I²C 配置边界；`-CK` 后缀需厂家资料确认。
 - S21：[IP5306CK 开源电源板参考](https://oshwhub.com/yxynb/IP5306CKPOWERBOARD) 与 [ElectroDragon IP5306 资料页](https://w2.electrodragon.com/Chip-cn-dat/injoinic-dat/IP5306-dat/IP5306-dat.md)，CK 持续升压、KEY 冷启动、EPAD/模块负端和静态功耗的社区级参考；不替代厂家数据表。
+- S22：[ETA9697 原厂数据手册](https://www.eta-semi.com/wp-content/uploads/2022/03/ETA9697_V1.3.pdf)，VIN/BAT/SW/5VOUT/ENBST/STAT/NTC/ISET 引脚、0.4 A 5V 升压额定、真关断和推荐外围依据。

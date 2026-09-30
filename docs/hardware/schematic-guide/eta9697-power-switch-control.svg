@@ -1,0 +1,93 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1500" height="820" viewBox="0 0 1500 820">
+  <title>ETA9697 总电源开关与 USB Host 控制示意</title>
+  <desc>BAT 和受保护 USB 输入经过低电流二极管 OR，由维持型 SW_SYS 控制 ETA9697 ENBST。ENBST 关闭时升压输出断开但充电器仍可工作，USB Host 另由 TPS2553 EN 控制。</desc>
+  <defs>
+    <style>
+      .bg{fill:#f8fafc}.title{font:700 26px "Microsoft YaHei",sans-serif;fill:#172033}.sub{font:14px "Microsoft YaHei",sans-serif;fill:#526071}
+      .power{fill:#fff3df;stroke:#d58b2d;stroke-width:2}.logic{fill:#edf8ef;stroke:#5a9d72;stroke-width:2}.port{fill:#eaf4ff;stroke:#5790c7;stroke-width:2}.warn{fill:#fff0f0;stroke:#cc4b4b;stroke-width:2}.switch{fill:#f1edff;stroke:#7f63b2;stroke-width:2}
+      .head{font:700 18px "Microsoft YaHei",sans-serif;fill:#172033}.text{font:13px "Microsoft YaHei",sans-serif;fill:#526071}.small{font:12px "Microsoft YaHei",sans-serif;fill:#526071}.net{font:700 13px "Consolas",monospace;fill:#9a4e16}.wire{fill:none;stroke:#c06d19;stroke-width:4;marker-end:url(#arrow)}.ctl{fill:none;stroke:#6b4ba5;stroke-width:3;marker-end:url(#ctlArrow)}
+    </style>
+    <marker id="arrow" markerWidth="10" markerHeight="10" refX="9" refY="5" orient="auto"><path d="M0,0 L10,5 L0,10 Z" fill="#c06d19"/></marker>
+    <marker id="ctlArrow" markerWidth="10" markerHeight="10" refX="9" refY="5" orient="auto"><path d="M0,0 L10,5 L0,10 Z" fill="#6b4ba5"/></marker>
+  </defs>
+  <rect class="bg" width="1500" height="820"/>
+  <text class="title" x="42" y="43">ETA9697：维持型总电源开关、充电保持与 USB Host</text>
+  <text class="sub" x="42" y="70">橙色是电源路径，紫色是 ENBST/Host 控制；SW_SYS 不切充电输入，只切 5V 升压。</text>
+
+  <g transform="translate(45,120)">
+    <rect class="port" width="230" height="125" rx="12"/>
+    <text class="head" x="115" y="31" text-anchor="middle">受保护电池</text>
+    <text class="text" x="18" y="64">P+ → BAT</text>
+    <text class="text" x="18" y="87">P− → GND</text>
+    <text class="small" x="18" y="109">J_BAT XH2.54</text>
+  </g>
+  <g transform="translate(45,315)">
+    <rect class="port" width="230" height="125" rx="12"/>
+    <text class="head" x="115" y="31" text-anchor="middle">USB-C VBUS</text>
+    <text class="text" x="18" y="64">VBUS → ETA_VIN</text>
+    <text class="text" x="18" y="87">输入保护后使用</text>
+    <text class="small" x="18" y="109">USB-only 启动需实测</text>
+  </g>
+
+  <g transform="translate(350,140)">
+    <rect class="logic" width="240" height="175" rx="12"/>
+    <text class="head" x="120" y="31" text-anchor="middle">EN_AUX 二极管 OR</text>
+    <text class="text" x="18" y="67">BAT ─|&gt;─┐</text>
+    <text class="text" x="18" y="93">ETA_VIN ─|&gt;─┴─ EN_AUX</text>
+    <text class="small" x="18" y="128">仅提供约 1 µA 级 EN 电流</text>
+    <text class="small" x="18" y="151">禁止接超过 6.5 V 的输入</text>
+  </g>
+  <path class="wire" d="M275 182 H350"/><text class="net" x="288" y="166">BAT</text>
+  <path class="wire" d="M275 377 H315 V247 H350"/><text class="net" x="286" y="361">ETA_VIN</text>
+
+  <g transform="translate(650,155)">
+    <rect class="switch" width="245" height="145" rx="12"/>
+    <text class="head" x="122" y="31" text-anchor="middle">SW_SYS SPST</text>
+    <text class="text" x="18" y="68">EN_AUX → 开关 → 10 kΩ</text>
+    <text class="text" x="18" y="92">100 kΩ → GND</text>
+    <text class="small" x="18" y="119">ON=升压，OFF=真关断</text>
+  </g>
+  <path class="ctl" d="M590 228 H650"/><text class="net" x="600" y="212">EN_AUX</text>
+
+  <g transform="translate(980,105)">
+    <rect class="power" width="330" height="250" rx="12"/>
+    <text class="head" x="165" y="31" text-anchor="middle">U2 ETA9697E8A</text>
+    <text class="text" x="20" y="70">ENBST ← SW_SYS</text>
+    <text class="text" x="20" y="96">BAT ← J_BAT</text>
+    <text class="text" x="20" y="122">VIN ← ETA_VIN</text>
+    <text class="text" x="20" y="148">5VOUT → 5V_ETA</text>
+    <text class="text" x="20" y="174">STAT → STAT_CHG_N</text>
+    <text class="small" x="20" y="211">ENBST=0：断开 BAT→5VOUT</text>
+    <text class="small" x="20" y="232">充电器仍可由 VIN 工作</text>
+  </g>
+  <path class="ctl" d="M895 228 H940 V175 H980"/><text class="net" x="908" y="212">ENBST</text>
+  <path class="wire" d="M895 285 H940 V253 H980"/><text class="net" x="910" y="269">BAT</text>
+  <path class="wire" d="M275 377 H930 V227 H980"/><text class="net" x="720" y="361">ETA_VIN</text>
+
+  <g transform="translate(1030,430)">
+    <rect class="logic" width="235" height="135" rx="12"/>
+    <text class="head" x="117" y="31" text-anchor="middle">3V3 / MCU</text>
+    <text class="text" x="18" y="65">5V_ETA → AMS1117</text>
+    <text class="text" x="18" y="88">ENBST OFF 时掉电</text>
+    <text class="small" x="18" y="111">不能反向驱动 ENBST</text>
+  </g>
+  <path class="wire" d="M1310 253 V395 H1147 V430"/><text class="net" x="1320" y="385">5V_ETA</text>
+
+  <g transform="translate(700,450)">
+    <rect class="power" width="250" height="175" rx="12"/>
+    <text class="head" x="125" y="31" text-anchor="middle">U5 TPS2553</text>
+    <text class="text" x="18" y="66">IN ← 5V_ETA</text>
+    <text class="text" x="18" y="90">EN ← HOST_EN</text>
+    <text class="text" x="18" y="114">OUT → VBUS_HOST</text>
+    <text class="small" x="18" y="142">Host 仍单独限流</text>
+  </g>
+  <path class="wire" d="M1310 253 V410 H825 V450"/><text class="net" x="1180" y="394">5V_ETA</text>
+
+  <g transform="translate(45,610)">
+    <rect class="warn" width="590" height="125" rx="12"/>
+    <text class="head" x="20" y="31" fill="#a52b2b">状态结论</text>
+    <text class="text" x="130" y="31">SW_SYS=ON：电池已接入时可启动 5V；USB-only 需样品确认。</text>
+    <text class="text" x="130" y="61">SW_SYS=OFF：升压真关断，充电仍可继续。</text>
+    <text class="text" x="130" y="91">若增加高电流升压，其 EN 也接 SW_SYS 后节点；无输入时任何开关都不能启动。</text>
+  </g>
+</svg>
