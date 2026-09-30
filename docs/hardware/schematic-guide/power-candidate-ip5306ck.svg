@@ -24,17 +24,18 @@
   <path class="wire" d="M235 232 H300"/><text class="net" x="238" y="216">IP53_VIN</text>
 
   <g transform="translate(300,120)">
-    <rect class="power" width="350" height="230" rx="12"/>
+    <rect class="power" width="350" height="245" rx="12"/>
     <text class="head" x="175" y="31" text-anchor="middle">U2 IP5306-CK ESOP8</text>
     <text class="text" x="20" y="66">VIN ← IP53_VIN</text>
     <text class="text" x="20" y="88">BAT ↔ 1S 受保护电池（4.2 V）</text>
-    <text class="text" x="20" y="110">SW ↔ 按最终资料选定的电感</text>
+    <text class="text" x="20" y="110">SW ↔ 1.0 µH 起步，按 CK 资料核对</text>
     <text class="text" x="20" y="132">VOUT → 5V_IP53</text>
-    <text class="text" x="20" y="154">LED / KEY / VSET 按 CK 资料处理</text>
+    <text class="text" x="20" y="154">LED / VSET 按 CK 资料；KEY ← PWR_KEY</text>
     <text class="small" x="20" y="181">标准 IP5306：约 2.1 A 充电、2.4 A 级升压</text>
-    <text class="small" x="20" y="204">CK 常开、引脚和配置：待厂家确认</text>
+    <text class="small" x="20" y="204">CK 常开、冷启动、引脚和配置：待厂家确认</text>
+    <text class="small" x="20" y="226">EPAD → GND + 热/回流过孔；完全掉电需测 KEY</text>
   </g>
-  <path class="wire" d="M475 350 V425"/><text class="net" x="490" y="396">BAT</text>
+  <path class="wire" d="M475 365 V425"/><text class="net" x="490" y="396">BAT</text>
   <g transform="translate(370,425)">
     <rect class="port" width="210" height="92" rx="12"/>
     <text class="head" x="105" y="30" text-anchor="middle">J6 1S 电池</text>
@@ -82,8 +83,8 @@
     <rect class="warn" width="1290" height="92" rx="12"/>
     <text class="head" x="20" y="29" fill="#a52b2b">放行条件</text>
     <text class="text" x="120" y="29">供应商需确认 -CK 专用资料；样板需证明 0–100 mA 低负载连续不关机。</text>
-    <text class="text" x="120" y="53">I5V_CONT = IUSB_A + IPS2_K + IPS2_M + I3V3 + IIR_PEAK_AVG + IOTHER；电池与热设计按最坏值核对。</text>
-    <text class="text" x="120" y="77">IP53_VIN、BAT、5V_IP53、3V3、VBUS_HOST 各放测试点；未通过前不得把 5V_IP53 改名为 SYS。</text>
+    <text class="text" x="120" y="53">I5V_CONT = IUSB_A + IPS2_K + IPS2_M + I3V3 + IIR_PEAK_AVG + IOTHER；I_BAT_IDLE 也要实测。</text>
+    <text class="text" x="120" y="77">冷启动需测 PWR_KEY；触摸电极不能代替断电后的第一次激活。未通过前不得把 5V_IP53 改名为 SYS。</text>
   </g>
   <path class="warnline" d="M475 350 C650 375 840 365 1040 440"/>
   <path class="warnline" d="M650 238 C690 215 690 105 670 84"/>

@@ -11,6 +11,8 @@
 
 `IP5306-CK` 的“CK”常被供应商标成“常开”或“5V 常开 2 A”，但我没有找到英集芯公开发布、明确覆盖 `-CK` 后缀的独立数据表。这个功能目前只能作为供应商变体声明，不能用标准 IP5306 数据表推断。正式下单前必须拿到带完整料号、批次和引脚/配置说明的厂家或授权渠道资料，并在样板上确认：无负载和低负载是否保持 VOUT、是否仍需 KEY 唤醒、输入拔插和边充边放时 VOUT 是否连续、4.2 V 充电截止配置、保护阈值以及推荐电感和电容。供应商页面确实把 `IP5306-CK` 描述为“带 CK 常开”和“5V 常开 2A”，但这属于分销信息，应以样品和厂家文件为准。[供应商型号页](https://china.hqew.com/IP5306-ck.html)
 
+用户给出的参考网页对应的开源 `IP5306CK` 电源板资料进一步说明：CK 版本的目的就是持续升压、不依赖持续负载；但该类模块每次完全掉电后仍需要按一下 KEY 才能激活，且示例板把待机电流记为约 3 mA。这个资料不是英集芯的正式数据表，所以只能用于补充原理图风险清单；它已经足以说明“常开”不能等同于“无条件自动冷启动”。[IP5306CK 开源电源板参考](https://oshwhub.com/yxynb/IP5306CKPOWERBOARD)
+
 如果 CK 的常开行为实测成立，原理图可以采用以下条件性架构：
 
 ```text
@@ -20,9 +22,17 @@ IP5306-CK VOUT → 5V_IP53
 5V_IP53 → TPS2553 → VBUS_HOST
 5V_IP53 → 受控 PS/2 5 V 分支
 5V_IP53 → 3V3 LDO（AMS1117 仅在热预算合格时使用）
+PWR_KEY → IP5306-CK KEY（冷启动按键，不能由断电时的触摸电极代替）
 ```
 
 IP5306-CK 的 5 V 是全板共享总线，芯片的 2.4 A 级峰值不能直接当作电池、连接器或每个端口都能长期得到的电流。USB-A 仍应保留 TPS2553 或同类逐口限流开关；IP5306 的全局过流保护不能替代 `HOST_EN` 和 `HOST_FAULT_N`。标准 IP5306 的 ESOP8 版本也没有 BQ24074 的 `CHG#`、`PGOOD`、`EN1/EN2`、`TS`；若要由 MCU 读取充电状态，应增加外部监测，或采购明确的 `IP5306-I2C` 定制版本。英集芯的寄存器文档明确说明标准品默认不支持 I²C，并把“BOOST 输出常开”列为可配置位，因此不能把标准 `IP5306` 的寄存器功能自动套到 `IP5306-CK` 上。[IP5306 I²C 寄存器文档](https://m5stack.oss-cn-shenzhen.aliyuncs.com/resource/docs/datasheet/core/IIC_IP5306_REG_V1.4_cn.pdf)
+
+### 冷启动、静态功耗和电池负端
+
+- `KEY` 应画成独立的 `PWR_KEY`，按最终资料接到 GND 的瞬时按键或等效开漏脉冲。MCU 由 `5V_IP53` 供电时，不能指望 MCU 自己在完全掉电后产生第一个 KEY 脉冲；底层触摸电极也不能在无 3V3 时完成唤醒。若产品必须取消实体按键，就要另加始终接在电池侧的超低功耗唤醒电路，并单独验证功耗。
+- 社区 CK 模块把持续工作时的待机电流记为约 3 mA；AMS1117-3.3 典型静态电流约 5 mA。两者叠加后，低负载常供电的续航可能比标准 IP5306 的微安级待机差两个数量级。若需要数天级待机，优先使用低 IQ LDO/Buck，并把 `I_BAT_IDLE` 写进产品指标；不能只看 LDO 热耗散。
+- 开源模块的 10 针接口把 `BAT-`、系统 `GND` 和保护芯片的电池负端分开。若本板使用已带保护板的电池包，应按电池包的 `P−/GND` 定义连接；若本板集成保护芯片，则必须保留 `B−` 与 `P−/GND` 的区别，不能为了方便把电池负端直接短接到错误的地节点。
+- IP5306 的 EPAD 必须按最终封装资料焊接到 GND，并布置足够的热/回流过孔；不能只连接 8 个外露引脚。标准应用通常以约 1.0 µH 电感为起点，`-CK` 仍需以厂家资料确认饱和电流和热额定值。
 
 ### 1 A 预算如何判断
 
@@ -66,10 +76,11 @@ AMS1117-3.3 的资料还给出约 5 mA 典型静态电流、约 1.1 V 典型压�
 
 在未得到 `-CK` 专用数据表前，按标准 IP5306 的电气回路绘制**候选页**，但在料号旁明确“CK 常开功能待厂家确认”，不要直接替换正式 `SYS` 网络。样板至少应放置 `TP_IP53_VIN`、`TP_BAT`、`TP_5V_IP53`、`TP_3V3`、`TP_VBUS_HOST`，并完成以下测试：
 
+- 电池完全断电后重新接入，分别测试无按键、短按 `PWR_KEY`、USB-C 插入三种启动路径；确认 VOUT 是否需要 KEY，以及 MCU/触摸是否能在预期时刻启动。
 - 0 mA、10 mA、50 mA、100 mA 负载下，VOUT 连续运行至少 10 min；确认 CK 不会按标准 IP5306 的轻载逻辑关断。
 - USB-A 0.5 A、两路 PS/2 最大负载、OLED/BLE 发射和红外峰值同时变化时，记录 5 V 纹波、压降、输入电流和 IP5306/电池温升。
 - 充电插入、拔出、满电、低电量、USB-A 热插拔和短路保护各执行一次；核对电池保护板和连接器额定值。
-- 分别记录 `I3V3` 最大值和 AMS1117 的壳温；若超过 150 mA 或温升无法接受，不再为 AMS1117 加“保持负载”，直接换低 IQ LDO/Buck。
+- 分别记录 `I3V3` 最大值、`I_BAT_IDLE` 和 AMS1117 的壳温；若超过 150 mA、静态电流不满足续航或温升无法接受，不再为 AMS1117 加“保持负载”，直接换低 IQ LDO/Buck。
 
 未完成上述测试前，正式电源树仍保持 `BQ24074 → SYS → TPS63031/TPS61023 → TPS2553`；IP5306-CK 只作为 `Rev B-P` 候选。
 
@@ -156,6 +167,10 @@ Tj ≈ Ta + PAMS1117 × θJA
 ## 资料
 
 - [Injoinic IP5305T 原厂数据表 V1.0](https://www.injoinic.com/api/static/uploads/20250529/20250529092838_6837b846e7f6c.pdf)
+- [Injoinic IP5306 数据表](https://datasheet.lcsc.com/lcsc/INJOINIC-IP5306_C181692.pdf)
+- [IP5306 I²C 寄存器文档](https://m5stack.oss-cn-shenzhen.aliyuncs.com/resource/docs/datasheet/core/IIC_IP5306_REG_V1.4_cn.pdf)
+- [IP5306CK 开源电源板参考](https://oshwhub.com/yxynb/IP5306CKPOWERBOARD)：CK 常开、冷启动 KEY、模块负端和约 3 mA 待机电流的社区实测说明；不是厂家数据表。
+- [ElectroDragon IP5306 资料页](https://w2.electrodragon.com/Chip-cn-dat/injoinic-dat/IP5306-dat/IP5306-dat.md)：标准版轻载检测、KEY 行为、CK 常开和 I²C 版本说明。
 - [IP5305T 引脚和典型应用镜像](https://datasheet4u.com/pdf-down/I/P/5/IP5305T-Injoinic.pdf)
 - [Advanced Monolithic Systems AMS1117-3.3 数据表](https://datasheet.lcsc.com/lcsc/1810231814_Advanced-Monolithic-Systems-AMS1117-3-3_C6186.pdf)
 - [TI BQ24074](https://www.ti.com/lit/ds/symlink/bq24074.pdf)、[TI TPS63031](https://www.ti.com/lit/ds/symlink/tps63031.pdf)、[TI TPS61023](https://www.ti.com/lit/ds/symlink/tps61023.pdf)、[TI TPS2553](https://www.ti.com/lit/ds/symlink/tps2553.pdf)
