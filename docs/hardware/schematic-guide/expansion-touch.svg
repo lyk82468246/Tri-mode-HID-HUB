@@ -20,7 +20,7 @@
     <text class="text" x="20" y="176">PA12：SPI_CS_N</text><text class="text" x="20" y="202">PA13：SPI_SCK</text><text class="text" x="20" y="228">PA14：SPI_MOSI</text><text class="text" x="20" y="254">PA15：SPI_MISO</text>
     <text class="text" x="20" y="350">PA5：UART_TTL_TX</text><text class="text" x="20" y="376">PA4：UART_TTL_RX</text>
     <text class="text" x="20" y="428">PB15：WCH_TCK</text><text class="text" x="20" y="454">PB14：WCH_TIO</text>
-    <text class="text" x="20" y="480">PB18：USER_N 触摸</text>
+    <text class="text" x="20" y="480">PB18：USER_TOUCH 触摸</text>
   </g>
 
   <g transform="translate(470,105)"><rect class="headr" width="300" height="130" rx="12"/><text class="head" x="150" y="30" text-anchor="middle">J7 I²C / OLED 1×4</text><text class="text" x="18" y="60">1 GND；2 3V3；3 SCL；4 SDA</text><text class="text" x="18" y="84">SCL/SDA：2.2–4.7 kΩ → 3V3</text><text class="text" x="18" y="108">OLED RESET/INT 待确认脚位</text></g>
@@ -39,7 +39,7 @@
   <path class="wire" d="M340 553 H390 V440 H820 V510 H850"/><path class="wire" d="M340 579 H405 V450 H810 V530 H850"/><text class="net" x="560" y="432">WCH_TCK / WCH_TIO</text>
 
   <g transform="translate(850,625)"><rect class="touch" width="380" height="80" rx="12"/><text class="head" x="190" y="29" text-anchor="middle">底层触摸电极</text><text class="text" x="18" y="55">PB18 USER 已确认</text><text class="text" x="18" y="75">PB22 BOOT / PB23 RESET：先确认 WCH 触摸复用</text></g>
-  <path class="ctrl" d="M340 615 H800 V665 H850"/><text class="pin" x="420" y="607">USER_N：远离电池、SW、晶振和天线</text>
+  <path class="ctrl" d="M340 615 H800 V665 H850"/><text class="pin" x="420" y="607">USER_TOUCH：远离电池、SW、晶振和天线</text>
 
   <g transform="translate(40,640)"><rect class="note" width="740" height="80" rx="10"/><text class="head" x="18" y="29">电气规则</text><text class="text" x="18" y="55">I²C 是开漏总线，两根线各自上拉；UART3/J10 仅为 3.3 V TTL；WCH-Link VTref 只作参考，不让调试器 5 V 反灌。</text></g>
 </svg>

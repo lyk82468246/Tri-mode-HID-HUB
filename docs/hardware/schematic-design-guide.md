@@ -4,6 +4,8 @@
 
 本文不是已经验收的制造网表。凡是写成“按最终料号确认”“按数据手册计算”“DNP/可选”的项目，必须在下单前用最终器件的数据手册、封装和电流预算复核。原理图中不要用“看起来相同”的库符号替代最终料号。
 
+**2026-09-30 修订重点**：上一版把 U12 外部逻辑多路器误写成 IrDA/遥控的必需器件，也把 PB18 触摸写成普通上拉输入。本版撤销这两个结论：PB7/TXD0/PWM9 直接接 U9 TXD，由 CH582M 内部复用和固件在 UART0 与 PWM/定时器之间切换；触摸只走 WCH 触摸通道，和红外没有硬件复用关系。U12 不进入基线 BOM。
+
 ## 0. 先冻结哪些设计决定
 
 在 EDA 中放置第一个符号前，先在项目标题栏写明 `Rev B-IR / Schematic Draft`，并把下列决定记录为设计参数：
@@ -12,13 +14,13 @@
 |---|---|---|
 | MCU | CH582M，QFN48，3.3 V I/O | 以 WCH 官方参考原理图和最终封装 pin number 为准；不要只按 GPIO 名称猜脚号 |
 | 红外 | 一个带 IREDC 引出的 TFBS4650 级共用光头 | U9 同时负责 IrDA 和遥控收发；不再并列放 TSOP 或独立 IrDA LED |
-| 遥控发射 | U9 内置 IRED，由 Q_IR 低侧电流汇驱动 | R_IR 按峰值电流、脉冲占空比和热设计计算；38 kHz 由 MCU PB0/PWM6 产生 |
-| IrDA 编码 | MCU 软件 UART/定时器为主 | MCP2120 仅作为 DNP 可选物理层编码器，不能把它当协议栈 |
+| 遥控发射 | **U9 TXD 直接由 PB7/TXD0/PWM9 驱动** | 同一根线在软件中输出 UART/SIR 或 38 kHz 载波+包络；IREDC/Q_IR/R_IR 只保留为实测不足时的 DNP 增强支路 |
+| IrDA 编码 | MCU 软件 UART/定时器为主 | MCP2120 仅作为 DNP 可选物理层编码器，不能把它当协议栈；不放运行时外部 TX 多路器 |
 | 电池 | 1S 受保护锂电池，中央盆地 | J6 只定义 BAT+/GND；NTC 独立焊盘或随电池连接器引出，极性必须在丝印和原理图同时标明 |
 | 机械 | CH582M 顶层面向盆地，OLED/触摸在底层面向用户 | 原理图不表达上下翻转；在装配备注中写明顶层器件高度、光窗、天线和电池禁压区 |
 | 接口 | USB-C 设备、USB-A 主机、DB9 公座、两路 Mini-DIN-6 PS/2、板边直角排母 | 连接器的 mating-face/PCB-side 脚序必须用最终 3D 模型复核 |
 
-如果最终选用不带 IREDC 的 TFBS4711，必须删除 Q_IR/R_IR/U12 的遥控支路，并把项目标为 `Rev B-IRDA-only`；不能只替换封装而保留遥控功能。
+如果最终选用不带 IREDC 的 TFBS4711，删除 IREDC/Q_IR/R_IR 的可选支路即可；PB7 直接 TXD 的标准 IrDA 与遥控复用仍需按该器件的 TXD 脉宽、峰值电流和光学指标实测，不能只替换封装而宣称遥控性能不变。
 
 ## 1. 页面分区和绘图顺序
 
@@ -32,7 +34,7 @@
 6. **P05 USB 主从数据**：U1 USB Device/Host 引脚、USB ESD、差分对标签。
 7. **P06 两路 PS/2**：J3/J4、5 V 受控供电、四颗 BSS138、5 V/3.3 V 上拉。
 8. **P07 RS232**：MAX3232E、DB9、charge-pump 电容、TTL 侧 UART1。
-9. **P08 共用红外光头**：U9、U12、Q_IR、R_IR、可选 U10 MCP2120、模式安全状态。
+9. **P08 共用红外光头**：U9、PB7/PB4 直连、RXD 可选 PB1 捕获、可选 DNP IREDC/Q_IR/R_IR 和 U10 MCP2120。
 10. **P09 I²C/SPI/UART3/WCH-Link 扩展**：J7–J10、上拉、CS 默认状态、VTref。
 11. **P10 OLED 与触摸**：底层 OLED/FPC 接口、PB18 USER、待确认的 RST/BOOT 触摸电极。
 12. **P11 ERC/测试点清单**：所有外部接口、未用引脚、测量点和装配备注。
@@ -53,7 +55,7 @@
 | USB | `USB_DEV_DP_MCU`, `USB_DEV_DN_MCU`, `USB_HOST_DP_MCU`, `USB_HOST_DN_MCU`, `USB_C_VBUS_ADC` |
 | RS232 | `RS232_RX_TTL`, `RS232_TX_TTL`, `RS232_RX_DB9`, `RS232_TX_DB9` |
 | PS/2 | `KBD_CLK_5V`, `KBD_DATA_5V`, `KBD_CLK_MCU`, `KBD_DATA_MCU`, `MOUSE_CLK_5V`, `MOUSE_DATA_5V`, `MOUSE_CLK_MCU`, `MOUSE_DATA_MCU` |
-| 红外 | `IR_TX_STD`, `IR_TX_REMOTE`, `IR_TXD_U9`, `IR_RX_RAW`, `IR_RX_MCP`, `IR_TX_MCP`, `IR_TX_SEL_CODEC_EN`, `IRDA_MODE`, `IRDA_SD`, `IR_VCC2`, `Q_IR_GATE`, `IR_TX_CARRIER` |
+| 红外 | `IR_TXD_U9`, `IR_RX_RAW`, `IR_TX_MCP`（可选）, `IRDA_SD`, `IR_VCC2`, `IR_EXT_SINK_GATE`（可选） |
 | 扩展 | `I2C_SCL`, `I2C_SDA`, `SPI_SCK`, `SPI_MOSI`, `SPI_MISO`, `SPI_CS_N`, `UART_TTL_TX`, `UART_TTL_RX`, `WCH_TCK`, `WCH_TIO`, `RESET_N`, `BOOT_N` |
 | 状态/采样 | `CHG_N`, `INPUT_PGOOD_N`, `HOST_EN`, `HOST_FAULT_N`, `VBAT_SENSE`, `USB_C_VBUS_ADC` |
 
@@ -64,6 +66,7 @@
 - 开漏状态脚 `CHG_N`、`INPUT_PGOOD_N`、`HOST_FAULT_N` 各自使用独立的 4.7–10 kΩ 上拉到 3V3，不能把开漏输出直接接到 MCU 推挽输出。
 - 每个连接器的 NC 脚都放 `No Connect` 标记；不能用“没画线”表示 NC。
 - 同名标签表示同一物理网络。不同电压域即使信号逻辑相似，也要加 `_5V`、`_MCU` 或 `_HOST` 后缀。
+- `IR_TXD_U9` 只有一个基线推挽驱动：U1 PB7。标准 IrDA 和遥控不是两根并联线，而是 PB7 的 UART0/PWM9 内部功能切换；若装 MCP2120，必须用装配时 0 Ω 选择 TX 源，不能把两个推挽输出硬并联。
 
 ## 3. U1 CH582M 核心页
 
@@ -84,11 +87,11 @@
 | PA4/PA5 | `UART_TTL_RX`/`UART_TTL_TX` | UART3 板边排母，3.3 V TTL |
 | PA6/PA7 | `VBAT_SENSE`/`USB_C_VBUS_ADC` | 通过分压和 RC 接入 ADC；计算最大输入电压，禁止 5 V 直连 |
 | PA12–PA15 | SPI0 | `CS/SCK/MOSI/MISO`，按 pin 表连接 J8 |
-| PB18 | `USER_N` | 当前确认的 USER 触摸电极；不要与 RESET/BOOT 共用电阻网络 |
-| PB19 | `IRDA_SD` | U9 SD，高电平关断；外部上拉保证上电安全 |
+| PB18 | `USER_TOUCH` | 当前确认的 USER 电容触摸通道；按 WCH touch 配置使用，不默认放 GPIO 上拉 |
+| PB19 | `IRDA_SD` | U9 SD，高电平关断；放约 10 kΩ 下拉到 GND，PB19 拉高才关断 |
 | PB20/PB21 | `I2C_SDA`/`I2C_SCL` | I²C 重映射必须在固件设置 `RB_PIN_I2C=1` |
 | PB22/PB23 | `BOOT_N`/`RESET_N` | 调试/ISP 保留脚；只有确认 WCH 触摸复用后才允许画为触摸电极 |
-| PB0/PB1/PB2/PB3/PB4/PB6/PB7 | 红外/主机/IrDA | 逐一按 P08 网络表连接，不要在同一网络并接多个推挽输出 |
+| PB0/PB1/PB2/PB3/PB4/PB6/PB7 | 红外/主机/IrDA | PB7/PB4 为 U9 直连；PB1 仅作可选高阻捕获，PB0 只作可选 IREDC/Q_IR 栅极，PB2/PB3 不接外部红外选择器 |
 | PB5/PB8/PB9/PB14/PB15/PB16/PB17 | 状态/调试/充电 | PB16 是数字 `INPUT_PGOOD_N`，不是 ADC |
 | EP | `GND` | 大面积地铜和多个过孔；核对库中 EP 是 pin 0 还是 pin 49 |
 
@@ -233,68 +236,76 @@ DB9 侧可放低电容 RS232 TVS，器件尽量靠近连接器。DB9 引脚绝�
 按侧视 7 针器件的最终封装核对 pin 1 方向：
 
 | U9 pin | 名称 | 网络/连接 |
----:|---|---|
-| 1 | IREDA | `IR_VCC2` 经 R_IR；按最终光头数据手册连接 |
-| 2 | IREDC | Q_IR 漏极/电流汇节点 |
-| 3 | TXD | `IR_TXD_U9`，来自 U12-A |
-| 4 | RXD | `IR_RX_RAW`，分支到 PB1、可选 MCP2120 RXIR、MCU 旁路 |
-| 5 | SD | `IRDA_SD`/PB19；高电平关断，外部上拉 |
+|---:|---|---|
+| 1 | IREDA | `IR_VCC2`；是否串 R_IR 以最终 TFBS4650 电流/应用电路为准 |
+| 2 | IREDC | 基线 NC/测试点；仅在可选 DNP Q_IR 支路装配时接 Q_IR 漏极 |
+| 3 | TXD | `IR_TXD_U9`，**直接来自 U1 PB7/TXD0/PWM9** |
+| 4 | RXD | `IR_RX_RAW`，直接到 PB4/RXD0；可选高阻/0 Ω 分支到 PB1 捕获 |
+| 5 | SD | `IRDA_SD`/PB19；高电平关断，约 10 kΩ 下拉到 GND |
 | 6 | VCC | `3V3`，紧贴放去耦 |
 | 7 | GND | `GND`，就近回流 |
 
 TFBS4650 内部已有 IRED、PIN 光电二极管和接收 ASIC。U9 RXD 是共用接收原始脉冲节点，不是 TSOP 那种已解调的 38 kHz 包络；因此遥控学习必须在 MCU 中记录脉宽/边沿，再恢复协议。
 
-![共用红外光头与模式选择](schematic-guide/shared-ir.svg)
+![共用红外光头的直接连接与可选支路](schematic-guide/shared-ir.svg)
 
-图 5：U9 的 TXD/RXD/SD、U12 模式选择、Q_IR 低侧电流汇、R_IR 和可选 MCP2120 的连接关系。标准 IrDA 与遥控发射共用一个光窗，但同一时刻只允许一个 TX 驱动源。
+图 5：PB7 直接连接 U9 TXD；UART0 与 PWM9 是 MCU 内部功能选择。U9 RXD 直接到 PB4，并可高阻分支到 PB1。IREDC/Q_IR/R_IR 和 MCP2120 都是可选 DNP 支路，不是基线必装器件。
 
-### 8.2 遥控电流支路
+### 8.2 标准 IrDA 与家电遥控的同脚复用
 
-按以下网络画出单向电流路径：
+基线只画一条 TX 物理网络：
 
 ```text
-IR_VCC2 ── R_IR ── U9 IREDA / 内部 IRED / U9 IREDC ── Q_IR(D)
-                                                     Q_IR(S) ── GND
-PB0/PWM6 ── U12-B ── Q_IR_GATE ── Q_IR(G)
+U1 PB7/TXD0/PWM9 ─────────────────────────────── U9 TXD
+       ├─ 标准 IrDA：UART0 TX，输出 SIR 脉冲
+       └─ 家电遥控：PWM9/定时器，输出 38 kHz 载波 + NEC/RC5 包络
+
+U9 RXD ── IR_RX_RAW ──┬─ U1 PB4/RXD0（标准接收）
+                       └─ 0 Ω/串阻可选 ── U1 PB1（学习捕获）
 ```
 
-- Q_IR 选逻辑电平 NMOS，栅极串 22–100 Ω，栅极到 GND 放 47–200 kΩ 下拉，保证复位时关断。
-- `R_IR` 按 `VCC2 - V_F(IRED) - V_DS(on)`、峰值电流、载波占空比、包络占空比和电阻脉冲功率计算；不能直接照抄普通 IrDA 电阻。
-- 若最终选择外部 940 nm IRED，必须重新校验 IREDC 支路、光窗、热、眼安全和封装；TFBS4650 内置 IRED 峰值约 870–910 nm。
+这不是“同时全双工”：同一颗光头仍按半双工物理层工作，发射期间 RXD 可能回显或饱和；固件要屏蔽回显，并在发送结束后按数据手册留出恢复时间。它也不需要把触摸信号接入任何红外选择器。
 
-### 8.3 U12 SN74LVC2G157 模式选择
+常见 38 kHz 遥控载波的高电平约为 8.8 µs（1/3 占空比）到 13.2 µs（50% 占空比）；TFBS4650 数据手册给出的 TXD 输入脉宽窗口覆盖这一范围，但光强、距离和不同协议的长包络仍要用实物验证。
 
-U12 是 3.3 V、双通道 2:1 选择器。实际符号的 `G/S/A/B/Y` 极性必须按最终库和真值表确认，原理图备注写清“PB3 高/低对应哪一路”。建议逻辑为：
+### 8.3 可选 IREDC/Q_IR 增强支路
 
-| 模式 | U12-A 输出到 U9 TXD | U12-B 输出到 Q_IR_GATE | 其他动作 |
-|---|---|---|---|
-| 标准 IrDA | `IR_TX_STD`（PB7）或 `IR_TX_MCP` | 关闭/固定低 | PB3=`IR_TX_SEL_CODEC_EN` 高；PB0 不驱动 Q_IR |
-| 遥控发射 | 固定低，禁止 U9 内部 IRED 走标准 TXD | `IR_TX_REMOTE`（PB0/PWM6） | PB3 低；PB1 记录 `IR_RX_RAW` |
+只有在直接 TXD 的光强、脉宽或外部发光器需求实测不足时，才装配下面的 DNP 支路：
 
-U12 的 `G` 不要悬空；若器件真值表规定低有效，就接到明确的使能电平。PB3 上电用外部下拉，保证遥控电流支路默认关闭。禁止把 PB7、MCP2120 TXIR、U12 输出直接并到同一推挽节点。
+```text
+IR_VCC2 ── R_IR（按脉冲电流/热计算）── U9 IREDA / 内部 IRED ── U9 IREDC ── Q_IR(D)
+PB0/PWM6 ── 22–100 Ω ── Q_IR(G)，Q_IR(G) 到 GND 放 47–200 kΩ 下拉
+Q_IR(S) ── GND
+```
+
+该支路不是第二个光学器件，也不是外部 TX 多路器。装配后，标准 IrDA 使用 PB7/TXD0 且 PB0/Q_IR 保持关闭；遥控增强模式由固件先把 PB7/TXD0 置于安全低电平，再用 PB0/PWM6 控制 Q_IR。`R_IR` 按 `VCC2 - V_F(IRED) - V_DS(on)`、峰值电流、载波/包络占空比和脉冲功率计算。若改用外部 940 nm IRED，必须重新验证 IREDC、光窗、热和眼安全；TFBS4650 内置 IRED 约为 870–910 nm。
 
 ### 8.4 可选 U10 MCP2120
 
-如果装配 MCP2120，按数据手册原始引脚号画，不要按旧库符号猜：`VDD` 接 3V3，`VSS` 接 GND，`OSC1/OSC2` 接最终晶振，`RESET` 有明确默认状态，`RXIR` 接 `IR_RX_RAW`，`TXIR` 输出 `IR_TX_MCP`，`MODE` 接 PB2，`EN` 有上拉/下拉并接 `IR_TX_SEL_CODEC_EN`，`BAUD0/1/2` 固定到所需模式，`RX/TX` 若不使用则明确 NC 或测试点。7.3728 MHz 晶体只是常见起点，必须按目标波特率和最终数据手册确认。
+如果装配 MCP2120，按数据手册原始引脚号画，不要按旧库符号猜：`VDD` 接 3V3，`VSS` 接 GND，`OSC1/OSC2` 接最终晶振，`RESET` 有明确默认状态，`RXIR` 接 `IR_RX_RAW`，`TXIR` 输出 `IR_TX_MCP`，`MODE` 接固定默认电平或通过 DNP 0 Ω 接预留 GPIO，`EN` 有上拉/下拉，`BAUD0/1/2` 固定到所需模式，`RX/TX` 若不使用则明确 NC 或测试点。PB2 不再作为基线 MODE 专用脚。7.3728 MHz 晶体只是常见起点，必须按目标波特率和最终数据手册确认。
 
-不装 U10 时，`IR_RX_RAW` 仍必须能到 PB1，`IR_TX_STD` 仍必须能由 PB7 通过 U12-A 到 U9 TXD；不要让 DNP 器件留下悬空推挽输出。
+U10 只作为装配时的物理层编码选项，不是 MCU 解码或遥控发射的前置条件。基线不装 U10 时，`IR_TXD_U9` 由 PB7 直驱；若装 U10，用 `R_TX_MCU`/`R_TX_MCP` 两个互斥的 0 Ω 位号选择 TX 源，不能把 PB7 和 `TXIR` 两个推挽输出并在一起。`IR_RX_RAW` 到 U10 `RXIR` 必须保持高阻输入关系。
 
 ### 8.5 接收和半双工约束
 
-- `IR_RX_RAW` 只允许接收输入；PB1 用于边沿捕获，U10 RXIR 为可选高阻/配置路径。
+- `IR_RX_RAW` 只允许接收输入；PB4 是标准 UART0 接收，PB1 是可选边沿捕获，U10 RXIR 为可选高阻输入。
 - 发射期间 RXD 可能回显 TXD 或因接收器饱和，固件必须屏蔽回显，并在发送结束后按数据手册留出至少约 150 µs 的接收恢复时间。
 - 标准 IrDA SIR 3/16 编码可由 MCU 定时器/UART 软件生成；MCP2120 只是编码器选项，不是必需外设。
-- P08 放 `TP_IR_RX_RAW`、`TP_IR_TXD_U9`、`TP_Q_IR_GATE` 三个测试点，便于用示波器区分“协议错误”和“光头没有发光”。
+- P08 放 `TP_IR_RX_RAW`、`TP_IR_TXD_U9` 两个基线测试点；`TP_IR_EXT_SINK_GATE` 只在 Q_IR DNP 位号实际装配时增加。
 
 ## 9. I²C、SPI、UART3 和 WCH-Link 排针
 
 ### 9.1 I²C / OLED（J7）
 
-PB20=`I2C_SDA`、PB21=`I2C_SCL`，两根线各放 2.2–4.7 kΩ 到 3V3，网络名标注 `RB_PIN_I2C=1`。J7 1×4 从左到右固定为：1 GND、2 3V3、3 SCL、4 SDA。OLED 在 PCB 底层，原理图上先画 J7/OLED 共用总线；OLED 的 RESET/INT 只有在确认 MCU 引脚分配后才能增加，不能随意占用 PB22/PB23。
+PB20=`I2C_SDA`、PB21=`I2C_SCL`，网络名标注 `RB_PIN_I2C=1`。I²C 是开漏/线与总线，**每根线必须在总线某处有上拉**；CH582M 的 GPIO 内部上拉只能作为短线、低速实验的后备，阻值和电压/温度变化不适合作为板边排针的唯一上拉。基线在本板各放一颗 2.2–4.7 kΩ 到 3V3，并给 `R_I2C_SDA/R_I2C_SCL` 加 DNP/跳线选择：如果 OLED 或外部模块已经带上拉，核对并联后的总电阻后只保留一组，不能层层叠加。
+
+WCH [CH583/CH582 数据手册](https://github.com/openwch/ch583/blob/main/Datasheet/CH583DS1_zh.PDF)确实提供 GPIO 上拉使能位，并在 I²C 表中要求/建议上拉与自动开漏行为；它没有把这个内部上拉定义成一个可按 BOM 精确控制的固定电阻。因此它可以帮助短线测试，但不能替代本板对外排针的可测上拉。
+
+J7 1×4 从左到右固定为：1 GND、2 3V3、3 SCL、4 SDA。OLED 在 PCB 底层，原理图上先画 J7/OLED 共用总线；OLED 的 RESET/INT 只有在确认 MCU 引脚分配后才能增加，不能随意占用 PB22/PB23。
 
 ### 9.2 SPI0（J8）
 
-PA12=`SPI_CS_N`、PA13=`SPI_SCK`、PA14=`SPI_MOSI`、PA15=`SPI_MISO`。J8 2×4 定义为：1 3V3、2 GND、3 SCK、4 GND、5 MOSI、6 MISO、7 CS#、8 GND。`SPI_CS_N` 放 10 kΩ 上拉到 3V3，避免上电误选外设；当前基线为 SPI Mode 0，最终从设备若不同必须在模块页备注。
+PA12=`SPI_CS_N`、PA13=`SPI_SCK`、PA14=`SPI_MOSI`、PA15=`SPI_MISO`。SPI 主机的 SCK/MOSI 是推挽输出，**不需要像 I²C 一样给每根线放上拉**；MISO 在从设备未选中时可能悬空，只有在系统需要确定空闲电平时才增加弱上拉或利用芯片输入上拉。J8 2×4 定义为：1 3V3、2 GND、3 SCK、4 GND、5 MOSI、6 MISO、7 CS#、8 GND。`SPI_CS_N` 放 4.7–10 kΩ 上拉到 3V3，避免复位/下载期间误选低有效从设备；当前基线为 SPI Mode 0，最终从设备若不同必须在模块页备注。
 
 ### 9.3 UART3（J10）
 
@@ -311,23 +322,24 @@ J9 2×3：1 `3V3_VTref`、2 GND、3 `WCH_TCK`、4 `WCH_TIO`、5 `RESET_N`、6 GN
 ## 10. OLED、底层触摸和机械相关电气规则
 
 - OLED 供电电压、电流、FPC pinout 和背光电源必须以最终模块数据手册为准；不要仅因接口叫 I²C 就假设其能直接接 3V3。
-- PB18=`USER_N` 是当前确认的用户触摸输入，可按 WCH 触摸应用笔记增加电极、守护地、串联电阻和 ESD。电极必须远离电池、DC/DC SW 节点、晶振和天线馈线。
+- PB18=`USER_TOUCH` 是当前确认的用户触摸输入。按 WCH 触摸模式/SDK 配置电极、守护地、串联电阻和 ESD；不要因为它叫“按键”就默认加 GPIO 上拉，外部上拉会改变电极的电容和基线。电极必须远离电池、DC/DC SW 节点、晶振和天线馈线。
 - PB22=`BOOT_N`、PB23=`RESET_N` 同时承担 ISP/复位功能。除非已经确认 CH582M 触摸通道、复位滤波和 ISP 低电平时序，否则原理图中只画成调试/系统信号，不要把它们直接当普通触摸按键。
+- 触摸电极和红外 TX/RX 是两个独立模块；没有共享网络，也不需要 SN74LVC2G157 或其他外部多路器。
 - 触摸电极在 PCB 底层、OLED 也在底层；在装配备注写明电池与底层铜箔之间的绝缘层、泡棉和压力限制。四角 H1–H4 只接机械安装孔环，不要把螺丝孔当作信号地回路。
 
 ## 11. 测试点和 ERC/DRC 验收
 
-至少放置以下测试点：`VBUS_RAW`、`BAT`、`SYS`、`3V3`、`5V_HOST`、`VBUS_HOST`、`CHG_N`、`INPUT_PGOOD_N`、`HOST_FAULT_N`、`RESET_N`、`BOOT_N`、USB D+/D− 两组、`IR_RX_RAW`、`IR_TXD_U9`、`Q_IR_GATE`、UART3 TX/RX、SPI SCK/MOSI/MISO/CS。
+至少放置以下测试点：`VBUS_RAW`、`BAT`、`SYS`、`3V3`、`5V_HOST`、`VBUS_HOST`、`CHG_N`、`INPUT_PGOOD_N`、`HOST_FAULT_N`、`RESET_N`、`BOOT_N`、USB D+/D− 两组、`IR_RX_RAW`、`IR_TXD_U9`、UART3 TX/RX、SPI SCK/MOSI/MISO/CS；只有装配 Q_IR 时再加 `IR_EXT_SINK_GATE`。
 
 原理图 ERC 逐项确认：
 
-1. U1、U2、U3、U4、U5、U6、U9、U12 的每个电源输入都有合法电源驱动；需要时在电源入口放 `PWR_FLAG`，但不要到处滥放。
-2. 所有开漏输出都有上拉；所有 MOSFET 栅极都有默认电阻；所有选择器使能/选择脚都有上电状态。
-3. 没有两个推挽输出驱动 `IR_TXD_U9`、`IR_RX_RAW`、I²C 或 PS/2 总线。
+1. U1、U2、U3、U4、U5、U6、U9（以及实际装配的可选器件）的每个电源输入都有合法电源驱动；需要时在电源入口放 `PWR_FLAG`，但不要到处滥放。
+2. 所有开漏输出都有上拉；可选 Q_IR 栅极有串联电阻和下拉；I²C 每根线只保留一组有效上拉。
+3. 没有两个推挽输出驱动 `IR_TXD_U9`、`IR_RX_RAW`、I²C 或 PS/2 总线；MCP2120 若装配必须由 0 Ω 位号与 PB7 互斥。
 4. 每个连接器的 NC 脚都被标记；所有未使用 U1 GPIO 都有 `NC` 或明确的保留测试点。
 5. 电池、USB-C、USB-A、DB9、Mini-DIN-6 的电源极性和脚序与最终 footprint/3D 模型一致。
 6. `PB16` 没有被标成 ADC；ADC 分压不会超过 PA6/PA7 的输入范围；`VBUS_RAW`、`VBUS_HOST`、`5V_PS2_*` 没有意外短接。
-7. 红外模式真值表与固件默认值一致：上电时 U12/Q_IR 关闭、U9 SD 处于安全状态、MCP2120 DNP 不会留下浮动输出。
+7. 红外安全态与固件一致：上电时 PB7/TXD0 不发光、PB19/SD 为低、可选 Q_IR 栅极为低；PB7 的 UART0/PWM9 切换不依赖外部选择器。
 
 完成 ERC 后再做 PCB 前置审查：USB 差分对、DCDC 热回路、QFN EP 过孔、RF 50 Ω/天线净空、TFBS 光窗和侧视高度、直角排母插拔包络、底层 OLED/触摸、电池 z 向禁压区、H1–H4 螺丝孔环和 3D 打印墙体开窗必须逐项截图归档。ERC 通过不等于这些项目已经通过。
 
@@ -336,11 +348,11 @@ J9 2×3：1 `3V3_VTref`、2 GND、3 `WCH_TCK`、4 `WCH_TIO`、5 `RESET_N`、6 GN
 1. 新建多页工程，先录入上述网络名和标题栏版本；不要从旧 Rev A 页面复制隐藏端口。
 2. 先画 P00–P04 电源和 MCU 核心，完成电源树、复位、晶振、RF 和 WCH-Link 后运行一次 ERC。
 3. 逐页画 USB、PS/2、RS232、红外和扩展口；每画完一个模块，立即核对“连接器脚号 → 保护/转换 → MCU 引脚”的连续性。
-4. 画 P08 红外时先放 U9/Q_IR/R_IR/U12，再决定 MCP2120 是否 DNP；不要先放旧 TSOP 或独立 LED。
+4. 画 P08 红外时先放 U9、PB7/PB4 直连和 RXD→PB1 可选捕获；再按实测需要放 DNP Q_IR/R_IR 或 MCP2120。不要先放旧 TSOP、独立 LED 或 U12。
 5. 为每个电源电阻、电感、晶振、NTC、ESD、连接器填写 `Value`、最终料号候选、封装和“待确认项”字段。
 6. 将所有待确认项汇总到 P11 和 BOM，不允许把 `TBD` 器件当作已完成设计。
 7. 运行 ERC，修复真正的电气错误；对有意的 NC/开漏/电源域差异使用局部说明和正确的 ERC 规则，不要用全局忽略掩盖错误。
-8. 导出 PDF/网表前，用 pin allocation 表逐脚复核 U1，用最终数据手册逐脚复核 U2/U3/U4/U5/U6/U9/U12，用连接器机械图逐脚复核 J1–J10。
+8. 导出 PDF/网表前，用 pin allocation 表逐脚复核 U1，用最终数据手册逐脚复核 U2/U3/U4/U5/U6/U9 及实际装配的可选器件，用连接器机械图逐脚复核 J1–J10。
 9. 只有在原理图网表冻结、封装和电源预算锁定后，才开始 PCB placement/routing；PCB 顶层/底层的装配方向按照 Rev B-M 机械说明执行。
 
 ## 13. 依据和必须回看的资料
@@ -349,8 +361,7 @@ J9 2×3：1 `3V3_VTref`、2 GND、3 `WCH_TCK`、4 `WCH_TIO`、5 `RESET_N`、6 GN
 - [Vishay TFBS4650 数据手册](https://www.vishay.com/docs/84672/tfbs4650.pdf)：7 针、TXD/RXD/SD、IREDA/IREDC、IRED 电流和布局限制。
 - [Vishay IrDA 收发器应用笔记](https://www.vishay.com/doc/?82610=)：SIR 半双工、RXD 回显/恢复时间、MCU 或编码器实现、遥控学习注意事项。
 - [Microchip MCP2120 数据手册](https://ww1.microchip.com/downloads/en/devicedoc/21618b.pdf)：可选编码器的 pinout、MODE/EN/BAUD 和晶振要求。
-- [TI SN74LVC2G157](https://www.ti.com/product/SN74LVC2G157)：选择器电源范围、G/S 真值表和传播延迟。
 - [TI BQ24074 数据手册](https://www.ti.com/lit/ds/symlink/bq24074.pdf)：充电、power-path、TS、ISET、ILIM、ITERM、TMR 和输入/输出电容。
 - [TI TPS63031 数据手册](https://www.ti.com/lit/ds/symlink/tps63031.pdf)、[TPS61023 数据手册](https://www.ti.com/lit/ds/symlink/tps61023.pdf)、[TPS2553 数据手册](https://www.ti.com/lit/ds/symlink/tps2553.pdf)：3V3 buck-boost、5 V boost 和 USB 限流开关的最终参数。
 
-当前固件仍对应旧的 UART0/MCP2120/TFBS4711、PB1/TSOP 和 PB0/独立 LED 分立原型；完成本指南后的原理图还需要按 `docs/revb-firmware-migration.md` 迁移 U12/Q_IR、共用 RXD 原始脉冲学习和 MCU-only IrDA 状态机，再进行开发板实测。
+当前固件仍对应旧的 UART0/MCP2120/TFBS4711、PB1/TSOP 和 PB0/独立 LED 分立原型；完成本指南后的原理图还需要按 `docs/revb-firmware-migration.md` 迁移到 PB7 直连 TXD、PB4 直连 RXD、可选 PB1 原始捕获和 MCU 内部 UART/PWM 模式状态机，再进行开发板实测。

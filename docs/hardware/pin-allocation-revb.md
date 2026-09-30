@@ -1,6 +1,6 @@
 # CH582M Rev B-IR 引脚分配提案
 
-日期：2026-09-28。配套布局：`pcb-concept-revb.svg`；底层用户界面：`pcb-bottom-revb.svg`；物理剖面：`pcb-stack-revb.svg`；顶视放大图：`pinout-revb.svg`。
+日期：2026-09-30。配套布局：`pcb-concept-revb.svg`；底层用户界面：`pcb-bottom-revb.svg`；物理剖面：`pcb-stack-revb.svg`；顶视放大图：`pinout-revb.svg`。
 这是单光电收发模块的 Rev B-IR 硬件基线；当前固件仍按旧的 MCP2120/TSOP 分立原型，最终电气行为需在开发板/PCB 上实测确认。
 
 0° 定义：数据手册第 111 页 Top View，Pin 1 在左下。1–10 南侧从左到右；11–24 东侧从下到上；25–34 北侧从右到左；35–48 西侧从上到下。EP 在手册标 0，本提案 CSV 以库常用的 49 表示。
@@ -23,20 +23,20 @@
 | 14 | PB12/U2D- | 东 | `USB_HOST_DN_MCU` | USB2 Host；禁止 I2C 默认映射占用 |
 | 15 | PB11/UD+ | 东 | `USB_DEV_DP_MCU` | USB Device，固定数据引脚 |
 | 16 | PB10/UD- | 东 | `USB_DEV_DN_MCU` | USB Device，固定数据引脚 |
-| 17 | PB7/TXD0 | 东 | `IRDA_UART_TX` | UART0 TX；经可选 MCP2120 或旁路送到共用光模块 TXD |
+| 17 | PB7/TXD0/PWM9 | 东 | `IR_TXD_U9` | 直接接 U9 TXD；IrDA 用 UART0 TX，遥控用同一脚的 PWM9/定时器载波与包络；不放外部 TX 多路器 |
 | 18 | PB6 | 东 | `HOST_EN` | TPS2553 EN，高有效；外部下拉，上电关断 |
 | 19 | PB5 | 东 | `HOST_FAULT_N` | TPS2553 FAULT#；外部上拉到 3V3；不是电压合格指示 |
-| 20 | PB4/RXD0 | 东 | `IRDA_UART_RX` | UART0 RX；来自可选 MCP2120 或共用光模块 RXD 旁路 |
-| 21 | PB3 | 东 | `IR_TX_SEL_CODEC_EN` | 高=标准 IrDA/U12-A 且 Q_IR 关闭；低=遥控/U12-B 驱动 Q_IR 且编码器禁用；外部下拉 |
-| 22 | PB2 | 东 | `IRDA_MODE` | 可选 MCP2120 MODE；标准模式内配置/数据切换，MCU-only 时预留 |
-| 23 | PB1 | 东 | `IR_RX_CAPTURE` | 共用光模块 RXD 原始脉冲；遥控学习或 MCU IrDA 输入捕获 |
-| 24 | PB0/PWM6 | 东 | `IR_TX_CARRIER` | 遥控时经 U12-B/Q_IR 驱动同一光头 IRED 阴极，输出约 38 kHz 载波包络 |
+| 20 | PB4/RXD0 | 东 | `IR_RX_RAW` | 直接接 U9 RXD；UART0 IrDA 接收；同一高阻节点可选 0 Ω/串阻分支到 PB1 学习捕获 |
+| 21 | PB3 | 东 | `RESERVED_GPIO` | 不再承担外部红外模式选择；保留为普通 GPIO/测试点，原理图不连接 U12 |
+| 22 | PB2 | 东 | `RESERVED_GPIO` | 不再承担 MCP2120 MODE；可作为未来扩展 GPIO，默认 NC/测试点 |
+| 23 | PB1 | 东 | `IR_RX_CAPTURE` | 可选高阻输入捕获 U9 RXD；遥控学习记录原始载波脉冲，不放 TSOP |
+| 24 | PB0/PWM6 | 东 | `IR_EXT_SINK_GATE` | 仅在可选 DNP IREDC/Q_IR 支路装配时作栅极控制；直接 TXD 基线不使用 |
 | 25 | PB23/RST# | 北 | `RESET_N` | 低有效复位；底层 RST 触摸电极与调试口共用，不重映射 UART2 |
 | 26 | PB22 | 北 | `BOOT_N` | 底层 BOOT 触摸电极；保留 ISP 配置 |
 | 27 | PB21/SCL_ | 北 | `I2C_SCL` | I2C 必须重映射 RB_PIN_I2C=1 |
 | 28 | PB20/SDA_ | 北 | `I2C_SDA` | 板边直角 J7 I2C/OLED 排母，外部上拉到 3V3 |
-| 29 | PB19 | 北 | `IRDA_SD` | 共用光模块 pin4 SD，高关断；外部上拉 |
-| 30 | PB18 | 北 | `USER_N` | 底层 USER 触摸电极；外部上拉，触摸判定为有效低 |
+| 29 | PB19 | 北 | `IRDA_SD` | U9 pin5 SD，高关断；10 kΩ 左右下拉到 GND，PB19 拉高才关断 |
+| 30 | PB18 | 北 | `USER_TOUCH` | 底层 USER 电容触摸通道；按 WCH touch 配置使用，不默认放 GPIO 上拉 |
 | 31 | X32MO | 北 | `X32MO` | 32 MHz 晶振；负载由晶体 CL 与寄生计算 |
 | 32 | X32MI | 北 | `X32MI` | 32 MHz 晶振；最短回路，与 RF 馈线分开 |
 | 33 | VINTA | 北 | `CH_VINTA` | 内部模拟节点；只按手册去耦，不作为外部负载电源 |
@@ -85,13 +85,14 @@ J7/J8/J9/J10 均是向板外插拔的直角排母；正式 footprint 应以方�
 | 资源 | 选择 | 冲突处理 |
 |---|---|---|
 | USB / USB2 | Device PB11/PB10；Host PB13/PB12 | 不占用作 UART1、SPI0 或 I2C 默认脚 |
-| UART0 | PB7 TX / PB4 RX，标准 IrDA 数据通道 | RB_PIN_UART0=0；可旁路 MCP2120，MODEM 功能关闭 |
+| UART0 | PB7 TX / PB4 RX，标准 IrDA 数据通道 | RB_PIN_UART0=0；同一 PB7 也可切换 PWM9 生成遥控载波 |
 | UART1 | PA9 TX / PA8 RX，RS232 | RB_PIN_UART1=0；现有 UART1 debug 输出需防止污染业务串口 |
 | UART2 | 不启用 | 默认 PA6/PA7 用作 ADC；重映射 PB22/PB23 保留给 BOOT/RESET |
 | UART3 | PA5 TX / PA4 RX，板边直角排母 | RB_PIN_UART3=0；PB20/PB21 留给 I2C |
 | SPI0 | PA12–PA15 默认组 | RB_PIN_SPI0=0；SPI1 禁用（其 PA0–PA2 已是 PS/2） |
 | I2C | PB21 SCL / PB20 SDA | RB_PIN_I2C=1，否则与 USB2 冲突 |
-| PWM6 | PB0，经 U12-B/Q_IR 驱动共用光模块 IRED 阴极的 38 kHz 载波 | 只使能 PWM6；U12 与 IrDA TXD 路径互斥 |
+| PB7/PWM9 | 同一 PB7/TXD0 产生 38 kHz 载波和包络 | 由 MCU 内部复用选择；不放外部 TX 多路器 |
+| PB0/PWM6 | 可选 IREDC/Q_IR 栅极 | 仅装配 DNP 电流汇增强支路时使用；基线 NC/测试点 |
 | GPIO 中断 / 时间基准 | PS/2 GPIOA；共用光模块 RXD 可送 PB1 | 遥控学习记录 RXD 原始脉冲；不在 ISR 解码整帧 |
 | ADC | AIN10=PA6 电池；AIN11=PA7 上行 VBUS | 采样前关闭数字输入/上拉，按 ADC PGA 范围核算分压 |
 | LSE | PA10/PA11 可选晶振 | 与现有 LSI 模式二选一；没有分配给其他信号 |
@@ -100,12 +101,12 @@ PB16 不支持 ADC。Rev A 的 USB-A 电压模拟采样不再占用 PA4：PA4/PA
 
 ## Rev B-IR 红外电路连接
 
-- U9 基线改为带 `IREDC` 阴极引出的 TFBS4650（侧视封装）：一个器件内仍同时包含 IRED、PIN 光电二极管和接收 ASIC，只保留一个朝外光窗。`IREDA` 经 R_IR 接 VCC2，`IREDC` 由 Q_IR 低侧电流汇控制；VCC、去耦、SD、TXD/RXD 走线按制造商布局要求。
-- U12 使用 3.3 V SN74LVC2G157 四路 2:1 选择器的两个通道，G 先固定在使能态、S 接 PB3：通道 A 在标准模式把 PB7 旁路或可选 MCP2120 TXIR 送到 U9 TXD；通道 B 在遥控模式把 PB0/PWM6 送到 Q_IR 栅极，并同时把 U9 TXD 固定为低。正式原理图须按实际符号核对 A/B 极性；PB2 只负责 MCP2120 MODE。
-- Q_IR 是同一光头 IRED 的外部电流汇，不是第二个接收器；遥控发射沿用 U9 内部 IRED 和同一光窗。R_IR 必须按 IRED 脉冲峰值、占空比和 3.3 V 电源重新计算，不能直接照抄 IrDA 电阻。
-- U9 RXD 为共用接收节点 `IR_RX_RAW`：送可选 MCP2120 RXIR，同时通过高阻输入送 PB1；MCU-only 模式用 0 Ω 配置把 `IR_RX_RAW` 旁路到 PB4。不能让两个推挽输出同时驱动同一节点。
-- 标准 IrDA 模式由 MCU 定时器/UART 软件完成 SIR 3/16 脉冲编码和接收；MCP2120 仅作为可选 DNP 的物理层编码器，不是协议栈。
-- 遥控发射由 PB0/PWM6 生成约 38 kHz 载波和 NEC/RC5 包络，经 U12-B/Q_IR 驱动 U9 的 IRED 阴极；遥控学习由 PB1 捕获 U9 RXD 的载波脉冲串，再在任务上下文中恢复包络。U9 的 RXD 不是 TSOP 的已解调包络，旧 TSOP 解码器不能直接复用。
+- U9 基线改为带 `IREDC` 阴极引出的 TFBS4650（侧视封装）：一个器件内仍同时包含 IRED、PIN 光电二极管和接收 ASIC，只保留一个朝外光窗。基线把 U9 `TXD` 直接接到 PB7；`IREDA`、`IREDC`、VCC、去耦、SD、RXD 按制造商资料画出。
+- **不放 U12 外部多路器**：PB7/TXD0 是同一根物理线，标准 IrDA 时配置为 UART0 TX，家电遥控时配置为 PWM9/定时器输出载波与包络；这是 CH582M 内部复用和固件状态机完成的互斥，不需要 PB3 选择脚。
+- `IREDC`/Q_IR/R_IR 只保留为可选 DNP 增强支路。若实测直接 TXD 的光强、脉宽或外部 IRED 电流不足，再用 PB0/PWM6 通过栅极电阻驱动 Q_IR；装配该支路时，固件必须先让 PB7/TXD0 进入安全低电平，避免两种发射路径叠加。
+- U9 RXD 为共用接收节点 `IR_RX_RAW`：直接送 PB4/RXD0，另以高阻/0 Ω 可选分支送 PB1 捕获。遥控学习记录 U9 的原始载波脉冲串，不需要 TSOP；不能让两个推挽输出同时驱动该节点。
+- 标准 IrDA 和遥控发射都由 MCU 软件/外设完成；MCP2120 只作为可选 DNP 物理层编码器，若装配则用 0 Ω 选择 TX 源，不能与 PB7 推挽输出硬并联。
+- TFBS4650 的 TXD 脉冲宽度窗口覆盖常见 38 kHz、1/3–1/2 占空比载波高电平，但最终光强、距离、学习灵敏度仍需实物验证；同一光窗在物理层仍是半双工。
 - U9 的 TX/RX 不能同时当作无回声全双工链路；发射期间 RXD 会回显/饱和，固件须屏蔽回显并在发射结束后按数据手册留出接收恢复时间。
 - TFBS4650 内置 IRED 峰值约 870–910 nm；若产品必须使用 940 nm 外部发射器，应在 IREDC 支路改接经验证的外部 IRED，并重新做光学窗口、限流、热和眼安全评估。TFBS4711 可作为紧凑的 IrDA-only 备选，但因无 IREDC 不能作为本 Rev B-IR 遥控发射基线。
 
@@ -115,6 +116,6 @@ PB16 不支持 ADC。Rev A 的 USB-A 电压模拟采样不再占用 PA4：PA4/PA
 - VBAT_SENSE：PB16 → PA6/AIN10；PA7/AIN11 新增上行 VBUS 检测；PA4/PA5 改为 UART3 板边直角排母。
 - USER：PB8 → PB18；CHG#：PB19 → PB9；PB8/PB17 新增充电模式控制；PB16 改为输入电源有效状态。
 - U5 计划由 SY6280 改为 TPS2553，新增 PB5 FAULT#，需要新封装/参数，绝不是直接替换料号。
-- 当前运行固件仍是旧的 UART0/MCP2120/TFBS4711 + PB1 TSOP/PB0 独立 LED 原型；单模块方案需要新增 U12/Q_IR 模式仲裁、RXD 原始脉冲解码和模式状态机后，才能宣称软件与硬件一致。
+- 当前运行固件仍是旧的 UART0/MCP2120/TFBS4711 + PB1 TSOP/PB0 独立 LED 原型；单模块方案需要迁移到 PB7 直连 TXD、PB4 直连 RXD、可选 PB1 捕获和 MCU 内部 UART/PWM 模式状态机后，才能宣称软件与硬件一致。
 
-依据：[WCH CH583/CH582 官方资料仓库](https://github.com/openwch/ch583)及 CH582M 数据手册引脚复用；[Vishay TFBS4650 数据手册](https://www.vishay.com/docs/84672/tfbs4650.pdf)；[Vishay IrDA 收发器应用笔记](https://www.vishay.com/doc/?82610=)；[TI SN74LVC2G157](https://www.ti.com/product/SN74LVC2G157)。其余元件资料见 `pcb-design-study.md`。
+依据：[WCH CH583/CH582 官方资料仓库](https://github.com/openwch/ch583)及 CH582M 数据手册引脚复用；[Vishay TFBS4650 数据手册](https://www.vishay.com/docs/84672/tfbs4650.pdf)；[Vishay IrDA 收发器应用笔记](https://www.vishay.com/doc/?82610=)；[Microchip MCP2120 数据手册](https://ww1.microchip.com/downloads/en/devicedoc/21618b.pdf)。其余元件资料见 `pcb-design-study.md`。

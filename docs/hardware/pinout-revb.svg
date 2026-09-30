@@ -42,21 +42,21 @@
 <polyline points="1007.50,639.88 1030.50,639.88" fill="none" stroke="#2675d8" stroke-width="9" stroke-linejoin="round" stroke-linecap="round" stroke-dasharray="" />
 <text x="1039.50" y="644.88" font-size="13" fill="#2675d8" text-anchor="start" font-weight="600" >16  PB10  USB_DEV_DN_MCU</text>
 <polyline points="1007.50,606.62 1030.50,606.62" fill="none" stroke="#c74679" stroke-width="9" stroke-linejoin="round" stroke-linecap="round" stroke-dasharray="" />
-<text x="1039.50" y="611.62" font-size="13" fill="#c74679" text-anchor="start" font-weight="600" >17  PB7  IRDA_UART_TX</text>
+<text x="1039.50" y="611.62" font-size="13" fill="#c74679" text-anchor="start" font-weight="600" >17  PB7  IR_TXD_U9</text>
 <polyline points="1007.50,573.38 1030.50,573.38" fill="none" stroke="#926432" stroke-width="9" stroke-linejoin="round" stroke-linecap="round" stroke-dasharray="" />
 <text x="1039.50" y="578.38" font-size="13" fill="#926432" text-anchor="start" font-weight="600" >18  PB6  HOST_EN</text>
 <polyline points="1007.50,540.12 1030.50,540.12" fill="none" stroke="#926432" stroke-width="9" stroke-linejoin="round" stroke-linecap="round" stroke-dasharray="" />
 <text x="1039.50" y="545.12" font-size="13" fill="#926432" text-anchor="start" font-weight="600" >19  PB5  HOST_FAULT_N</text>
 <polyline points="1007.50,506.88 1030.50,506.88" fill="none" stroke="#c74679" stroke-width="9" stroke-linejoin="round" stroke-linecap="round" stroke-dasharray="" />
-<text x="1039.50" y="511.88" font-size="13" fill="#c74679" text-anchor="start" font-weight="600" >20  PB4  IRDA_UART_RX</text>
-<polyline points="1007.50,473.62 1030.50,473.62" fill="none" stroke="#c74679" stroke-width="9" stroke-linejoin="round" stroke-linecap="round" stroke-dasharray="" />
-<text x="1039.50" y="478.62" font-size="13" fill="#c74679" text-anchor="start" font-weight="600" >21  PB3  IR_TX_SEL_CODEC_EN</text>
-<polyline points="1007.50,440.38 1030.50,440.38" fill="none" stroke="#c74679" stroke-width="9" stroke-linejoin="round" stroke-linecap="round" stroke-dasharray="" />
-<text x="1039.50" y="445.38" font-size="13" fill="#c74679" text-anchor="start" font-weight="600" >22  PB2  IRDA_MODE</text>
+<text x="1039.50" y="511.88" font-size="13" fill="#c74679" text-anchor="start" font-weight="600" >20  PB4  IR_RX_RAW</text>
+<polyline points="1007.50,473.62 1030.50,473.62" fill="none" stroke="#87929e" stroke-width="9" stroke-linejoin="round" stroke-linecap="round" stroke-dasharray="" />
+<text x="1039.50" y="478.62" font-size="13" fill="#87929e" text-anchor="start" font-weight="600" >21  PB3  RESERVED_GPIO</text>
+<polyline points="1007.50,440.38 1030.50,440.38" fill="none" stroke="#87929e" stroke-width="9" stroke-linejoin="round" stroke-linecap="round" stroke-dasharray="" />
+<text x="1039.50" y="445.38" font-size="13" fill="#87929e" text-anchor="start" font-weight="600" >22  PB2  RESERVED_GPIO</text>
 <polyline points="1007.50,407.13 1030.50,407.13" fill="none" stroke="#c74679" stroke-width="9" stroke-linejoin="round" stroke-linecap="round" stroke-dasharray="" />
 <text x="1039.50" y="412.13" font-size="13" fill="#c74679" text-anchor="start" font-weight="600" >23  PB1  IR_RX_CAPTURE</text>
 <polyline points="1007.50,373.88 1030.50,373.88" fill="none" stroke="#c74679" stroke-width="9" stroke-linejoin="round" stroke-linecap="round" stroke-dasharray="" />
-<text x="1039.50" y="378.88" font-size="13" fill="#c74679" text-anchor="start" font-weight="600" >24  PB0  IR_TX_CARRIER</text>
+<text x="1039.50" y="378.88" font-size="13" fill="#c74679" text-anchor="start" font-weight="600" >24  PB0  IR_EXT_SINK_GATE</text>
 <polyline points="919.62,352.50 919.62,329.50" fill="none" stroke="#64748b" stroke-width="9" stroke-linejoin="round" stroke-linecap="round" stroke-dasharray="" />
 <text x="924.62" y="317.50" font-size="13" fill="#64748b" text-anchor="start" font-weight="600" transform="rotate(-90 924.625 317.5)">25  PB23  RESET_N</text>
 <polyline points="886.38,352.50 886.38,329.50" fill="none" stroke="#64748b" stroke-width="9" stroke-linejoin="round" stroke-linecap="round" stroke-dasharray="" />
@@ -68,7 +68,7 @@
 <polyline points="786.62,352.50 786.62,329.50" fill="none" stroke="#c74679" stroke-width="9" stroke-linejoin="round" stroke-linecap="round" stroke-dasharray="" />
 <text x="791.62" y="317.50" font-size="13" fill="#c74679" text-anchor="start" font-weight="600" transform="rotate(-90 791.625 317.5)">29  PB19  IRDA_SD</text>
 <polyline points="753.38,352.50 753.38,329.50" fill="none" stroke="#64748b" stroke-width="9" stroke-linejoin="round" stroke-linecap="round" stroke-dasharray="" />
-<text x="758.38" y="317.50" font-size="13" fill="#64748b" text-anchor="start" font-weight="600" transform="rotate(-90 758.375 317.5)">30  PB18  USER_N</text>
+<text x="758.38" y="317.50" font-size="13" fill="#64748b" text-anchor="start" font-weight="600" transform="rotate(-90 758.375 317.5)">30  PB18  USER_TOUCH</text>
 <polyline points="720.12,352.50 720.12,329.50" fill="none" stroke="#a66a04" stroke-width="9" stroke-linejoin="round" stroke-linecap="round" stroke-dasharray="" />
 <text x="725.12" y="317.50" font-size="13" fill="#a66a04" text-anchor="start" font-weight="600" transform="rotate(-90 725.125 317.5)">31  X32MO  X32MO</text>
 <polyline points="686.88,352.50 686.88,329.50" fill="none" stroke="#a66a04" stroke-width="9" stroke-linejoin="round" stroke-linecap="round" stroke-dasharray="" />

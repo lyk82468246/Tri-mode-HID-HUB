@@ -62,7 +62,7 @@
   <path class="arrow" d="M1022 400 V450"/>
   <g transform="translate(40,465)">
     <rect class="page ir" width="255" height="115" rx="10"/><circle class="num-bg" cx="25" cy="25" r="15"/><text class="num" x="25" y="30" text-anchor="middle">P08</text>
-    <text class="page-title" x="52" y="30">共用红外光头</text><text class="page-text" x="20" y="58">TFBS4650 / U12 / Q_IR</text><text class="page-text" x="20" y="79">R_IR、IR_RX_RAW、SD</text><text class="page-text" x="20" y="100">MCP2120 仅可选 DNP</text>
+    <text class="page-title" x="52" y="30">共用红外光头</text><text class="page-text" x="20" y="58">TFBS4650 / PB7 直连 TXD</text><text class="page-text" x="20" y="79">RXD、IR_RX_RAW、SD</text><text class="page-text" x="20" y="100">Q_IR/R_IR、MCP2120 仅可选 DNP</text>
   </g>
   <path class="arrow" d="M295 522 H325"/>
   <g transform="translate(325,465)">

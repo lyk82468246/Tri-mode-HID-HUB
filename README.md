@@ -7,7 +7,7 @@
 | 内容 | 入口 | 状态 |
 |---|---|---|
 | 硬件设计资料 | [硬件文档索引](docs/hardware/README.md) | 区分 Rev A 实际记录、Rev B 电气提案、Rev B-M 机械层叠与 Rev B-IR 单光电收发修订 |
-| 信用卡尺寸 PCB 规划 | [原理图绘制指南](docs/hardware/schematic-design-guide.md)、[Rev B/M/IR 设计说明](docs/hardware/pcb-design-study.md)、[顶层布局](docs/hardware/pcb-concept-revb.svg)、[底层界面](docs/hardware/pcb-bottom-revb.svg)、[物理剖面](docs/hardware/pcb-stack-revb.svg)、[引脚表](docs/hardware/pin-allocation-revb.md) | 2026-09-29 提案；云端原理图待同步，单模块红外仍待固件迁移和实测 |
+| 信用卡尺寸 PCB 规划 | [原理图绘制指南](docs/hardware/schematic-design-guide.md)、[Rev B/M/IR 设计说明](docs/hardware/pcb-design-study.md)、[顶层布局](docs/hardware/pcb-concept-revb.svg)、[底层界面](docs/hardware/pcb-bottom-revb.svg)、[物理剖面](docs/hardware/pcb-stack-revb.svg)、[引脚表](docs/hardware/pin-allocation-revb.md) | 2026-09-30 修订；云端原理图待同步，单模块红外仍待固件迁移和实测 |
 | 首版原理图记录 | [Rev A 引脚规划](docs/pin-plan.md)、[设计取舍](docs/design-decisions.md) | 历史记录，包含待整改项目 |
 | 固件实现与架构 | [固件说明](docs/firmware.md)、[架构与里程碑](docs/firmware-architecture.md) | M1–M6 代码已落地 |
 | 实测验收 | [M6 验证清单](docs/m6-validation.md)、[Rev B 固件测试行动指南](docs/revb-firmware-test-plan.md) | 开发板及 PCB 物理验收待完成 |
@@ -21,9 +21,9 @@
 - J3/J4 已更换为 6 针圆形 DIN-6 PS/2 插座候选 C23689424；原先错误的 9 针长条封装已移除。
 - 原理图按电源、USB、CH582M/RF、PS/2、RS232、调试/扩展分区；短引线不显示重复网络名，网络由引脚处端口维护。
 - 暂不纳入 2.4 GHz 接收端软硬件；2.4 GHz 这里仅指 CH582M 的 BLE/RF 部分。
-- 已完成 Rev B PCB 概念布局、引脚分配、Rev B-M 物理层叠和 Rev B-IR 单光电收发修订；Rev B-IR 以带 IRED 阴极的 TFBS4650 级光头、Q_IR/R_IR 和 U12 模式选择为基线，尚未建立可制造的 PCB 布局布线工程。云端原理图仍是待审查的 Rev A，不是可直接打板的 release 版本。
+- 已完成 Rev B PCB 概念布局、引脚分配、Rev B-M 物理层叠和 Rev B-IR 单光电收发修订；Rev B-IR 以带 IRED 阴极的 TFBS4650 级光头、PB7/TXD0/PWM9 直连为基线，Q_IR/R_IR/MCP2120 只作可选 DNP 增强支路，外部 TX 多路器已从设计中删除，尚未建立可制造的 PCB 布局布线工程。云端原理图仍是待审查的 Rev A，不是可直接打板的 release 版本。
 - USB-C、USB-A、DB9、电池、OLED/直角排母、晶振、天线和触摸电极中仍有若干 C990 Extended Part 或机械候选，尚未达到生产 BOM 的可追溯要求；中央电池盆地和四孔 3D 打印结构还需实物验证。
-- 已加入根目录的 CH582M MounRiver Studio 固件工程；Milestone 1 的 USB Device HID/CDC、Milestone 2 的 BLE HOGP/NUS-compatible 输出、Milestone 3 的 PS/2/UART1/UART3 输入适配器、Milestone 4 的 USB Host HID 枚举/解析、Milestone 5 的 Event_Router 全链路合并和 Milestone 6 的运行时诊断代码已经落地。当前固件仍对应旧的 UART0/MCP2120/TFBS4711、PB1/TSOP 和 PB0/独立 LED 分立原型；Rev B-IR 的 U12/Q_IR 模式选择、共用 RXD 原始脉冲学习和 MCU-only IrDA 仍待迁移。完整迁移状态见 [`docs/revb-firmware-migration.md`](docs/revb-firmware-migration.md)。真实开发板验收仍需按 [`docs/revb-firmware-test-plan.md`](docs/revb-firmware-test-plan.md) 执行。
+- 已加入根目录的 CH582M MounRiver Studio 固件工程；Milestone 1 的 USB Device HID/CDC、Milestone 2 的 BLE HOGP/NUS-compatible 输出、Milestone 3 的 PS/2/UART1/UART3 输入适配器、Milestone 4 的 USB Host HID 枚举/解析、Milestone 5 的 Event_Router 全链路合并和 Milestone 6 的运行时诊断代码已经落地。当前固件仍对应旧的 UART0/MCP2120/TFBS4711、PB1/TSOP 和 PB0/独立 LED 分立原型；Rev B-IR 的 PB7 直连 UART0/PWM9、共用 RXD 原始脉冲学习和 MCU-only IrDA 仍待迁移。完整迁移状态见 [`docs/revb-firmware-migration.md`](docs/revb-firmware-migration.md)。真实开发板验收仍需按 [`docs/revb-firmware-test-plan.md`](docs/revb-firmware-test-plan.md) 执行。
 
 ## 嘉立创 EDA 工程
 

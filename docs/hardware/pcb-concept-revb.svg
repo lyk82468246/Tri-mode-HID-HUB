@@ -3,7 +3,7 @@
 <g font-family="Microsoft YaHei, Noto Sans CJK SC, Segoe UI, Arial, sans-serif">
 <rect x="0.00" y="0.00" width="1500.00" height="1080.00" rx="0" fill="#f7f9fc" stroke="none" />
 <text x="55.00" y="52.00" font-size="30" fill="#243447" text-anchor="start" font-weight="700" >CH582M · 顶层器件与板边接口布局</text>
-<text x="55.00" y="82.00" font-size="16" fill="#627186" text-anchor="start" font-weight="400" >Rev B-IR / 2026-09-28   ·   顶视图   ·   PCB 85.60 × 53.98 mm   ·   0° = Pin 1 左下</text>
+<text x="55.00" y="82.00" font-size="16" fill="#627186" text-anchor="start" font-weight="400" >Rev B-IR / 2026-09-30   ·   顶视图   ·   PCB 85.60 × 53.98 mm   ·   0° = Pin 1 左下</text>
 <text x="55.00" y="108.00" font-size="15" fill="#627186" text-anchor="start" font-weight="400" >红外采用一个 TXD/RXD 光电收发模块；底层 OLED/触摸与中央电池盆地移到独立图，避免互相遮挡。</text>
 <rect x="70.00" y="180.00" width="1070.00" height="674.75" rx="30" fill="#edf5f0" stroke="#547466" stroke-width="2"/>
 <polyline points="70.00,142.50 1140.00,142.50" fill="none" stroke="#718295" stroke-width="1" stroke-linejoin="round" stroke-linecap="round" stroke-dasharray="" />
@@ -43,10 +43,9 @@
 <polyline points="576.25,501.25 432.50,501.25 420.00,680.00 320.00,755.00 270.00,780.00" fill="none" stroke="#7c51c0" stroke-width="1.8" stroke-linejoin="round" stroke-linecap="round" stroke-dasharray="" opacity="0.45"/>
 <polyline points="576.25,466.25 470.00,392.50 445.00,267.50 395.00,255.00" fill="none" stroke="#d06338" stroke-width="1.8" stroke-linejoin="round" stroke-linecap="round" stroke-dasharray="" opacity="0.45"/>
 <polyline points="607.50,517.50 607.50,580.00 582.50,679.75" fill="none" stroke="#d06338" stroke-width="1.8" stroke-linejoin="round" stroke-linecap="round" stroke-dasharray="" opacity="0.45"/>
-<polyline points="638.75,480.00 688.75,430.00 688.75,398.75 845.00,398.75" fill="none" stroke="#c74679" stroke-width="1.8" stroke-linejoin="round" stroke-linecap="round" stroke-dasharray="" opacity="0.45"/>
-<polyline points="638.75,459.38 688.75,392.50 688.75,315.00 807.50,315.00 807.50,255.00 982.50,255.00 1032.50,280.00" fill="none" stroke="#c74679" stroke-width="1.8" stroke-linejoin="round" stroke-linecap="round" stroke-dasharray="" opacity="0.45"/>
-<polyline points="868.75,223.75 907.50,251.25 945.00,251.25" fill="none" stroke="#c74679" stroke-width="1.8" stroke-linejoin="round" stroke-linecap="round" stroke-dasharray="" opacity="0.45"/>
-<polyline points="907.50,251.25 995.00,251.25 1026.25,292.50" fill="none" stroke="#c74679" stroke-width="1.8" stroke-linejoin="round" stroke-linecap="round" stroke-dasharray="" opacity="0.45"/>
+<polyline points="638.75,480.00 732.50,380.00 868.75,223.75" fill="none" stroke="#c74679" stroke-width="1.8" stroke-linejoin="round" stroke-linecap="round" stroke-dasharray="" opacity="0.45"/>
+<polyline points="638.75,459.38 720.00,315.00 807.50,255.00 932.50,251.25" fill="none" stroke="#c74679" stroke-width="1.8" stroke-linejoin="round" stroke-linecap="round" stroke-dasharray="" opacity="0.45"/>
+<polyline points="868.75,223.75 863.75,267.50 845.00,267.50" fill="none" stroke="#c74679" stroke-width="1.8" stroke-linejoin="round" stroke-linecap="round" stroke-dasharray="" opacity="0.45"/>
 <polyline points="620.00,455.00 695.00,380.00 732.50,373.75" fill="none" stroke="#39829d" stroke-width="1.8" stroke-linejoin="round" stroke-linecap="round" stroke-dasharray="" opacity="0.45"/>
 <polyline points="638.75,512.50 682.50,580.00 732.50,617.50" fill="none" stroke="#64748b" stroke-width="1.8" stroke-linejoin="round" stroke-linecap="round" stroke-dasharray="5 4" opacity="0.45"/>
 <rect x="470.00" y="180.00" width="312.50" height="125.00" rx="0" fill="#fff4d9" stroke="#bd8e27" stroke-dasharray="6 4"/>
@@ -85,17 +84,14 @@
 <polyline points="868.75,180.00 868.75,158.75" fill="none" stroke="#60748b" stroke-width="1.2" stroke-linejoin="round" stroke-linecap="round" stroke-dasharray="" marker-end="url(#arrow)"/>
 <rect x="926.25" y="236.25" width="37.50" height="31.25" rx="4" fill="#fce7f0" stroke="#c74679" stroke-width="1.25"/>
 <text x="945.00" y="250.62" font-size="8" fill="#c74679" text-anchor="middle" font-weight="700" >Q_IR</text>
-<text x="945.00" y="263.75" font-size="7" fill="#c74679" text-anchor="middle" font-weight="400" >IRED sink</text>
+<text x="945.00" y="263.75" font-size="7" fill="#c74679" text-anchor="middle" font-weight="400" >DNP</text>
 <rect x="976.25" y="236.25" width="43.75" height="31.25" rx="4" fill="#fce7f0" stroke="#c74679" stroke-width="1.25"/>
 <text x="998.12" y="250.62" font-size="8" fill="#c74679" text-anchor="middle" font-weight="700" >R_IR</text>
-<text x="998.12" y="263.75" font-size="7" fill="#c74679" text-anchor="middle" font-weight="400" >IRED limit</text>
+<text x="998.12" y="263.75" font-size="7" fill="#c74679" text-anchor="middle" font-weight="400" >DNP</text>
 <rect x="845.00" y="267.50" width="162.50" height="137.50" rx="4" fill="#fce7f0" stroke="#c74679" stroke-width="1.25"/>
 <text x="926.25" y="305.00" font-size="12" fill="#c74679" text-anchor="middle" font-weight="700" >MCP2120</text>
 <text x="926.25" y="331.25" font-size="9" fill="#c74679" text-anchor="middle" font-weight="400" >可选 DNP</text>
 <text x="926.25" y="360.00" font-size="8" fill="#c74679" text-anchor="middle" font-weight="400" >旁路/去耦区</text>
-<rect x="1032.50" y="280.00" width="75.00" height="50.00" rx="4" fill="#fce7f0" stroke="#c74679" stroke-width="1.25"/>
-<text x="1070.00" y="298.12" font-size="8" fill="#c74679" text-anchor="middle" font-weight="700" >U12</text>
-<text x="1070.00" y="313.12" font-size="7" fill="#c74679" text-anchor="middle" font-weight="400" >TX 模式选择</text>
 <rect x="282.50" y="317.50" width="112.50" height="112.50" rx="4" fill="#dff2ec" stroke="#168573" stroke-width="1.25"/>
 <text x="338.75" y="338.75" font-size="9" fill="#168573" text-anchor="middle" font-weight="700" >PS2-K</text>
 <text x="338.75" y="359.38" font-size="9" fill="#168573" text-anchor="middle" font-weight="400" >BSS138 ×2</text>
@@ -237,8 +233,8 @@
 <text x="1235.00" y="426.00" font-size="12" fill="#617086" text-anchor="start" font-weight="400" >信号方向示意，非铜线</text>
 <text x="1235.00" y="469.00" font-size="15" fill="#243447" text-anchor="start" font-weight="700" >阅读约束</text>
 <text x="1235.00" y="495.00" font-size="11" fill="#536575" text-anchor="start" font-weight="400" >1. U1 保持 0°，Pin 1 在左下；ANT34 向北。</text>
-<text x="1235.00" y="531.00" font-size="11" fill="#536575" text-anchor="start" font-weight="400" >2. U9 唯一光窗；U12/Q_IR 模式互斥。</text>
-<text x="1235.00" y="567.00" font-size="11" fill="#536575" text-anchor="start" font-weight="400" >3. 底层 OLED/触摸、电池袋和 3D 打印墙不叠在本图。</text>
+<text x="1235.00" y="531.00" font-size="11" fill="#536575" text-anchor="start" font-weight="400" >2. PB7 直连 TXD；UART0/PWM9 内部切换。</text>
+<text x="1235.00" y="567.00" font-size="11" fill="#536575" text-anchor="start" font-weight="400" >3. Q_IR/R_IR 仅可选 DNP；触摸/电池分开。</text>
 <text x="1235.00" y="603.00" font-size="11" fill="#536575" text-anchor="start" font-weight="400" >4. 正式 footprint / 3D / DRC 待建立。</text>
 <text x="70.00" y="915.00" font-size="20" fill="#243447" text-anchor="start" font-weight="700" >配套图</text>
 <rect x="70.00" y="935.00" width="440.00" height="68.00" rx="9" fill="#ffffff" stroke="#cfdae5" />

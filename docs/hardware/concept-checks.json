@@ -1,7 +1,7 @@
 {
   "pin_rows": 49,
   "unique_gpio": 40,
-  "planning_envelopes": 24,
+  "planning_envelopes": 23,
   "envelope_overlaps": [],
   "side_headers": 4,
   "bottom_user_zones": 4,
@@ -40,7 +40,7 @@
   "comparisons": [
     {
       "rotation_cw_deg": 0,
-      "mean_departure_angle_deg": 26.39,
+      "mean_departure_angle_deg": 26.37,
       "backward_groups": 0,
       "groups": [
         {
@@ -85,8 +85,8 @@
         },
         {
           "group": "IR TX/RX",
-          "angle_deg": 14.99,
-          "straight_distance_mm": 19.5
+          "angle_deg": 14.83,
+          "straight_distance_mm": 19.62
         },
         {
           "group": "I2C",
@@ -97,7 +97,7 @@
     },
     {
       "rotation_cw_deg": 45,
-      "mean_departure_angle_deg": 45.79,
+      "mean_departure_angle_deg": 45.75,
       "backward_groups": 0,
       "groups": [
         {
@@ -142,8 +142,8 @@
         },
         {
           "group": "IR TX/RX",
-          "angle_deg": 65.8,
-          "straight_distance_mm": 19.72
+          "angle_deg": 65.42,
+          "straight_distance_mm": 19.76
         },
         {
           "group": "I2C",
@@ -154,7 +154,7 @@
     },
     {
       "rotation_cw_deg": -45,
-      "mean_departure_angle_deg": 56.7,
+      "mean_departure_angle_deg": 56.68,
       "backward_groups": 2,
       "groups": [
         {
@@ -199,8 +199,8 @@
         },
         {
           "group": "IR TX/RX",
-          "angle_deg": 34.13,
-          "straight_distance_mm": 20.87
+          "angle_deg": 33.98,
+          "straight_distance_mm": 20.99
         },
         {
           "group": "I2C",
@@ -211,7 +211,7 @@
     },
     {
       "rotation_cw_deg": 90,
-      "mean_departure_angle_deg": 93.49,
+      "mean_departure_angle_deg": 93.46,
       "backward_groups": 6,
       "groups": [
         {
@@ -256,8 +256,8 @@
         },
         {
           "group": "IR TX/RX",
-          "angle_deg": 113.92,
-          "straight_distance_mm": 21.38
+          "angle_deg": 113.62,
+          "straight_distance_mm": 21.3
         },
         {
           "group": "I2C",
@@ -268,7 +268,7 @@
     },
     {
       "rotation_cw_deg": 180,
-      "mean_departure_angle_deg": 156.09,
+      "mean_departure_angle_deg": 156.07,
       "backward_groups": 10,
       "groups": [
         {
@@ -313,8 +313,8 @@
         },
         {
           "group": "IR TX/RX",
-          "angle_deg": 161.04,
-          "straight_distance_mm": 24.5
+          "angle_deg": 160.89,
+          "straight_distance_mm": 24.38
         },
         {
           "group": "I2C",
@@ -325,7 +325,7 @@
     },
     {
       "rotation_cw_deg": 270,
-      "mean_departure_angle_deg": 102.26,
+      "mean_departure_angle_deg": 102.23,
       "backward_groups": 6,
       "groups": [
         {
@@ -370,8 +370,8 @@
         },
         {
           "group": "IR TX/RX",
-          "angle_deg": 79.08,
-          "straight_distance_mm": 22.87
+          "angle_deg": 78.77,
+          "straight_distance_mm": 22.92
         },
         {
           "group": "I2C",

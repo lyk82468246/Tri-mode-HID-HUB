@@ -3,7 +3,7 @@
 <g font-family="Microsoft YaHei, Noto Sans CJK SC, Segoe UI, Arial, sans-serif">
 <rect x="0.00" y="0.00" width="1500.00" height="900.00" rx="0" fill="#f7f9fc" stroke="none" />
 <text x="55.00" y="52.00" font-size="30" fill="#243447" text-anchor="start" font-weight="700" >CH582M · PCB / 电池盆地 / 3D 打印结构剖面</text>
-<text x="55.00" y="83.00" font-size="16" fill="#627186" text-anchor="start" font-weight="400" >Rev B-M / 2026-09-28   ·   非比例机械示意   ·   需用最终封装、螺丝和电池实物收口</text>
+<text x="55.00" y="83.00" font-size="16" fill="#627186" text-anchor="start" font-weight="400" >Rev B-M / 2026-09-30   ·   非比例机械示意   ·   需用最终封装、螺丝和电池实物收口</text>
 <text x="55.00" y="112.00" font-size="15" fill="#627186" text-anchor="start" font-weight="400" >上方是用户面；底层 OLED/触摸朝上，顶层器件和 CH582M 朝下进入盆地。</text>
 <rect x="300.00" y="145.00" width="900.00" height="62.00" rx="10" fill="#e5f4fb" stroke="#2d7c9f" stroke-width="2"/>
 <text x="750.00" y="171.00" font-size="19" fill="#24627f" text-anchor="middle" font-weight="700" >用户面 / PCB 底层：OLED + 触摸（脸朝上）</text>

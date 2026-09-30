@@ -3,7 +3,7 @@
 <g font-family="Microsoft YaHei, Noto Sans CJK SC, Segoe UI, Arial, sans-serif">
 <rect x="0.00" y="0.00" width="1500.00" height="980.00" rx="0" fill="#f7f9fc" stroke="none" />
 <text x="55.00" y="52.00" font-size="30" fill="#243447" text-anchor="start" font-weight="700" >CH582M · 底层用户界面布局</text>
-<text x="55.00" y="82.00" font-size="16" fill="#627186" text-anchor="start" font-weight="400" >Rev B-M / 2026-09-28   ·   从底层铜面观察   ·   OLED 与触摸有效面朝用户</text>
+<text x="55.00" y="82.00" font-size="16" fill="#627186" text-anchor="start" font-weight="400" >Rev B-M / 2026-09-30   ·   从底层铜面观察   ·   OLED 与触摸有效面朝用户</text>
 <text x="55.00" y="108.00" font-size="15" fill="#627186" text-anchor="start" font-weight="400" >本图只画显示屏、触摸电极、FPC 和安装孔；顶层器件与接口请看 pcb-concept-revb.svg。</text>
 <rect x="70.00" y="175.00" width="1070.00" height="674.75" rx="30" fill="#f1f7fa" stroke="#5b7c8c" stroke-width="2"/>
 <polyline points="70.00,137.50 1140.00,137.50" fill="none" stroke="#718295" stroke-width="1" stroke-linejoin="round" stroke-linecap="round" stroke-dasharray="" />
