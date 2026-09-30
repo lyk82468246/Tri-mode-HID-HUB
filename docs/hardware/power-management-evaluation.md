@@ -25,6 +25,8 @@ IP5306-CK VOUT → 5V_IP53
 PWR_KEY → IP5306-CK KEY（冷启动按键，不能由断电时的触摸电极代替）
 ```
 
+总开关和 USB-A Host 的具体开关拓扑见 [原理图绘制指南 4.7](schematic-design-guide.md#47-总电源开关key-和-5v-host-开关) 及 [总电源/Host 控制 SVG](schematic-guide/power-switch-control.svg)：总电源使用 DPST 同时隔离 `P+` 和 USB VBUS；Host 只控制 TPS2553 的 `EN`，不让机械开关承载 USB 大电流。
+
 IP5306-CK 的 5 V 是全板共享总线，芯片的 2.4 A 级峰值不能直接当作电池、连接器或每个端口都能长期得到的电流。USB-A 仍应保留 TPS2553 或同类逐口限流开关；IP5306 的全局过流保护不能替代 `HOST_EN` 和 `HOST_FAULT_N`。标准 IP5306 的 ESOP8 版本也没有 BQ24074 的 `CHG#`、`PGOOD`、`EN1/EN2`、`TS`；若要由 MCU 读取充电状态，应增加外部监测，或采购明确的 `IP5306-I2C` 定制版本。英集芯的寄存器文档明确说明标准品默认不支持 I²C，并把“BOOST 输出常开”列为可配置位，因此不能把标准 `IP5306` 的寄存器功能自动套到 `IP5306-CK` 上。[IP5306 I²C 寄存器文档](https://m5stack.oss-cn-shenzhen.aliyuncs.com/resource/docs/datasheet/core/IIC_IP5306_REG_V1.4_cn.pdf)
 
 ### 冷启动、静态功耗和电池负端

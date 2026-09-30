@@ -1,0 +1,123 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1500" height="860" viewBox="0 0 1500 860">
+  <title>IP5306-CK 总电源开关、KEY 与 USB Host 控制示意</title>
+  <desc>DPST 总开关同时隔离受保护电池正端和 USB-C 输入，瞬时 PWR_KEY 负责 IP5306-CK 冷启动，TPS2553 EN 节点由实体 Host 开关和 MCU 开漏下拉共同控制。</desc>
+  <defs>
+    <style>
+      .bg{fill:#f8fafc}.title{font:700 26px "Microsoft YaHei",sans-serif;fill:#172033}.sub{font:14px "Microsoft YaHei",sans-serif;fill:#526071}
+      .power{fill:#fff3df;stroke:#d58b2d;stroke-width:2}.logic{fill:#edf8ef;stroke:#5a9d72;stroke-width:2}.port{fill:#eaf4ff;stroke:#5790c7;stroke-width:2}.warn{fill:#fff0f0;stroke:#cc4b4b;stroke-width:2}.note{fill:#fff;stroke:#c8d1dc;stroke-width:1.4;stroke-dasharray:6 4}.switch{fill:#f1edff;stroke:#7f63b2;stroke-width:2}
+      .head{font:700 18px "Microsoft YaHei",sans-serif;fill:#172033}.text{font:13px "Microsoft YaHei",sans-serif;fill:#526071}.small{font:12px "Microsoft YaHei",sans-serif;fill:#526071}.net{font:700 13px "Consolas",monospace;fill:#9a4e16}.wire{fill:none;stroke:#c06d19;stroke-width:4;marker-end:url(#arrow)}.wire2{fill:none;stroke:#2b7c5a;stroke-width:4;marker-end:url(#arrow)}.ctl{fill:none;stroke:#6b4ba5;stroke-width:3;marker-end:url(#ctlArrow)}.dash{fill:none;stroke:#7f8c9f;stroke-width:2;stroke-dasharray:7 5}
+    </style>
+    <marker id="arrow" markerWidth="10" markerHeight="10" refX="9" refY="5" orient="auto"><path d="M0,0 L10,5 L0,10 Z" fill="#c06d19"/></marker>
+    <marker id="ctlArrow" markerWidth="10" markerHeight="10" refX="9" refY="5" orient="auto"><path d="M0,0 L10,5 L0,10 Z" fill="#6b4ba5"/></marker>
+  </defs>
+  <rect class="bg" width="1500" height="860"/>
+  <text class="title" x="42" y="43">IP5306-CK：总电源、PWR_KEY 与 5V Host 控制</text>
+  <text class="sub" x="42" y="70">紫色是控制信号，橙色是电源路径；总开关与 KEY 分工，Host 用 TPS2553 EN 控制。</text>
+
+  <g transform="translate(45,130)">
+    <rect class="port" width="205" height="118" rx="12"/>
+    <text class="head" x="102" y="31" text-anchor="middle">1S 受保护电池</text>
+    <text class="text" x="18" y="64">P+ / P−（保护板之后）</text>
+    <text class="text" x="18" y="88">不要切裸电芯 B+</text>
+  </g>
+  <g transform="translate(295,112)">
+    <rect class="switch" width="220" height="155" rx="12"/>
+    <text class="head" x="110" y="31" text-anchor="middle">SW_PWR DPST</text>
+    <text class="text" x="18" y="66">Pole A：P+ → BAT_IP53</text>
+    <text class="text" x="18" y="90">Pole B：VBUS → IP53_VIN</text>
+    <text class="text" x="18" y="114">OFF = 真正总断电</text>
+    <text class="small" x="18" y="138">电池触点按 ≥5 A DC 选型</text>
+  </g>
+  <path class="wire" d="M250 189 H295"/><text class="net" x="252" y="173">P+</text>
+
+  <g transform="translate(610,105)">
+    <rect class="power" width="340" height="205" rx="12"/>
+    <text class="head" x="170" y="31" text-anchor="middle">U2 IP5306-CK</text>
+    <text class="text" x="20" y="66">BAT ← BAT_IP53</text>
+    <text class="text" x="20" y="88">VIN ← IP53_VIN</text>
+    <text class="text" x="20" y="110">VOUT → 5V_IP53</text>
+    <text class="text" x="20" y="132">KEY ← PWR_KEY 瞬时按键</text>
+    <text class="small" x="20" y="161">EPAD → GND + 热/回流过孔</text>
+    <text class="small" x="20" y="183">SW ↔ 1.0 µH 起步，按 CK 资料复核</text>
+  </g>
+  <path class="wire" d="M515 168 H610"/><text class="net" x="528" y="152">BAT_IP53</text>
+  <path class="wire" d="M515 220 H570 V193 H610"/><text class="net" x="528" y="238">IP53_VIN</text>
+  <path class="wire" d="M950 193 H1015"/><text class="net" x="962" y="177">5V_IP53</text>
+
+  <g transform="translate(45,285)">
+    <rect class="port" width="205" height="105" rx="12"/>
+    <text class="head" x="102" y="31" text-anchor="middle">J1 USB-C</text>
+    <text class="text" x="18" y="63">VBUS → VBUS_RAW</text>
+    <text class="text" x="18" y="86">CC1/CC2：5.1 kΩ Rd</text>
+  </g>
+  <path class="wire" d="M250 337 H270 V220 H295"/><text class="net" x="253" y="323">VBUS_RAW</text>
+
+  <g transform="translate(1020,115)">
+    <rect class="power" width="230" height="125" rx="12"/>
+    <text class="head" x="115" y="31" text-anchor="middle">3V3 LDO / Buck</text>
+    <text class="text" x="18" y="64">5V_IP53 → 3V3</text>
+    <text class="text" x="18" y="88">按 I3V3、温升、IQ 选型</text>
+    <text class="small" x="18" y="110">不从 BAT 直接取 3V3</text>
+  </g>
+
+  <g transform="translate(45,455)">
+    <rect class="switch" width="220" height="112" rx="12"/>
+    <text class="head" x="110" y="31" text-anchor="middle">SW_KEY 瞬时按键</text>
+    <text class="text" x="18" y="64">PWR_KEY：KEY → GND</text>
+    <text class="text" x="18" y="88">冷启动 / 软关断</text>
+  </g>
+  <path class="ctl" d="M265 511 H430 V237 H610"/><text class="net" x="302" y="494">PWR_KEY</text>
+  <text class="small" x="298" y="530">SW_PWR-B 断开 VIN</text>
+
+  <g transform="translate(610,365)">
+    <rect class="logic" width="250" height="185" rx="12"/>
+    <text class="head" x="125" y="31" text-anchor="middle">HOST_EN 节点</text>
+    <text class="text" x="18" y="65">3V3 → SW_HOST → 10 kΩ</text>
+    <text class="text" x="18" y="87">HOST_EN → TPS2553 EN</text>
+    <text class="text" x="18" y="109">100 kΩ → GND 默认关闭</text>
+    <text class="text" x="18" y="131">MCU HOST_KILL 仅下拉</text>
+    <text class="small" x="18" y="158">实体开关请求 + 固件禁止</text>
+  </g>
+  <g transform="translate(330,365)">
+    <rect class="switch" width="220" height="112" rx="12"/>
+    <text class="head" x="110" y="31" text-anchor="middle">SW_HOST SPST</text>
+    <text class="text" x="18" y="64">只切 EN 控制信号</text>
+    <text class="text" x="18" y="88">不承载 USB 大电流</text>
+  </g>
+  <path class="ctl" d="M550 421 H610"/><text class="net" x="552" y="405">HOST_REQ</text>
+  <g transform="translate(330,515)">
+    <rect class="logic" width="220" height="95" rx="12"/>
+    <text class="head" x="110" y="30" text-anchor="middle">CH582M GPIO</text>
+    <text class="text" x="18" y="60">HOST_KILL：开漏/仅下拉</text>
+    <text class="text" x="18" y="82">复位时保持高阻</text>
+  </g>
+  <path class="ctl" d="M550 560 H610 V496"/><text class="net" x="555" y="545">HOST_KILL</text>
+
+  <g transform="translate(950,365)">
+    <rect class="power" width="245" height="185" rx="12"/>
+    <text class="head" x="122" y="31" text-anchor="middle">U5 TPS2553</text>
+    <text class="text" x="18" y="65">IN ← 5V_IP53</text>
+    <text class="text" x="18" y="87">EN ← HOST_EN</text>
+    <text class="text" x="18" y="109">OUT → VBUS_HOST</text>
+    <text class="text" x="18" y="131">FAULT# → MCU</text>
+    <text class="small" x="18" y="158">RILIM 按目标电流</text>
+  </g>
+  <path class="wire" d="M950 193 V330 H1010 V365"/><text class="net" x="960" y="320">5V_IP53</text>
+  <path class="ctl" d="M860 457 H950"/><text class="net" x="875" y="441">HOST_EN</text>
+  <path class="wire" d="M1195 457 H1270"/><text class="net" x="1200" y="441">VBUS_HOST</text>
+  <g transform="translate(1270,392)">
+    <rect class="port" width="180" height="130" rx="12"/>
+    <text class="head" x="90" y="31" text-anchor="middle">USB-A Host</text>
+    <text class="text" x="18" y="64">pin 1 ← VBUS_HOST</text>
+    <text class="text" x="18" y="88">可控、可限流</text>
+    <text class="small" x="18" y="110">Host off ≠ 总断电</text>
+  </g>
+
+  <g transform="translate(45,690)">
+    <rect class="warn" width="1405" height="112" rx="12"/>
+    <text class="head" x="20" y="30" fill="#a52b2b">设计决定</text>
+    <text class="text" x="130" y="30">1. DPST 同时切 P+ 与 USB VBUS，才是 IP5306-CK 的真正总断电；单切 VOUT 会留下 CK 待机耗电。</text>
+    <text class="text" x="130" y="55">2. PWR_KEY 用瞬时按键，不能用维持型拨动开关，也不能让底层触摸承担冷启动。</text>
+    <text class="text" x="130" y="80">3. SW_HOST 只控制 TPS2553 EN；MCU 通过 HOST_KILL 开漏下拉实现软件禁止，USB 大电流不经过开关。</text>
+  </g>
+</svg>

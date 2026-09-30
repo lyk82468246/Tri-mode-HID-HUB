@@ -221,3 +221,9 @@ API 可以取得当前页 PNG 渲染用于复查；当前 Gateway 下 PDF 导出
 3. 明确 3V3 不必强制使用 Buck：`5V_IP53 → AMS1117-3.3` 在 `I3V3≤100–150 mA`、铺铜和温升合格时可以成立；200–300 mA 或封闭电池盆地时改低 IQ LDO/Buck，且 AMS1117 不能从 BAT 直接产生稳定 3V3。
 4. 新增 `schematic-guide/power-candidate-ip5306ck.svg`，并同步更新电源评估、原理图绘制指南、PCB 设计说明、硬件索引和 README；正式基线仍为 BQ24074/TPS63031/TPS61023/TPS2553，候选网络使用 `IP53_VIN`、`5V_IP53`，不复用 `SYS`。
 5. 参考用户提供的 51hei 页面及对应的 IP5306CK 开源电源板资料，补充 CK 版本的冷启动 `KEY` 要求、约 3 mA 常开待机电流、AMS1117 约 5 mA 静态电流、EPAD 接地/热过孔、1 µH 电感起点和 `B−/P−/GND` 负端隔离规则；底层触摸电极不能代替断电后的第一次激活。
+
+## 2026-09-30 IP5306-CK 总开关与 USB Host 控制
+
+1. 将维持型总开关与 IP5306-CK `KEY` 分离：推荐 DPST `SW_PWR` 同时切断受保护电池 `P+` 和 USB-C VBUS，确保 OFF 是真正断电；`PWR_KEY` 只使用板边瞬时按键负责冷启动/软关断。
+2. USB-A Host 继续由 TPS2553 供电和限流；新增 `SW_HOST` 只控制 `HOST_EN`，MCU 通过开漏 `HOST_KILL` 下拉实现软件禁止，机械开关不承载 USB 大电流。两路 PS/2 如需同步关闭，必须另加受控 5 V 分支。
+3. 新增 `schematic-guide/power-switch-control.svg` 并将上述网络、测试点和反向供电注意事项写入原理图绘制指南 4.7。
